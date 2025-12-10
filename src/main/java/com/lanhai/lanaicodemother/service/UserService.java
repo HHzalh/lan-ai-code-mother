@@ -7,6 +7,7 @@ import com.lanhai.lanaicodemother.model.vo.UserVO;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.service.IService;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -92,4 +93,13 @@ public interface UserService extends IService<User> {
      * @return 加密后的用户密码
      */
     String getEncryptPassword(String userPassword);
+
+    /**
+     * 上传并更新用户头像
+     *
+     * @param userId     用户ID
+     * @param avatarFile 头像文件
+     * @return 头像访问地址
+     */
+    String uploadUserAvatar(Long userId, MultipartFile avatarFile);
 }

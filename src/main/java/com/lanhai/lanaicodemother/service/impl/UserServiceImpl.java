@@ -5,6 +5,8 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.lanhai.lanaicodemother.exception.BusinessException;
 import com.lanhai.lanaicodemother.exception.ErrorCode;
+import com.lanhai.lanaicodemother.exception.ThrowUtils;
+import com.lanhai.lanaicodemother.manager.CosManager;
 import com.lanhai.lanaicodemother.mapper.UserMapper;
 import com.lanhai.lanaicodemother.model.dto.user.UserQueryRequest;
 import com.lanhai.lanaicodemother.model.entity.User;
@@ -14,10 +16,15 @@ import com.lanhai.lanaicodemother.model.vo.UserVO;
 import com.lanhai.lanaicodemother.service.UserService;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
+import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,6 +38,9 @@ import static com.lanhai.lanaicodemother.constant.UserConstant.USER_LOGIN_STATE;
  */
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
+
+    @Resource
+    private CosManager cosManager;
 
     @Override
     public long userRegister(String userAccount, String userPassword, String checkPassword) {
@@ -177,6 +187,38 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 .orderBy(sortField, "ascend".equals(sortOrder));
     }
 
+    @Override
+    @Transactional
+    public String uploadUserAvatar(Long userId, MultipartFile avatarFile) {
+        //参数校验
+        ThrowUtils.throwIf(avatarFile == null || avatarFile.isEmpty(), ErrorCode.PARAMS_ERROR, "头像文件不能为空");
+        String ext = StrUtil.subAfter(StrUtil.emptyToDefault(avatarFile.getOriginalFilename(), ""), ".", true);
+        ThrowUtils.throwIf(StrUtil.isBlank(ext), ErrorCode.PARAMS_ERROR, "头像文件名缺少后缀");
+        ext = ext.toLowerCase();
+        ThrowUtils.throwIf(!"jpg".equals(ext) && !"png".equals(ext), ErrorCode.PARAMS_ERROR, "仅支持 jpg/png 格式头像");
+
+        String suffix = "." + ext;
+        File tempFile = null;
+        try {
+            tempFile = File.createTempFile("avatar_" + userId + "_", suffix);
+            avatarFile.transferTo(tempFile);
+            String cosKey = String.format("/userAvatar/%s%s", userId, suffix);
+            String avatarUrl = cosManager.uploadFile(cosKey, tempFile);
+            ThrowUtils.throwIf(StrUtil.isBlank(avatarUrl), ErrorCode.OPERATION_ERROR, "头像上传失败");
+            //更新数据库中的头像URL
+            User updateUser = new User();
+            updateUser.setId(userId);
+            updateUser.setUserAvatar(avatarUrl);
+            boolean updated = this.updateById(updateUser);
+            return avatarUrl;
+        } catch (IOException e) {
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "头像处理失败");
+        } finally {
+            if (tempFile != null && tempFile.exists()) {
+                tempFile.delete();
+            }
+        }
+    }
 
     @Override
     public String getEncryptPassword(String userPassword) {

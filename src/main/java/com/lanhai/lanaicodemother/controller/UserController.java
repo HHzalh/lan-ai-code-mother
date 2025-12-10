@@ -18,6 +18,7 @@ import com.mybatisflex.core.paginate.Page;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -63,6 +64,20 @@ public class UserController {
         String userPassword = userLoginRequest.getUserPassword();
         LoginUserVO loginUserVO = userService.userLogin(userAccount, userPassword, request);
         return ResultUtils.success(loginUserVO);
+    }
+
+    /**
+     * 上传用户头像
+     *
+     * @param file    头像文件（仅支持 jpg/png）
+     * @param request 请求
+     * @return 头像访问地址
+     */
+    @PostMapping("/avatar/upload")
+    public BaseResponse<String> uploadUserAvatar(@RequestPart("file") MultipartFile file, HttpServletRequest request) {
+        User loginUser = userService.getLoginUser(request);
+        String avatarUrl = userService.uploadUserAvatar(loginUser.getId(), file);
+        return ResultUtils.success(avatarUrl);
     }
 
     /**
