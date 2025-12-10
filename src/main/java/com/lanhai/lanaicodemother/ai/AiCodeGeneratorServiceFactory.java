@@ -26,21 +26,6 @@ import java.time.Duration;
 @Slf4j
 public class AiCodeGeneratorServiceFactory {
 
-    @Resource
-    private ChatModel chatModel;
-
-    @Resource
-    private StreamingChatModel openAiStreamingChatModel;
-
-    @Resource
-    private StreamingChatModel reasoningStreamingChatModel;
-
-    @Resource
-    private RedisChatMemoryStore redisChatMemoryStore;
-
-    @Resource
-    private ChatHistoryService chatHistoryService;
-
     /**
      * AI 服务实例缓存
      * 缓存策略：
@@ -56,6 +41,16 @@ public class AiCodeGeneratorServiceFactory {
                 log.debug("AI 服务实例被移除，缓存键: {}, 原因: {}", key, cause);
             })
             .build();
+    @Resource
+    private ChatModel chatModel;
+    @Resource
+    private StreamingChatModel openAiStreamingChatModel;
+    @Resource
+    private StreamingChatModel reasoningStreamingChatModel;
+    @Resource
+    private RedisChatMemoryStore redisChatMemoryStore;
+    @Resource
+    private ChatHistoryService chatHistoryService;
 
     /**
      * 根据 appId 获取服务（带缓存）这个方法是为了兼容历史逻辑
