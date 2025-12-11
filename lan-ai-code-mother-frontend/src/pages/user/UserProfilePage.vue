@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import { message, type UploadProps } from 'ant-design-vue'
 import { UploadOutlined } from '@ant-design/icons-vue'
 import { useLoginUserStore } from '@/stores/loginUser'
-import { updateUser } from '@/api/userController'
+import { updateUser, uploadUserAvatar } from '@/api/userController'
 
 const router = useRouter()
 const loginUserStore = useLoginUserStore()
@@ -57,8 +57,22 @@ const toBase64 = (file: File) =>
 const handleAvatarUpload: UploadProps['beforeUpload'] = async (file) => {
   avatarUploading.value = true
   try {
-    formState.userAvatar = await toBase64(file)
-    message.success('头像已更新')
+    const formData = new FormData()
+    formData.append('file', file)
+    const res = await uploadUserAvatar(
+      { file: '' },
+      {
+        data: formData,
+        params: undefined,
+      },
+    )
+    if (res.data.code === 0 && res.data.data) {
+      formState.userAvatar = res.data.data
+      message.success('头像已上传')
+      await loginUserStore.fetchLoginUser()
+    } else {
+      message.error(res.data.message ?? '上传失败，请重试')
+    }
   } catch (error) {
     message.error('上传失败，请重试')
   } finally {

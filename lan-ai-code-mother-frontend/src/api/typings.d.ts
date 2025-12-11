@@ -208,6 +208,10 @@ declare namespace API {
     deployKey: string
   }
 
+  type uploadUserAvatarParams = {
+    file: string
+  }
+
   type User = {
     id?: number
     userAccount?: string

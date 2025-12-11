@@ -14,6 +14,21 @@ export async function addUser(body: API.UserAddRequest, options?: { [key: string
   })
 }
 
+/** 此处后端没有提供注释 POST /user/avatar/upload */
+export async function uploadUserAvatar(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.uploadUserAvatarParams,
+  options?: { [key: string]: any },
+) {
+  return request<API.BaseResponseString>('/user/avatar/upload', {
+    method: 'POST',
+    params: {
+      ...params,
+    },
+    ...(options || {}),
+  })
+}
+
 /** 此处后端没有提供注释 POST /user/delete */
 export async function deleteUser(body: API.DeleteRequest, options?: { [key: string]: any }) {
   return request<API.BaseResponseBoolean>('/user/delete', {

@@ -74,7 +74,7 @@ public class UserController {
      * @return 头像访问地址
      */
     @PostMapping("/avatar/upload")
-    public BaseResponse<String> uploadUserAvatar(@RequestPart("file") MultipartFile file, HttpServletRequest request) {
+    public BaseResponse<String> uploadUserAvatar(MultipartFile file, HttpServletRequest request) {
         User loginUser = userService.getLoginUser(request);
         String avatarUrl = userService.uploadUserAvatar(loginUser.getId(), file);
         return ResultUtils.success(avatarUrl);
