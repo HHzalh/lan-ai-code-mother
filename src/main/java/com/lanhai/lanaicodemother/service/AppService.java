@@ -1,5 +1,6 @@
 package com.lanhai.lanaicodemother.service;
 
+import com.lanhai.lanaicodemother.model.dto.app.AppAddRequest;
 import com.lanhai.lanaicodemother.model.dto.app.AppQueryRequest;
 import com.lanhai.lanaicodemother.model.entity.App;
 import com.lanhai.lanaicodemother.model.entity.User;
@@ -67,4 +68,13 @@ public interface AppService extends IService<App> {
      * @param appUrl 应用访问URL
      */
     void generateAppScreenshotAsync(Long appId, String appUrl);
+
+    /**
+     * 创建应用
+     *
+     * @param appAddRequest
+     * @param loginUser
+     * @return
+     */
+    Long createApp(AppAddRequest appAddRequest, User loginUser);
 }
