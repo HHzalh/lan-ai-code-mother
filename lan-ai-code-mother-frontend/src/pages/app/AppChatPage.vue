@@ -12,6 +12,38 @@
           </template>
           应用详情
         </a-button>
+        <a-tooltip
+          v-if="isOwner && !canDownload"
+          placement="bottom"
+          title="应用尚未生成浏览地址，无法下载代码"
+        >
+          <a-button
+            :disabled="!isOwner || !canDownload"
+            :loading="downloading"
+            ghost
+            type="primary"
+            @click="downloadCode"
+          >
+            <template #icon>
+              <DownloadOutlined />
+            </template>
+            下载代码
+          </a-button>
+        </a-tooltip>
+        <a-button
+          v-else
+          :disabled="!isOwner || !canDownload"
+          :loading="downloading"
+          ghost
+          type="primary"
+          @click="downloadCode"
+        >
+          <template #icon>
+            <DownloadOutlined />
+          </template>
+          下载代码
+        </a-button>
+
         <a-button :loading="deploying" type="primary" @click="deployApp">
           <template #icon>
             <CloudUploadOutlined />
@@ -149,6 +181,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { useLoginUserStore } from '@/stores/loginUser'
 import {
+  canDownloadAppCode,
   deleteApp as deleteAppApi,
   deployApp as deployAppApi,
   getAppVoById,
@@ -165,6 +198,7 @@ import { API_BASE_URL, getStaticPreviewUrl } from '@/config/env'
 
 import {
   CloudUploadOutlined,
+  DownloadOutlined,
   ExportOutlined,
   InfoCircleOutlined,
   SendOutlined,
@@ -277,6 +311,25 @@ const loadMoreHistory = async () => {
   await loadChatHistory(true)
 }
 
+// 检查是否可以下载
+const checkCanDownload = async () => {
+  if (!appId.value || !isOwner.value) {
+    canDownload.value = false
+    return
+  }
+  try {
+    const res = await canDownloadAppCode({ appId: appId.value as unknown as number })
+    if (res.data.code === 0) {
+      canDownload.value = res.data.data || false
+    } else {
+      canDownload.value = false
+    }
+  } catch (error) {
+    console.error('检查是否可以下载失败：', error)
+    canDownload.value = false
+  }
+}
+
 // 获取应用信息
 const fetchAppInfo = async () => {
   const id = route.params.id as string
@@ -299,6 +352,8 @@ const fetchAppInfo = async () => {
       if (messages.value.length >= 2) {
         updatePreview()
       }
+      // 检查是否可以下载
+      await checkCanDownload()
       // 检查是否需要自动发送初始提示词
       // 只有在是自己的应用且没有对话历史时才自动发送
       if (
@@ -433,6 +488,8 @@ const generateCode = async (userMessage: string, aiMessageIndex: number) => {
       setTimeout(async () => {
         await fetchAppInfo()
         updatePreview()
+        // 重新检查是否可以下载
+        await checkCanDownload()
       }, 1000)
     })
 
@@ -448,6 +505,8 @@ const generateCode = async (userMessage: string, aiMessageIndex: number) => {
         setTimeout(async () => {
           await fetchAppInfo()
           updatePreview()
+          // 重新检查是否可以下载
+          await checkCanDownload()
         }, 1000)
       } else {
         handleError(new Error('SSE连接错误'), aiMessageIndex)
@@ -530,6 +589,48 @@ const openDeployedSite = () => {
 // iframe加载完成
 const onIframeLoad = () => {
   previewReady.value = true
+}
+
+// 下载相关
+const downloading = ref(false)
+const canDownload = ref(false)
+
+// 下载代码
+const downloadCode = async () => {
+  if (!appId.value) {
+    message.error('应用ID不存在')
+    return
+  }
+  downloading.value = true
+  try {
+    const API_BASE_URL = request.defaults.baseURL || ''
+    const url = `${API_BASE_URL}/app/download/${appId.value}`
+    const response = await fetch(url, {
+      method: 'GET',
+      credentials: 'include',
+    })
+    if (!response.ok) {
+      throw new Error(`下载失败: ${response.status}`)
+    }
+    // 获取文件名
+    const contentDisposition = response.headers.get('Content-Disposition')
+    const fileName = contentDisposition?.match(/filename="(.+)"/)?.[1] || `app-${appId.value}.zip`
+    // 下载文件
+    const blob = await response.blob()
+    const downloadUrl = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = downloadUrl
+    link.download = fileName
+    link.click()
+    // 清理
+    URL.revokeObjectURL(downloadUrl)
+    message.success('代码下载成功')
+  } catch (error) {
+    console.error('下载失败：', error)
+    message.error('下载失败，请重试')
+  } finally {
+    downloading.value = false
+  }
 }
 
 // 编辑应用

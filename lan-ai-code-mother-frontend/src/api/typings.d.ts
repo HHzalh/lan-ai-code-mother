@@ -109,6 +109,10 @@ declare namespace API {
     message?: string
   }
 
+  type canDownloadAppCodeParams = {
+    appId: number
+  }
+
   type ChatHistory = {
     id?: number
     message?: string
@@ -140,6 +144,10 @@ declare namespace API {
 
   type DeleteRequest = {
     id?: number
+  }
+
+  type downloadAppCodeParams = {
+    appId: number
   }
 
   type getAppVOByIdByAdminParams = {
