@@ -1,6 +1,7 @@
 package com.lanhai.lanaicodemother.langgraph4j.state;
 
 import com.lanhai.lanaicodemother.langgraph4j.model.ImageResource;
+import com.lanhai.lanaicodemother.langgraph4j.model.QualityResult;
 import com.lanhai.lanaicodemother.model.enums.CodeGenTypeEnum;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -60,6 +61,10 @@ public class WorkflowContext implements Serializable {
      * 构建成功的目录
      */
     private String buildResultDir;
+    /**
+     * 质量检查结果
+     */
+    private QualityResult qualityResult;
     /**
      * 错误信息
      */
