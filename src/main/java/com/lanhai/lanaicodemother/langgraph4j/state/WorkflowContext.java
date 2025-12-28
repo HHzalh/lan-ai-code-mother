@@ -1,5 +1,6 @@
 package com.lanhai.lanaicodemother.langgraph4j.state;
 
+import com.lanhai.lanaicodemother.langgraph4j.model.ImageCollectionPlan;
 import com.lanhai.lanaicodemother.langgraph4j.model.ImageResource;
 import com.lanhai.lanaicodemother.langgraph4j.model.QualityResult;
 import com.lanhai.lanaicodemother.model.enums.CodeGenTypeEnum;
@@ -69,6 +70,20 @@ public class WorkflowContext implements Serializable {
      * 错误信息
      */
     private String errorMessage;
+    /**
+     * 图片收集计划
+     */
+    private ImageCollectionPlan imageCollectionPlan;
+
+
+    /**
+     * 并发图片收集的中间结果字段
+     */
+    private List<ImageResource> contentImages;
+    private List<ImageResource> illustrations;
+    private List<ImageResource> diagrams;
+    private List<ImageResource> logos;
+
 
     // ========== 上下文操作方法 ==========
 
