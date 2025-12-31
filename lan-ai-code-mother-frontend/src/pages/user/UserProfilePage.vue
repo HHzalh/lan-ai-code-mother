@@ -2,14 +2,16 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { message, type UploadProps } from 'ant-design-vue'
-import { UploadOutlined } from '@ant-design/icons-vue'
+import { LockOutlined, SafetyOutlined, UploadOutlined } from '@ant-design/icons-vue'
 import { useLoginUserStore } from '@/stores/loginUser'
-import { updateUser, uploadUserAvatar } from '@/api/userController'
+import { changePassword, updateUser, uploadUserAvatar } from '@/api/userController'
 
 const router = useRouter()
 const loginUserStore = useLoginUserStore()
 const submitting = ref(false)
 const avatarUploading = ref(false)
+const passwordSubmitting = ref(false)
+const showPasswordModal = ref(false)
 
 const formState = reactive<Partial<API.UserUpdateRequest>>({
   id: undefined,
@@ -17,6 +19,12 @@ const formState = reactive<Partial<API.UserUpdateRequest>>({
   userName: '',
   userProfile: '',
   userAvatar: '',
+})
+
+const passwordForm = reactive<API.UserChangePasswordRequest>({
+  oldPassword: '',
+  newPassword: '',
+  checkPassword: '',
 })
 
 const displayAvatar = computed(() => {
@@ -99,6 +107,61 @@ const handleSubmit = async () => {
     submitting.value = false
   }
 }
+
+/**
+ * 验证确认密码
+ */
+const validateCheckPassword = (rule: unknown, value: string, callback: (error?: Error) => void) => {
+  if (value && value !== passwordForm.newPassword) {
+    callback(new Error('两次输入密码不一致'))
+  } else {
+    callback()
+  }
+}
+
+/**
+ * 打开修改密码弹窗
+ */
+const openPasswordModal = () => {
+  passwordForm.oldPassword = ''
+  passwordForm.newPassword = ''
+  passwordForm.checkPassword = ''
+  showPasswordModal.value = true
+}
+
+/**
+ * 关闭修改密码弹窗
+ */
+const closePasswordModal = () => {
+  showPasswordModal.value = false
+  passwordForm.oldPassword = ''
+  passwordForm.newPassword = ''
+  passwordForm.checkPassword = ''
+}
+
+/**
+ * 提交修改密码
+ */
+const handlePasswordSubmit = async () => {
+  passwordSubmitting.value = true
+  try {
+    const res = await changePassword(passwordForm)
+    if (res.data.code === 0) {
+      message.success('密码修改成功，请使用新密码登录')
+      closePasswordModal()
+      // 可以选择退出登录，让用户重新登录
+      setTimeout(() => {
+        router.push('/user/login')
+      }, 1500)
+    } else {
+      message.error(res.data.message ?? '密码修改失败')
+    }
+  } catch (error) {
+    message.error('密码修改失败，请检查网络连接')
+  } finally {
+    passwordSubmitting.value = false
+  }
+}
 </script>
 
 <template>
@@ -165,6 +228,119 @@ const handleSubmit = async () => {
         </a-form-item>
       </a-form>
     </section>
+
+    <section class="profile-card password-card">
+      <div class="card-header">
+        <span class="line"></span>
+        <h3>安全设置</h3>
+      </div>
+      <div class="password-content">
+        <div class="password-info">
+          <div class="password-icon">
+            <LockOutlined />
+          </div>
+          <div class="password-text">
+            <h4>登录密码</h4>
+            <p>定期修改密码可以让账号更安全</p>
+          </div>
+        </div>
+        <a-button type="primary" @click="openPasswordModal">
+          <SafetyOutlined />
+          修改密码
+        </a-button>
+      </div>
+    </section>
+
+    <!-- 修改密码弹窗 -->
+    <a-modal
+      v-model:open="showPasswordModal"
+      :footer="null"
+      :title="null"
+      class="password-modal"
+      width="520px"
+      @cancel="closePasswordModal"
+    >
+      <div class="modal-header">
+        <h3>修改密码</h3>
+        <p class="modal-subtitle">为了您的账号安全，请定期修改密码</p>
+      </div>
+      <a-form
+        :model="passwordForm"
+        autocomplete="off"
+        class="password-form"
+        name="changePassword"
+        @finish="handlePasswordSubmit"
+      >
+        <a-form-item :rules="[{ required: true, message: '请输入旧密码' }]" name="oldPassword">
+          <a-input-password
+            v-model:value="passwordForm.oldPassword"
+            class="password-input"
+            placeholder="请输入旧密码"
+            size="large"
+          >
+            <template #prefix>
+              <LockOutlined />
+            </template>
+          </a-input-password>
+        </a-form-item>
+
+        <a-form-item
+          :rules="[
+            { required: true, message: '请输入新密码' },
+            { min: 8, message: '密码不能小于 8 位' },
+          ]"
+          name="newPassword"
+        >
+          <a-input-password
+            v-model:value="passwordForm.newPassword"
+            class="password-input"
+            placeholder="请输入新密码（至少8位）"
+            size="large"
+          >
+            <template #prefix>
+              <LockOutlined />
+            </template>
+          </a-input-password>
+        </a-form-item>
+
+        <a-form-item
+          :rules="[
+            { required: true, message: '请确认新密码' },
+            { min: 8, message: '密码不能小于 8 位' },
+            { validator: validateCheckPassword },
+          ]"
+          name="checkPassword"
+        >
+          <a-input-password
+            v-model:value="passwordForm.checkPassword"
+            class="password-input"
+            placeholder="请确认新密码"
+            size="large"
+          >
+            <template #prefix>
+              <LockOutlined />
+            </template>
+          </a-input-password>
+        </a-form-item>
+
+        <a-form-item class="password-form-actions">
+          <div class="button-group">
+            <a-button class="cancel-button" size="large" @click="closePasswordModal">
+              取消
+            </a-button>
+            <a-button
+              :loading="passwordSubmitting"
+              class="submit-button"
+              html-type="submit"
+              size="large"
+              type="primary"
+            >
+              确认修改
+            </a-button>
+          </div>
+        </a-form-item>
+      </a-form>
+    </a-modal>
   </div>
 </template>
 
@@ -273,6 +449,172 @@ const handleSubmit = async () => {
   margin-top: 24px;
 }
 
+.password-card {
+  margin-top: 24px;
+}
+
+.password-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 0;
+}
+
+.password-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+}
+
+.password-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 20px;
+}
+
+.password-text h4 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  color: #1f2d3d;
+  font-weight: 500;
+}
+
+.password-text p {
+  margin: 0;
+  font-size: 14px;
+  color: #5f6b7c;
+}
+
+/* 修改密码弹窗样式 */
+.password-modal :deep(.ant-modal-content) {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.password-modal :deep(.ant-modal-body) {
+  padding: 0;
+}
+
+.modal-header {
+  padding: 32px 32px 24px;
+  text-align: center;
+  background: linear-gradient(120deg, #e0f2ff, #f5f7ff);
+  border-bottom: 1px solid #f0f2f5;
+}
+
+.modal-header h3 {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  color: #1f2d3d;
+  font-weight: 600;
+}
+
+.modal-subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: #5f6b7c;
+}
+
+.password-form {
+  padding: 32px;
+}
+
+.password-input :deep(.ant-input),
+.password-input :deep(.ant-input-password) {
+  border-radius: 8px;
+  height: 48px;
+  font-size: 15px;
+  padding-left: 40px;
+  border-color: #d9d9d9;
+  transition: all 0.3s;
+}
+
+.password-input :deep(.ant-input:hover),
+.password-input :deep(.ant-input-password:hover) {
+  border-color: #667eea;
+}
+
+.password-input :deep(.ant-input:focus),
+.password-input :deep(.ant-input-focused),
+.password-input :deep(.ant-input-password:focus) {
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+}
+
+.password-input :deep(.ant-input-prefix) {
+  left: 14px;
+  color: #667eea;
+  font-size: 16px;
+}
+
+.password-input :deep(.ant-input-password-icon) {
+  color: #999;
+  font-size: 16px;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.password-input :deep(.ant-input-password-icon:hover) {
+  color: #667eea;
+}
+
+.password-form-actions {
+  margin-top: 32px;
+  margin-bottom: 0;
+}
+
+.button-group {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+.cancel-button {
+  flex: 1;
+  height: 48px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  background: #ffffff;
+  border: 1px solid #d9d9d9;
+  color: #666;
+  transition: all 0.3s ease;
+}
+
+.cancel-button:hover {
+  border-color: #667eea;
+  color: #667eea;
+  background: #f5f5f5;
+}
+
+.submit-button {
+  flex: 1;
+  height: 48px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.submit-button:hover {
+  background: linear-gradient(135deg, #5568d3 0%, #6a3d91 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+.submit-button:active {
+  transform: translateY(0);
+}
+
 @media (max-width: 768px) {
   .profile-hero {
     flex-direction: column;
@@ -287,6 +629,25 @@ const handleSubmit = async () => {
 
   .profile-card {
     padding: 24px;
+  }
+
+  .password-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .password-form {
+    padding: 24px;
+  }
+
+  .button-group {
+    flex-direction: column;
+  }
+
+  .cancel-button,
+  .submit-button {
+    width: 100%;
   }
 }
 </style>

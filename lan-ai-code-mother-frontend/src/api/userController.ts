@@ -114,6 +114,21 @@ export async function userLogout(options?: { [key: string]: any }) {
   })
 }
 
+/** 此处后端没有提供注释 POST /user/password/change */
+export async function changePassword(
+  body: API.UserChangePasswordRequest,
+  options?: { [key: string]: any }
+) {
+  return request<API.BaseResponseBoolean>('/user/password/change', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  })
+}
+
 /** 此处后端没有提供注释 POST /user/password/find */
 export async function findPassword(
   body: API.FindPasswordRequest,
