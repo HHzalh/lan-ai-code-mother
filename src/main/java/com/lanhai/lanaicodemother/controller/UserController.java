@@ -139,6 +139,24 @@ public class UserController {
     }
 
     /**
+     * 修改密码
+     *
+     * @param changePasswordRequest 修改密码请求（包含旧密码、新密码、确认新密码）
+     * @param request               请求
+     * @return 是否修改成功
+     */
+    @PostMapping("/password/change")
+    public BaseResponse<Boolean> changePassword(@RequestBody UserChangePasswordRequest changePasswordRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(changePasswordRequest == null, ErrorCode.PARAMS_ERROR);
+        User loginUser = userService.getLoginUser(request);
+        String oldPassword = changePasswordRequest.getOldPassword();
+        String newPassword = changePasswordRequest.getNewPassword();
+        String checkPassword = changePasswordRequest.getCheckPassword();
+        boolean result = userService.changePassword(loginUser.getId(), oldPassword, newPassword, checkPassword);
+        return ResultUtils.success(result);
+    }
+
+    /**
      * 创建用户
      */
     @PostMapping("/add")

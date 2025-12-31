@@ -339,4 +339,49 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return true;
     }
 
+    /**
+     * 修改密码
+     */
+    @Override
+    @Transactional
+    public boolean changePassword(Long userId, String oldPassword, String newPassword, String checkPassword) {
+        // 1. 参数校验
+        if (!StringUtils.hasText(oldPassword) || !StringUtils.hasText(newPassword) ||
+                !StringUtils.hasText(checkPassword)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数不能为空");
+        }
+        if (newPassword.length() < 8 || checkPassword.length() < 8) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "密码长度不能少于8位");
+        }
+        if (!newPassword.equals(checkPassword)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "两次输入的密码不一致");
+        }
+
+        // 2. 查询用户
+        User user = this.getById(userId);
+        ThrowUtils.throwIf(user == null, ErrorCode.NOT_FOUND_ERROR, "用户不存在");
+
+        // 3. 验证旧密码
+        String encryptOldPassword = getEncryptPassword(oldPassword);
+        if (!encryptOldPassword.equals(user.getUserPassword())) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "旧密码错误");
+        }
+
+        // 4. 验证新密码不能与旧密码相同
+        String encryptNewPassword = getEncryptPassword(newPassword);
+        if (encryptNewPassword.equals(user.getUserPassword())) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "新密码不能与旧密码相同");
+        }
+
+        // 5. 更新密码
+        User updateUser = new User();
+        updateUser.setId(userId);
+        updateUser.setUserPassword(encryptNewPassword);
+        boolean result = this.updateById(updateUser);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "密码修改失败");
+
+        log.info("密码修改成功，用户ID：{}", userId);
+        return true;
+    }
+
 }
