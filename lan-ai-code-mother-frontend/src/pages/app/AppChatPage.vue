@@ -590,7 +590,6 @@ const generateCode = async (userMessage: string, aiMessageIndex: number) => {
       }
     })
 
-
     // 处理错误
     eventSource.onerror = function () {
       if (streamCompleted || !isGenerating.value) return

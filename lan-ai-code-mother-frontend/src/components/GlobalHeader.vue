@@ -44,7 +44,12 @@
           </div>
 
           <div v-else>
-            <a-button href="/user/login" type="primary">登录</a-button>
+            <a-button href="/user/login" type="primary">
+              <template #icon>
+                <LoginOutlined />
+              </template>
+              登录
+            </a-button>
           </div>
         </div>
       </a-col>
@@ -58,7 +63,16 @@ import { useRouter } from 'vue-router'
 import { type MenuProps, message } from 'ant-design-vue'
 import { useLoginUserStore } from '@/stores/loginUser.ts'
 import { userLogout } from '@/api/userController.ts'
-import { HomeOutlined, LogoutOutlined, UserOutlined } from '@ant-design/icons-vue'
+import {
+  AppstoreOutlined,
+  BookOutlined,
+  ContactsOutlined,
+  HomeOutlined,
+  LoginOutlined,
+  LogoutOutlined,
+  TeamOutlined,
+  UserOutlined,
+} from '@ant-design/icons-vue'
 
 const loginUserStore = useLoginUserStore()
 const router = useRouter()
@@ -78,17 +92,26 @@ const originItems = [
     title: '主页',
   },
   {
+    key: '/help/docs',
+    icon: () => h(BookOutlined),
+    label: '快速上手',
+    title: '快速上手',
+  },
+  {
     key: '/admin/userManage',
+    icon: () => h(TeamOutlined),
     label: '用户管理',
     title: '用户管理',
   },
   {
     key: '/admin/appManage',
+    icon: () => h(AppstoreOutlined),
     label: '应用管理',
     title: '应用管理',
   },
   {
     key: 'others',
+    icon: () => h(ContactsOutlined),
     label: h('a', { href: 'https://www.gitee.com/hhzalh', target: '_blank' }, '联系作者'),
     title: '联系作者',
   },
