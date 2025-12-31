@@ -102,4 +102,25 @@ public interface UserService extends IService<User> {
      * @return 头像访问地址
      */
     String uploadUserAvatar(Long userId, MultipartFile avatarFile);
+
+    /**
+     * 发送密码找回验证码
+     *
+     * @param userAccount 账号
+     * @param email       邮箱地址
+     * @return 是否发送成功
+     */
+    boolean sendPasswordResetCode(String userAccount, String email);
+
+    /**
+     * 重置密码
+     *
+     * @param userAccount   账号
+     * @param email         邮箱地址
+     * @param code          验证码
+     * @param newPassword   新密码
+     * @param checkPassword 确认新密码
+     * @return 是否重置成功
+     */
+    boolean resetPassword(String userAccount, String email, String code, String newPassword, String checkPassword);
 }

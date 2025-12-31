@@ -60,6 +60,8 @@
       <div class="register-link">
         没有账号?
         <RouterLink to="/user/register">立即注册</RouterLink>
+        <span class="link-divider">|</span>
+        <RouterLink to="/user/find-password">找回密码</RouterLink>
       </div>
     </div>
   </div>
@@ -238,6 +240,11 @@ const handleSubmit = async (values: any) => {
 .register-link a:hover {
   color: #40a9ff;
   text-decoration: underline;
+}
+
+.link-divider {
+  margin: 0 8px;
+  color: #d9d9d9;
 }
 
 /* 响应式设计 */

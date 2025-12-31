@@ -23,4 +23,14 @@ public interface UserConstant {
     String ADMIN_ROLE = "admin";
 
     // endregion
+
+    /**
+     * 密码重置验证码Redis key前缀
+     */
+    String PASSWORD_RESET_CODE_PREFIX = "password:reset:code:";
+
+    /**
+     * 验证码过期时间（秒）
+     */
+    Long CODE_EXPIRE_TIME = 300L; // 5分钟
 }

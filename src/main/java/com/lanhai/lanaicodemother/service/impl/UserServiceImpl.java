@@ -14,33 +14,46 @@ import com.lanhai.lanaicodemother.model.enums.UserRoleEnum;
 import com.lanhai.lanaicodemother.model.vo.LoginUserVO;
 import com.lanhai.lanaicodemother.model.vo.UserVO;
 import com.lanhai.lanaicodemother.service.UserService;
+import com.lanhai.lanaicodemother.utils.MailUtils;
+import com.lanhai.lanaicodemother.utils.RegexUtils;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static com.lanhai.lanaicodemother.constant.UserConstant.USER_LOGIN_STATE;
+import static com.lanhai.lanaicodemother.constant.UserConstant.*;
 
 /**
  * 用户 服务层实现。
  *
  * @author <a href="https://gitee.com/hhzalh">致爱蓝海</a>
  */
+@Slf4j
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
     @Resource
     private CosManager cosManager;
+
+    @Resource
+    private MailUtils mailUtils;
+
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
 
     @Override
     public long userRegister(String userAccount, String userPassword, String checkPassword) {
@@ -225,6 +238,100 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 盐值，混淆密码
         final String SALT = "lanhai";
         return DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
+    }
+
+    /**
+     * 发送密码找回验证码
+     */
+    @Override
+    public boolean sendPasswordResetCode(String userAccount, String email) {
+        // 1. 参数校验
+        if (!StringUtils.hasText(userAccount) || !StringUtils.hasText(email)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号和邮箱不能为空");
+        }
+        if (RegexUtils.isEmailInvalid(email)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "邮箱格式不正确");
+        }
+
+        // 2. 查询用户是否存在
+        QueryWrapper queryWrapper = new QueryWrapper();
+        queryWrapper.eq("userAccount", userAccount);
+        User user = this.mapper.selectOneByQuery(queryWrapper);
+        ThrowUtils.throwIf(user == null, ErrorCode.NOT_FOUND_ERROR, "该账号未注册");
+
+        // 3. 生成验证码
+        String code = MailUtils.generateCode();
+
+        // 4. 将验证码存储到Redis，设置5分钟过期时间
+        String redisKey = PASSWORD_RESET_CODE_PREFIX + userAccount + ":" + email;
+        stringRedisTemplate.opsForValue().set(redisKey, code, CODE_EXPIRE_TIME, TimeUnit.SECONDS);
+
+        // 5. 发送验证码邮件
+        try {
+            mailUtils.sendVerificationCode(email, code);
+            log.info("密码找回验证码发送成功，账号：{}，邮箱：{}", userAccount, email);
+            return true;
+        } catch (Exception e) {
+            log.error("密码找回验证码发送失败，账号：{}，邮箱：{}，错误：{}", userAccount, email, e.getMessage(), e);
+            // 发送失败时删除Redis中的验证码
+            stringRedisTemplate.delete(redisKey);
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "验证码发送失败，请稍后重试");
+        }
+    }
+
+    /**
+     * 重置密码
+     */
+    @Override
+    @Transactional
+    public boolean resetPassword(String userAccount, String email, String code, String newPassword, String checkPassword) {
+        // 1. 参数校验
+        if (!StringUtils.hasText(userAccount) || !StringUtils.hasText(email) ||
+                !StringUtils.hasText(code) || !StringUtils.hasText(newPassword) ||
+                !StringUtils.hasText(checkPassword)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数不能为空");
+        }
+        if (RegexUtils.isEmailInvalid(email)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "邮箱格式不正确");
+        }
+        if (newPassword.length() < 8 || checkPassword.length() < 8) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "密码长度不能少于8位");
+        }
+        if (!newPassword.equals(checkPassword)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "两次输入的密码不一致");
+        }
+
+        // 2. 验证验证码
+        String redisKey = PASSWORD_RESET_CODE_PREFIX + userAccount + ":" + email;
+        String storedCode = stringRedisTemplate.opsForValue().get(redisKey);
+        if (storedCode == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "验证码已过期或不存在，请重新获取");
+        }
+        if (!storedCode.equals(code)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "验证码错误");
+        }
+
+        // 3. 查询用户
+        QueryWrapper queryWrapper = new QueryWrapper();
+        queryWrapper.eq("userAccount", userAccount);
+        User user = this.mapper.selectOneByQuery(queryWrapper);
+        ThrowUtils.throwIf(user == null, ErrorCode.NOT_FOUND_ERROR, "用户不存在");
+
+        // 4. 加密新密码
+        String encryptPassword = getEncryptPassword(newPassword);
+
+        // 5. 更新密码
+        User updateUser = new User();
+        updateUser.setId(user.getId());
+        updateUser.setUserPassword(encryptPassword);
+        boolean result = this.updateById(updateUser);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "密码重置失败");
+
+        // 6. 删除Redis中的验证码
+        stringRedisTemplate.delete(redisKey);
+
+        log.info("密码重置成功，账号：{}", userAccount);
+        return true;
     }
 
 }

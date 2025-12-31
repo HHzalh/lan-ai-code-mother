@@ -106,6 +106,39 @@ public class UserController {
     }
 
     /**
+     * 找回密码 - 发送验证码
+     *
+     * @param findPasswordRequest 找回密码请求（包含账号和邮箱）
+     * @return 是否发送成功
+     */
+    @PostMapping("/password/find")
+    public BaseResponse<Boolean> findPassword(@RequestBody FindPasswordRequest findPasswordRequest) {
+        ThrowUtils.throwIf(findPasswordRequest == null, ErrorCode.PARAMS_ERROR);
+        String userAccount = findPasswordRequest.getUserAccount();
+        String email = findPasswordRequest.getEmail();
+        boolean result = userService.sendPasswordResetCode(userAccount, email);
+        return ResultUtils.success(result);
+    }
+
+    /**
+     * 重置密码
+     *
+     * @param resetPasswordRequest 重置密码请求（包含账号、邮箱、验证码、新密码）
+     * @return 是否重置成功
+     */
+    @PostMapping("/password/reset")
+    public BaseResponse<Boolean> resetPassword(@RequestBody ResetPasswordRequest resetPasswordRequest) {
+        ThrowUtils.throwIf(resetPasswordRequest == null, ErrorCode.PARAMS_ERROR);
+        String userAccount = resetPasswordRequest.getUserAccount();
+        String email = resetPasswordRequest.getEmail();
+        String code = resetPasswordRequest.getCode();
+        String newPassword = resetPasswordRequest.getNewPassword();
+        String checkPassword = resetPasswordRequest.getCheckPassword();
+        boolean result = userService.resetPassword(userAccount, email, code, newPassword, checkPassword);
+        return ResultUtils.success(result);
+    }
+
+    /**
      * 创建用户
      */
     @PostMapping("/add")

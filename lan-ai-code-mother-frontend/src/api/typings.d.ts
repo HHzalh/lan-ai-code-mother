@@ -150,6 +150,11 @@ declare namespace API {
     appId: number
   }
 
+  type FindPasswordRequest = {
+    userAccount?: string
+    email?: string
+  }
+
   type getAppVOByIdByAdminParams = {
     id: number
   }
@@ -208,6 +213,14 @@ declare namespace API {
     totalPage?: number
     totalRow?: number
     optimizeCountQuery?: boolean
+  }
+
+  type ResetPasswordRequest = {
+    userAccount?: string
+    email?: string
+    code?: string
+    newPassword?: string
+    checkPassword?: string
   }
 
   type ServerSentEventString = true
