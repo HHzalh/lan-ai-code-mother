@@ -244,7 +244,7 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
     }
 
     /**
-     * 删除应用时关联删除对话历史
+     * 删除应用时关联删除对话历史、代码目录和部署目录
      *
      * @param id 应用ID
      * @return 是否成功
@@ -259,7 +259,44 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         if (appId <= 0) {
             return false;
         }
-        // 先删除关联的对话历史
+        // 先查询应用信息，获取 codeGenType 和 deployKey（用于删除代码目录和部署目录）
+        App app = this.getById(appId);
+        if (app != null) {
+            // 删除代码目录
+            try {
+                String codeGenType = app.getCodeGenType();
+                if (StrUtil.isNotBlank(codeGenType)) {
+                    String sourceDirName = codeGenType + "_" + appId;
+                    String sourceDirPath = AppConstant.CODE_OUTPUT_ROOT_DIR + File.separator + sourceDirName;
+                    File sourceDir = new File(sourceDirPath);
+                    // 如果目录存在，则删除
+                    if (sourceDir.exists() && sourceDir.isDirectory()) {
+                        FileUtil.del(sourceDir);
+                        log.info("成功删除应用代码目录: {}", sourceDirPath);
+                    }
+                }
+            } catch (Exception e) {
+                // 记录日志但不阻止应用删除
+                log.error("删除应用代码目录失败，appId: {}, 错误: {}", appId, e.getMessage(), e);
+            }
+            // 删除部署目录（如果应用已部署）
+            try {
+                String deployKey = app.getDeployKey();
+                if (StrUtil.isNotBlank(deployKey)) {
+                    String deployDirPath = AppConstant.CODE_DEPLOY_ROOT_DIR + File.separator + deployKey;
+                    File deployDir = new File(deployDirPath);
+                    // 如果部署目录存在，则删除
+                    if (deployDir.exists() && deployDir.isDirectory()) {
+                        FileUtil.del(deployDir);
+                        log.info("成功删除应用部署目录: {}", deployDirPath);
+                    }
+                }
+            } catch (Exception e) {
+                // 记录日志但不阻止应用删除
+                log.error("删除应用部署目录失败，appId: {}, deployKey: {}, 错误: {}", appId, app.getDeployKey(), e.getMessage(), e);
+            }
+        }
+        // 删除关联的对话历史
         try {
             chatHistoryService.deleteByAppId(appId);
         } catch (Exception e) {
@@ -290,7 +327,7 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         boolean result = this.save(app);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         log.info("应用创建成功，ID: {}, 类型: {}", app.getId(), selectedCodeGenType.getValue());
-        return app.getId();
+    return app.getId();
     }
 
 
