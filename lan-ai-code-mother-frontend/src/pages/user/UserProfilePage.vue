@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import { message, type UploadProps } from 'ant-design-vue'
 import { LockOutlined, SafetyOutlined, UploadOutlined } from '@ant-design/icons-vue'
 import { useLoginUserStore } from '@/stores/loginUser'
-import { changePassword, updateUser, uploadUserAvatar } from '@/api/userController'
+import { changePassword, updateUserInfo, uploadUserAvatar } from '@/api/userController'
 
 const router = useRouter()
 const loginUserStore = useLoginUserStore()
@@ -90,13 +90,14 @@ const handleAvatarUpload: UploadProps['beforeUpload'] = async (file) => {
 }
 
 const handleSubmit = async () => {
-  if (!formState.id) {
-    message.error('缺少用户 ID，无法更新')
-    return
-  }
   submitting.value = true
   try {
-    const res = await updateUser(formState as API.UserUpdateRequest)
+    // 只发送 userName 和 userProfile，后端接口只允许更新这两个字段
+    const updateData: API.UserUpdateRequest = {
+      userName: formState.userName,
+      userProfile: formState.userProfile,
+    }
+    const res = await updateUserInfo(updateData)
     if (res.data.code === 0) {
       message.success('资料已更新')
       await loginUserStore.fetchLoginUser()

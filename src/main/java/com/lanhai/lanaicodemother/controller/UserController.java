@@ -40,7 +40,7 @@ public class UserController {
      * @param userRegisterRequest 用户注册请求
      * @return 注册结果
      */
-    @PostMapping("register")
+    @PostMapping("/register")
     public BaseResponse<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
         ThrowUtils.throwIf(userRegisterRequest == null, ErrorCode.PARAMS_ERROR);
         String userAccount = userRegisterRequest.getUserAccount();
@@ -154,6 +154,34 @@ public class UserController {
         String checkPassword = changePasswordRequest.getCheckPassword();
         boolean result = userService.changePassword(loginUser.getId(), oldPassword, newPassword, checkPassword);
         return ResultUtils.success(result);
+    }
+
+    /**
+     * 更新用户个人信息
+     *
+     * @param userUpdateRequest 用户更新请求（仅可更新 userName 和 userProfile）
+     * @param request           请求
+     * @return 是否更新成功
+     */
+    @PostMapping("/update/info")
+    public BaseResponse<Boolean> updateUserInfo(@RequestBody UserUpdateRequest userUpdateRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(userUpdateRequest == null, ErrorCode.PARAMS_ERROR);
+        // 获取当前登录用户
+        User loginUser = userService.getLoginUser(request);
+        // 创建更新对象，只更新 userName 和 userProfile
+        User updateUser = new User();
+        updateUser.setId(loginUser.getId());
+        // 只更新请求中提供的字段
+        if (userUpdateRequest.getUserName() != null) {
+            updateUser.setUserName(userUpdateRequest.getUserName());
+        }
+        if (userUpdateRequest.getUserProfile() != null) {
+            updateUser.setUserProfile(userUpdateRequest.getUserProfile());
+        }
+        // 执行更新
+        boolean result = userService.updateById(updateUser);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        return ResultUtils.success(true);
     }
 
     /**
