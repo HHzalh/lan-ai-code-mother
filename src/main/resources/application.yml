@@ -6,20 +6,12 @@ spring:
     store-type: redis
     # session 30 天过期
     timeout: 2592000
-  # mysql
+  # mysql - 具体配置在 profile 文件中（application-local.yml 或 application-prod.yml）
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/lan_ai_code_mother
-    username: root
-    password: 123456
-  # redis
+  # redis - 具体配置在 profile 文件中
   data:
     redis:
-      host: localhost
-      port: 6379
-      password:
-      ttl: 3600
-      database: 0
   profiles:
     active: local
 
@@ -42,3 +34,8 @@ knife4j:
   enable: true
   setting:
     language: zh_cn
+
+# 应用配置 - 具体配置在 profile 文件中（application-local.yml 或 application-prod.yml）
+app:
+  admin:
+    register-password:
