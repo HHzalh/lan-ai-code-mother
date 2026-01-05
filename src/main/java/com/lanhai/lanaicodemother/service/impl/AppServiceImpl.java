@@ -27,6 +27,7 @@ import com.lanhai.lanaicodemother.service.AppService;
 import com.lanhai.lanaicodemother.service.ChatHistoryService;
 import com.lanhai.lanaicodemother.service.ScreenshotService;
 import com.lanhai.lanaicodemother.service.UserService;
+import com.lanhai.lanaicodemother.utils.GoodAppCacheUtils;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
@@ -76,6 +77,9 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
 
     @Resource
     private AiCodeGenTypeRoutingServiceFactory aiCodeGenTypeRoutingServiceFactory;
+
+    @Resource
+    private GoodAppCacheUtils goodAppCacheUtils;
 
     @Override
     public AppVO getAppVO(App app) {
@@ -249,6 +253,46 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
     }
 
     /**
+     * 重写 updateById 方法，在更新后删除精选应用缓存
+     *
+     * @param entity 要更新的实体
+     * @return 是否成功
+     */
+    @Override
+    public boolean updateById(App entity) {
+        if (entity == null || entity.getId() == null) {
+            return false;
+        }
+        // 更新前获取旧数据，用于判断是否需要删除缓存
+        App oldApp = this.getById(entity.getId());
+        Integer oldPriority = oldApp != null ? oldApp.getPriority() : null;
+        Integer newPriority = entity.getPriority();
+        
+        // 执行更新
+        boolean result = super.updateById(entity);
+        
+        // 判断是否需要删除缓存：
+        // 1. 修改前是精选应用（应用信息可能改变）
+        // 2. 修改后是精选应用（新增或保持精选状态，但信息改变了）
+        // 3. priority改变了（可能影响精选列表）
+        if (result) {
+            boolean wasGoodApp = AppConstant.GOOD_APP_PRIORITY.equals(oldPriority);
+            boolean isNowGoodApp = AppConstant.GOOD_APP_PRIORITY.equals(newPriority);
+            boolean priorityChanged = newPriority != null && oldPriority != null && !newPriority.equals(oldPriority);
+            if (wasGoodApp || isNowGoodApp || priorityChanged) {
+                try {
+                    goodAppCacheUtils.evictAllGoodAppCacheByRedis();
+                    log.debug("删除精选应用缓存成功，appId: {}", entity.getId());
+                } catch (Exception e) {
+                    // 记录日志但不阻止更新操作
+                    log.error("删除精选应用缓存失败，appId: {}, 错误: {}", entity.getId(), e.getMessage(), e);
+                }
+            }
+        }
+        return result;
+    }
+
+    /**
      * 删除应用时关联删除对话历史、代码目录和部署目录
      *
      * @param id 应用ID
@@ -266,6 +310,8 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         }
         // 先查询应用信息，获取 codeGenType 和 deployKey（用于删除代码目录和部署目录）
         App app = this.getById(appId);
+        // 记录是否是精选应用，用于删除缓存
+        boolean isGoodApp = app != null && AppConstant.GOOD_APP_PRIORITY.equals(app.getPriority());
         if (app != null) {
             // 删除代码目录
             try {
@@ -309,7 +355,18 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
             log.error("删除应用关联对话历史失败: {}", e.getMessage());
         }
         // 删除应用
-        return super.removeById(id);
+        boolean result = super.removeById(id);
+        // 如果删除的是精选应用，删除缓存
+        if (isGoodApp && result) {
+            try {
+                goodAppCacheUtils.evictAllGoodAppCacheByRedis();
+                log.debug("删除精选应用缓存成功，appId: {}", appId);
+            } catch (Exception e) {
+                // 记录日志但不阻止应用删除
+                log.error("删除精选应用缓存失败，appId: {}, 错误: {}", appId, e.getMessage(), e);
+            }
+        }
+        return result;
     }
 
     @Override
@@ -332,7 +389,7 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         boolean result = this.save(app);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         log.info("应用创建成功，ID: {}, 类型: {}", app.getId(), selectedCodeGenType.getValue());
-    return app.getId();
+        return app.getId();
     }
 
 
