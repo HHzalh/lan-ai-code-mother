@@ -70,12 +70,17 @@ public class PointLogServiceImpl extends ServiceImpl<PointLogMapper, PointLog> i
         // 构建查询条件
         QueryWrapper queryWrapper = new QueryWrapper();
         // 如果传入了userId则使用传入的（普通用户查自己的），否则从queryRequest获取（管理员查指定用户）
+        // 管理员查询时，如果queryRequest.userId为null，则查询所有用户
         Long targetUserId = userId;
         if (targetUserId == null && queryRequest != null) {
             targetUserId = queryRequest.getUserId();
         }
-        ThrowUtils.throwIf(targetUserId == null, ErrorCode.PARAMS_ERROR, "用户ID不能为空");
-        queryWrapper.eq("user_id", targetUserId);
+        
+        // 如果指定了userId（普通用户或管理员指定用户），则加上user_id条件
+        // 如果userId为null（管理员未指定），则不限制user_id，查询所有用户
+        if (targetUserId != null) {
+            queryWrapper.eq("user_id", targetUserId);
+        }
 
         if (queryRequest != null) {
             if (StrUtil.isNotBlank(queryRequest.getBusinessType())) {

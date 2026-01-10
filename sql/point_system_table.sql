@@ -37,7 +37,7 @@ create table if not exists point_log
 (
     id             bigint auto_increment comment 'id' primary key,
     user_id        bigint                             not null comment '用户ID',
-    business_type  varchar(64)                        not null comment '业务类型:SIGN_IN/SIGN_IN_BONUS/INVITE_NEW/INVITE_REWARD/FIRST_USE/DEPLOY/GENERATE/REFUND/SYSTEM等',
+    business_type  varchar(64)                        not null comment '业务类型:SIGN_IN/SIGN_IN_BONUS/REGISTER_REWARD/INVITEE_BONUS/INVITER_BONUS/FIRST_GENERATE/GENERATE/DEPLOY/REFUND/SYSTEM_GRANT等',
     business_id    varchar(128)                       null comment '业务ID(如应用ID、邀请码、被邀请人ID等)',
     point_type     varchar(32)                        not null comment '积分类型:INCOME/EXPENSE',
     point_change   bigint                             not null comment '积分变动数(正数为增加,负数为减少)',
@@ -45,7 +45,7 @@ create table if not exists point_log
     after_points   bigint                             not null comment '变动后积分',
     remark         varchar(512)                       null comment '备注',
     createTime     datetime    default CURRENT_TIMESTAMP not null comment '创建时间',
-    INDEX idx_userId (id),
+    INDEX idx_userId (user_id),
     INDEX idx_businessId (business_id),
     INDEX idx_createTime (createTime),
     INDEX idx_businessType (business_type)
@@ -64,7 +64,7 @@ create table if not exists point_sign_in_record
     is_bonus      tinyint      default 0             not null comment '是否额外奖励(如连续7天等)',
     createTime    datetime    default CURRENT_TIMESTAMP not null comment '创建时间',
     UNIQUE KEY uk_userId_date (user_id, sign_date),
-    INDEX idx_userId (id)
+    INDEX idx_userId (user_id)
 ) comment '签到记录' collate = utf8mb4_unicode_ci;
 
 -- ============================================
@@ -92,10 +92,14 @@ INSERT INTO point_rule (rule_key, rule_value, rule_desc) VALUES
 ('SIGN_IN_CONTINUOUS_3', 20, '连续3天额外奖励'),
 ('SIGN_IN_CONTINUOUS_7', 50, '连续7天额外奖励');
 
+-- 注册奖励规则
+INSERT INTO point_rule (rule_key, rule_value, rule_desc) VALUES 
+('REGISTER_REWARD', 10, '注册奖励（所有新用户注册的基础奖励）');
+
 -- 邀请奖励规则
 INSERT INTO point_rule (rule_key, rule_value, rule_desc) VALUES 
-('INVITE_NEW', 20, '新用户通过邀请码注册获得积分'),
-('INVITE_REWARD', 50, '邀请人获得奖励积分');
+('INVITE_NEW', 20, '被邀请人注册奖励（通过邀请码注册的额外奖励）'),
+('INVITE_REWARD', 50, '邀请人奖励（邀请人获得的奖励）');
 
 -- 消耗积分规则
 INSERT INTO point_rule (rule_key, rule_value, rule_desc) VALUES 
@@ -142,4 +146,3 @@ WHERE isDelete = 0
   AND NOT EXISTS (
       SELECT 1 FROM user_account WHERE user_account.user_id = `user`.id
   );
-

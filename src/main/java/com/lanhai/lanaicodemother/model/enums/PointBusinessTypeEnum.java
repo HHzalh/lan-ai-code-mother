@@ -23,14 +23,19 @@ public enum PointBusinessTypeEnum {
     SIGN_IN_BONUS("SIGN_IN_BONUS", "签到奖励"),
 
     /**
-     * 邀请新用户
+     * 注册奖励（所有新用户注册的基础奖励）
      */
-    INVITE_NEW("INVITE_NEW", "邀请新用户"),
+    REGISTER_REWARD("REGISTER_REWARD", "注册奖励"),
 
     /**
-     * 邀请奖励（邀请人获得的奖励）
+     * 被邀请人奖励（通过邀请码注册的额外奖励）
      */
-    INVITE_REWARD("INVITE_REWARD", "邀请奖励"),
+    INVITEE_BONUS("INVITEE_BONUS", "被邀请人奖励"),
+
+    /**
+     * 邀请人奖励（邀请人获得的奖励）
+     */
+    INVITER_BONUS("INVITER_BONUS", "邀请人奖励"),
 
     /**
      * 首次使用
@@ -65,12 +70,7 @@ public enum PointBusinessTypeEnum {
     /**
      * 系统发放
      */
-    SYSTEM("SYSTEM", "系统发放"),
-
-    /**
-     * 管理员发放
-     */
-    SYSTEM_GRANT("SYSTEM_GRANT", "管理员发放"),
+    SYSTEM_GRANT("SYSTEM_GRANT", "系统发放"),
 
     /**
      * 首次生成奖励

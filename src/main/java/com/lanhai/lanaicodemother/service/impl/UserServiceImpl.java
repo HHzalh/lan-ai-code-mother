@@ -10,9 +10,13 @@ import com.lanhai.lanaicodemother.manager.CosManager;
 import com.lanhai.lanaicodemother.mapper.UserMapper;
 import com.lanhai.lanaicodemother.model.dto.user.UserQueryRequest;
 import com.lanhai.lanaicodemother.model.entity.User;
+import com.lanhai.lanaicodemother.model.entity.UserAccount;
+import com.lanhai.lanaicodemother.model.enums.PointBusinessTypeEnum;
+import com.lanhai.lanaicodemother.model.enums.PointRuleKeyEnum;
 import com.lanhai.lanaicodemother.model.enums.UserRoleEnum;
 import com.lanhai.lanaicodemother.model.vo.LoginUserVO;
 import com.lanhai.lanaicodemother.model.vo.UserVO;
+import com.lanhai.lanaicodemother.service.UserAccountService;
 import com.lanhai.lanaicodemother.service.UserService;
 import com.lanhai.lanaicodemother.utils.MailUtils;
 import com.lanhai.lanaicodemother.utils.RegexUtils;
@@ -55,6 +59,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
+
+    @Resource
+    private UserAccountService userAccountService;
+
+    @Resource
+    private com.lanhai.lanaicodemother.service.PointRuleService pointRuleService;
 
     /**
      * 管理员注册密码（从配置读取，如果未配置则不允许管理员注册）
@@ -106,8 +116,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         // 注册成功后，创建积分账户
-        // 积分账户会在用户首次访问时自动创建
-        // 这里不做任何操作
+        UserAccount account = userAccountService.getOrCreateAccount(user.getId());
+
+        // 发放注册奖励（所有新用户都有的基础奖励）
+        try {
+            Long registerReward = pointRuleService.getRuleValue(PointRuleKeyEnum.REGISTER_REWARD);
+            if (registerReward != null && registerReward > 0) {
+                userAccountService.addPoints(user.getId(), registerReward,
+                        PointBusinessTypeEnum.REGISTER_REWARD.getValue(),
+                        null, "注册奖励");
+                log.info("注册奖励发放成功，用户ID：{}，积分：{}", user.getId(), registerReward);
+            }
+        } catch (Exception e) {
+            // 注册奖励发放失败不影响注册，记录日志即可
+            log.error("发放注册奖励失败，用户ID：{}，错误：{}", user.getId(), e.getMessage(), e);
+        }
 
         return user.getId();
     }

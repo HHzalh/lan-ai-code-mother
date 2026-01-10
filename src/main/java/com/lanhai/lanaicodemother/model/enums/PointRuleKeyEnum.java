@@ -33,14 +33,19 @@ public enum PointRuleKeyEnum {
     SIGN_IN_CONTINUOUS_30("SIGN_IN_CONTINUOUS_30", 30L, "连续30天额外奖励"),
 
     /**
-     * 新用户通过邀请码注册获得积分
+     * 注册奖励（所有新用户注册的基础奖励）
      */
-    INVITE_NEW("INVITE_NEW", 20L, "新用户通过邀请码注册获得积分"),
+    REGISTER_REWARD("REGISTER_REWARD", 10L, "注册奖励"),
 
     /**
-     * 邀请人获得奖励积分
+     * 被邀请人奖励（通过邀请码注册的额外奖励）
      */
-    INVITE_REWARD("INVITE_REWARD", 50L, "邀请人获得奖励积分"),
+    INVITE_NEW("INVITE_NEW", 20L, "被邀请人注册奖励"),
+
+    /**
+     * 邀请人奖励（邀请人获得的奖励）
+     */
+    INVITE_REWARD("INVITE_REWARD", 50L, "邀请人奖励"),
 
     /**
      * 部署应用消耗积分

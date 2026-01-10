@@ -23,11 +23,7 @@ import com.lanhai.lanaicodemother.model.enums.ChatHistoryMessageTypeEnum;
 import com.lanhai.lanaicodemother.model.enums.CodeGenTypeEnum;
 import com.lanhai.lanaicodemother.model.vo.AppVO;
 import com.lanhai.lanaicodemother.model.vo.UserVO;
-import com.lanhai.lanaicodemother.service.AppService;
-import com.lanhai.lanaicodemother.service.ChatHistoryService;
-import com.lanhai.lanaicodemother.service.PointService;
-import com.lanhai.lanaicodemother.service.ScreenshotService;
-import com.lanhai.lanaicodemother.service.UserService;
+import com.lanhai.lanaicodemother.service.*;
 import com.lanhai.lanaicodemother.utils.GoodAppCacheUtils;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
@@ -86,7 +82,7 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
     private PointService pointService;
 
     @Resource
-    private com.lanhai.lanaicodemother.service.PointRuleService pointRuleService;
+    private PointRuleService pointRuleService;
 
     @Override
     public AppVO getAppVO(App app) {

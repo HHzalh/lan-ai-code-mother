@@ -39,3 +39,6 @@ knife4j:
 app:
   admin:
     register-password:
+  # 应用部署域名（包含端口号）
+  code:
+    deploy-host: http://localhost:8123

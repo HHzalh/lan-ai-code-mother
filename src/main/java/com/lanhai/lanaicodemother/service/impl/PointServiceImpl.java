@@ -72,7 +72,7 @@ public class PointServiceImpl implements PointService {
         // 1. 检查是否已经处理过（查询流水记录）
         QueryWrapper queryWrapper = new QueryWrapper();
         queryWrapper.eq("user_id", userId);
-        queryWrapper.eq("business_type", PointBusinessTypeEnum.INVITE_NEW.getValue());
+        queryWrapper.eq("business_type", PointBusinessTypeEnum.INVITEE_BONUS.getValue());
         queryWrapper.eq("business_id", invitationCode);
         long count = pointLogMapper.selectCountByQuery(queryWrapper);
         ThrowUtils.throwIf(count > 0, ErrorCode.OPERATION_ERROR, "该邀请码已使用");
@@ -86,12 +86,12 @@ public class PointServiceImpl implements PointService {
         int updated = userAccountMapper.updateInviteStatsWithVersion(updateInviter, inviterPoints);
         ThrowUtils.throwIf(updated == 0, ErrorCode.OPERATION_ERROR, "更新邀请统计失败");
 
-        // 3. 给被邀请人发放积分
+        // 3. 给被邀请人发放积分（通过邀请码注册的额外奖励）
         Long inviteePoints = pointRuleService.getRuleValue(PointRuleKeyEnum.INVITE_NEW);
-        userAccountService.addPoints(userId, inviteePoints, PointBusinessTypeEnum.INVITE_NEW.getValue(), invitationCode, "邀请注册奖励");
+        userAccountService.addPoints(userId, inviteePoints, PointBusinessTypeEnum.INVITEE_BONUS.getValue(), invitationCode, "被邀请人注册奖励");
 
         // 4. 给邀请人发放积分
-        userAccountService.addPoints(inviterId, inviterPoints, PointBusinessTypeEnum.INVITE_REWARD.getValue(), String.valueOf(userId), "邀请用户注册奖励");
+        userAccountService.addPoints(inviterId, inviterPoints, PointBusinessTypeEnum.INVITER_BONUS.getValue(), String.valueOf(userId), "邀请人奖励");
 
         log.info("邀请奖励发放成功，被邀请人ID：{}，邀请人ID：{}，被邀请人获得积分：{}，邀请人获得积分：{}",
                 userId, inviterId, inviteePoints, inviterPoints);
@@ -207,9 +207,12 @@ public class PointServiceImpl implements PointService {
         ThrowUtils.throwIf(points == null || points <= 0, ErrorCode.PARAMS_ERROR, "积分数必须大于0");
         ThrowUtils.throwIf(StrUtil.isBlank(remark), ErrorCode.PARAMS_ERROR, "备注不能为空");
 
-        // 检查用户账户是否存在
+        // 检查用户账户是否存在，不存在则创建
         UserAccount account = userAccountService.getByUserId(userId);
-        ThrowUtils.throwIf(account == null, ErrorCode.NOT_FOUND_ERROR, "用户积分账户不存在");
+        if (account == null) {
+            log.warn("用户积分账户不存在，自动创建，用户ID：{}", userId);
+            account = userAccountService.getOrCreateAccount(userId);
+        }
 
         // 发放积分
         boolean result = userAccountService.addPoints(userId, points,
