@@ -64,3 +64,5 @@ create table chat_history
 ) comment '对话历史' collate = utf8mb4_unicode_ci;
 
 
+# # 升级为 MEDIUMTEXT (最大 16MB)
+ALTER TABLE chat_history MODIFY COLUMN message MEDIUMTEXT NOT NULL COMMENT '消息';
