@@ -74,3 +74,4 @@ public class PointSignInRecord implements Serializable {
 
 }
 
+

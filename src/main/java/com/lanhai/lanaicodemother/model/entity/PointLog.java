@@ -42,7 +42,7 @@ public class PointLog implements Serializable {
     private Long userId;
 
     /**
-     * 业务类型:SIGN_IN/SIGN_IN_BONUS/REGISTER_REWARD/INVITEE_BONUS/INVITER_BONUS/FIRST_GENERATE/GENERATE/DEPLOY/REFUND/SYSTEM_GRANT等
+     * 业务类型:SIGN_IN/SIGN_IN_BONUS/REGISTER_REWARD/INVITEE_BONUS/INVITER_BONUS/GENERATE/DEPLOY/REFUND/SYSTEM_GRANT等
      */
     @Column("business_type")
     private String businessType;

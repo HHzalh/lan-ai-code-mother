@@ -1,7 +1,9 @@
 package com.lanhai.lanaicodemother.service;
 
+import com.lanhai.lanaicodemother.model.dto.point.UserAccountQueryRequest;
 import com.lanhai.lanaicodemother.model.entity.UserAccount;
 import com.lanhai.lanaicodemother.model.vo.point.UserAccountVO;
+import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.service.IService;
 
 /**
@@ -28,6 +30,14 @@ public interface UserAccountService extends IService<UserAccount> {
     UserAccountVO getAccountVO(Long userId);
 
     /**
+     * 分页查询积分账户（管理员）
+     *
+     * @param queryRequest 查询请求
+     * @return 分页结果
+     */
+    Page<UserAccountVO> pageAccounts(UserAccountQueryRequest queryRequest);
+
+    /**
      * 创建或获取用户的积分账户（如果不存在则创建）
      *
      * @param userId 用户ID
@@ -46,11 +56,11 @@ public interface UserAccountService extends IService<UserAccount> {
     /**
      * 增加积分（乐观锁）
      *
-     * @param userId 用户ID
-     * @param points 增加的积分数
+     * @param userId       用户ID
+     * @param points       增加的积分数
      * @param businessType 业务类型
-     * @param businessId 业务ID
-     * @param remark 备注
+     * @param businessId   业务ID
+     * @param remark       备注
      * @return 是否成功
      */
     boolean addPoints(Long userId, Long points, String businessType, String businessId, String remark);
@@ -58,14 +68,15 @@ public interface UserAccountService extends IService<UserAccount> {
     /**
      * 扣减积分（乐观锁）
      *
-     * @param userId 用户ID
-     * @param points 扣减的积分数
+     * @param userId       用户ID
+     * @param points       扣减的积分数
      * @param businessType 业务类型
-     * @param businessId 业务ID
-     * @param remark 备注
+     * @param businessId   业务ID
+     * @param remark       备注
      * @return 是否成功
      */
     boolean deductPoints(Long userId, Long points, String businessType, String businessId, String remark);
 
 }
+
 

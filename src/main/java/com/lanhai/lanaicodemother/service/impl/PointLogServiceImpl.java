@@ -2,8 +2,6 @@ package com.lanhai.lanaicodemother.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
-import com.lanhai.lanaicodemother.exception.ErrorCode;
-import com.lanhai.lanaicodemother.exception.ThrowUtils;
 import com.lanhai.lanaicodemother.mapper.PointLogMapper;
 import com.lanhai.lanaicodemother.model.dto.point.PointLogQueryRequest;
 import com.lanhai.lanaicodemother.model.entity.PointLog;
@@ -75,7 +73,7 @@ public class PointLogServiceImpl extends ServiceImpl<PointLogMapper, PointLog> i
         if (targetUserId == null && queryRequest != null) {
             targetUserId = queryRequest.getUserId();
         }
-        
+
         // 如果指定了userId（普通用户或管理员指定用户），则加上user_id条件
         // 如果userId为null（管理员未指定），则不限制user_id，查询所有用户
         if (targetUserId != null) {

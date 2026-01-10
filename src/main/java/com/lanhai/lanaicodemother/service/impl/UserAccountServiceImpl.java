@@ -5,16 +5,19 @@ import com.lanhai.lanaicodemother.exception.ErrorCode;
 import com.lanhai.lanaicodemother.exception.ThrowUtils;
 import com.lanhai.lanaicodemother.mapper.PointLogMapper;
 import com.lanhai.lanaicodemother.mapper.UserAccountMapper;
+import com.lanhai.lanaicodemother.model.dto.point.UserAccountQueryRequest;
 import com.lanhai.lanaicodemother.model.entity.UserAccount;
 import com.lanhai.lanaicodemother.model.enums.PointTypeEnum;
 import com.lanhai.lanaicodemother.model.vo.point.UserAccountVO;
 import com.lanhai.lanaicodemother.service.PointLogService;
 import com.lanhai.lanaicodemother.service.UserAccountService;
 import com.lanhai.lanaicodemother.utils.InvitationCodeUtils;
+import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,6 +52,62 @@ public class UserAccountServiceImpl extends ServiceImpl<UserAccountMapper, UserA
         UserAccountVO vo = new UserAccountVO();
         BeanUtil.copyProperties(account, vo);
         return vo;
+    }
+
+    @Override
+    public Page<UserAccountVO> pageAccounts(UserAccountQueryRequest queryRequest) {
+        QueryWrapper queryWrapper = new QueryWrapper();
+
+        // 用户ID
+        if (queryRequest.getUserId() != null) {
+            queryWrapper.eq("user_id", queryRequest.getUserId());
+        }
+
+        // 邀请码
+        if (StringUtils.isNotBlank(queryRequest.getInvitationCode())) {
+            queryWrapper.eq("invitation_code", queryRequest.getInvitationCode());
+        }
+
+        // 可用积分范围
+        if (queryRequest.getMinAvailablePoints() != null) {
+            queryWrapper.ge("available_points", queryRequest.getMinAvailablePoints());
+        }
+        if (queryRequest.getMaxAvailablePoints() != null) {
+            queryWrapper.le("available_points", queryRequest.getMaxAvailablePoints());
+        }
+
+        // 累计积分范围
+        if (queryRequest.getMinTotalPoints() != null) {
+            queryWrapper.ge("total_points", queryRequest.getMinTotalPoints());
+        }
+        if (queryRequest.getMaxTotalPoints() != null) {
+            queryWrapper.le("total_points", queryRequest.getMaxTotalPoints());
+        }
+
+        // 按创建时间倒序
+        queryWrapper.orderBy("createTime", false);
+
+        // 分页查询
+        int pageSize = queryRequest != null ? queryRequest.getPageSize() : 10;
+        int pageNum = queryRequest != null ? queryRequest.getPageNum() : 1;
+        Page<UserAccount> accountPage = this.mapper.paginate(pageNum, pageSize, queryWrapper);
+
+
+        // 转换为VO
+        Page<UserAccountVO> voPage = new Page<>();
+        voPage.setPageNumber(accountPage.getPageNumber());
+        voPage.setPageSize(accountPage.getPageSize());
+        voPage.setTotalRow(accountPage.getTotalRow());
+        voPage.setTotalPage(accountPage.getTotalPage());
+        voPage.setRecords(accountPage.getRecords().stream()
+                .map(account -> {
+                    UserAccountVO vo = new UserAccountVO();
+                    BeanUtil.copyProperties(account, vo);
+                    return vo;
+                })
+                .toList());
+
+        return voPage;
     }
 
     @Override

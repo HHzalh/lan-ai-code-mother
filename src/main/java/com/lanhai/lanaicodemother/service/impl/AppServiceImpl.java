@@ -21,6 +21,7 @@ import com.lanhai.lanaicodemother.model.entity.App;
 import com.lanhai.lanaicodemother.model.entity.User;
 import com.lanhai.lanaicodemother.model.enums.ChatHistoryMessageTypeEnum;
 import com.lanhai.lanaicodemother.model.enums.CodeGenTypeEnum;
+import com.lanhai.lanaicodemother.model.enums.PointRuleKeyEnum;
 import com.lanhai.lanaicodemother.model.vo.AppVO;
 import com.lanhai.lanaicodemother.model.vo.UserVO;
 import com.lanhai.lanaicodemother.service.*;
@@ -178,7 +179,7 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
             return streamHandlerExecutor.doExecute(codeStream, chatHistoryService, appId, loginUser, codeGenTypeEnum);
         } catch (Exception e) {
             // 生成失败，退还积分
-            Long generateCost = pointRuleService.getRuleValue(com.lanhai.lanaicodemother.model.enums.PointRuleKeyEnum.GENERATE_COST);
+            Long generateCost = pointRuleService.getRuleValue(PointRuleKeyEnum.GENERATE_COST);
             log.error("生成应用失败，开始退还积分，用户ID：{}，应用ID：{}，退还积分：{}", loginUser.getId(), appId, generateCost);
             pointService.refundPoints(loginUser.getId(), appId, generateCost);
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "生成应用失败：" + e.getMessage());
@@ -258,15 +259,15 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
     @Override
     public void generateAppScreenshotAsync(Long appId, String appUrl) {
         // 使用虚拟线程异步执行
-        Thread.startVirtualThread(() ->  {
-                // 调用截图服务生成截图并上传
-                String screenshotUrl = screenshotService.generateAndUploadScreenshot(appUrl);
-                // 更新应用封面字段
-                App updateApp = new App();
-                updateApp.setId(appId);
-                updateApp.setCover(screenshotUrl);
-                boolean updated = this.updateById(updateApp);
-                ThrowUtils.throwIf(!updated, ErrorCode.OPERATION_ERROR, "更新应用封面字段失败");
+        Thread.startVirtualThread(() -> {
+            // 调用截图服务生成截图并上传
+            String screenshotUrl = screenshotService.generateAndUploadScreenshot(appUrl);
+            // 更新应用封面字段
+            App updateApp = new App();
+            updateApp.setId(appId);
+            updateApp.setCover(screenshotUrl);
+            boolean updated = this.updateById(updateApp);
+            ThrowUtils.throwIf(!updated, ErrorCode.OPERATION_ERROR, "更新应用封面字段失败");
         });
     }
 

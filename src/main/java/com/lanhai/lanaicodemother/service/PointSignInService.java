@@ -1,6 +1,5 @@
 package com.lanhai.lanaicodemother.service;
 
-import com.lanhai.lanaicodemother.model.dto.point.PointSignInRequest;
 import com.lanhai.lanaicodemother.model.dto.point.PointSignInResponse;
 import com.lanhai.lanaicodemother.model.vo.point.PointSignInRecordVO;
 
@@ -33,9 +32,9 @@ public interface PointSignInService {
     /**
      * 获取签到日历
      *
-     * @param userId 用户ID
+     * @param userId    用户ID
      * @param startDate 开始日期
-     * @param endDate 结束日期
+     * @param endDate   结束日期
      * @return 签到记录列表
      */
     List<PointSignInRecordVO> getSignInCalendar(Long userId, LocalDate startDate, LocalDate endDate);

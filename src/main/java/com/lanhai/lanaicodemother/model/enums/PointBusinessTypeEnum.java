@@ -38,11 +38,6 @@ public enum PointBusinessTypeEnum {
     INVITER_BONUS("INVITER_BONUS", "邀请人奖励"),
 
     /**
-     * 首次使用
-     */
-    FIRST_USE("FIRST_USE", "首次使用"),
-
-    /**
      * 部署应用
      */
     DEPLOY("DEPLOY", "部署应用"),
@@ -70,12 +65,7 @@ public enum PointBusinessTypeEnum {
     /**
      * 系统发放
      */
-    SYSTEM_GRANT("SYSTEM_GRANT", "系统发放"),
-
-    /**
-     * 首次生成奖励
-     */
-    FIRST_GENERATE("FIRST_GENERATE", "首次生成奖励");
+    SYSTEM_GRANT("SYSTEM_GRANT", "系统发放");
 
     /**
      * 枚举值

@@ -115,16 +115,6 @@ public class PointServiceImpl implements PointService {
         queryWrapper.eq("business_type", PointBusinessTypeEnum.GENERATE.getValue());
         long count = pointLogMapper.selectCountByQuery(queryWrapper);
 
-        if (count == 0) {
-            // 首次生成，不消耗，反而奖励
-            Long firstGeneratePoints = pointRuleService.getRuleValue(PointRuleKeyEnum.FIRST_GENERATE);
-            userAccountService.addPoints(userId, firstGeneratePoints,
-                    PointBusinessTypeEnum.FIRST_GENERATE.getValue(), String.valueOf(appId), "首次生成应用奖励");
-            log.info("首次生成应用奖励发放成功，用户ID：{}，应用ID：{}，积分：{}", userId, appId, firstGeneratePoints);
-            return true;
-        }
-
-        // 2. 非首次生成，检查积分是否足够
         Long generateCost = pointRuleService.getRuleValue(PointRuleKeyEnum.GENERATE_COST);
         if (!checkPointsEnough(userId, generateCost)) {
             throw new RuntimeException("积分不足，需要" + generateCost + "积分");
@@ -159,7 +149,7 @@ public class PointServiceImpl implements PointService {
     @Transactional(rollbackFor = Exception.class)
     public boolean refundPoints(Long userId, Long appId, Long points) {
         // 使用虚拟线程异步处理退款
-        Thread.startVirtualThread(() ->  {
+        Thread.startVirtualThread(() -> {
             try {
                 userAccountService.addPoints(userId, points,
                         PointBusinessTypeEnum.REFUND.getValue(), String.valueOf(appId), "应用操作失败退款");
@@ -192,9 +182,6 @@ public class PointServiceImpl implements PointService {
         }
         if (continuousDays >= 7) {
             bonusPoints += pointRuleService.getRuleValue(PointRuleKeyEnum.SIGN_IN_CONTINUOUS_7);
-        }
-        if (continuousDays >= 30) {
-            bonusPoints += pointRuleService.getRuleValue(PointRuleKeyEnum.SIGN_IN_CONTINUOUS_30);
         }
 
         return basePoints + bonusPoints;

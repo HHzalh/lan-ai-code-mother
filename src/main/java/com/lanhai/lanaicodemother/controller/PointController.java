@@ -8,8 +8,8 @@ import com.lanhai.lanaicodemother.exception.ThrowUtils;
 import com.lanhai.lanaicodemother.model.dto.point.PointLogQueryRequest;
 import com.lanhai.lanaicodemother.model.dto.point.PointRuleUpdateRequest;
 import com.lanhai.lanaicodemother.model.dto.point.PointSignInResponse;
+import com.lanhai.lanaicodemother.model.dto.point.UserAccountQueryRequest;
 import com.lanhai.lanaicodemother.model.entity.User;
-import com.lanhai.lanaicodemother.model.enums.UserRoleEnum;
 import com.lanhai.lanaicodemother.model.vo.point.PointLogVO;
 import com.lanhai.lanaicodemother.model.vo.point.PointRuleVO;
 import com.lanhai.lanaicodemother.model.vo.point.PointSignInRecordVO;
@@ -110,31 +110,43 @@ public class PointController {
     }
 
     /**
-     * 获取积分流水
-     * 普通用户只能查询自己的流水，管理员可以查询指定用户的流水
+     * 获取我的积分流水（普通用户专用）
+     * 只能查询当前登录用户的流水，无需传递用户ID
      *
-     * @param request       HTTP请求
-     * @param queryRequest  查询请求
+     * @param request      HTTP请求
+     * @param queryRequest 查询请求
+     * @return 分页结果
+     */
+    @PostMapping("/my-logs")
+    public BaseResponse<Page<PointLogVO>> getMyLogs(
+            HttpServletRequest request,
+            @RequestBody PointLogQueryRequest queryRequest) {
+        User loginUser = userService.getLoginUser(request);
+        ThrowUtils.throwIf(queryRequest == null, ErrorCode.PARAMS_ERROR, "查询参数不能为空");
+
+        // 强制使用当前登录用户的ID
+        Page<PointLogVO> page = pointLogService.pageLogs(loginUser.getId(), queryRequest);
+        return ResultUtils.success(page);
+    }
+
+    /**
+     * 获取积分流水（管理员专用）
+     * 可以查询指定用户的流水，也可以查询所有用户的流水
+     *
+     * @param request      HTTP请求
+     * @param queryRequest 查询请求
      * @return 分页结果
      */
     @PostMapping("/logs")
+    @AuthCheck(mustRole = "admin")
     public BaseResponse<Page<PointLogVO>> getLogs(
             HttpServletRequest request,
             @RequestBody PointLogQueryRequest queryRequest) {
         User loginUser = userService.getLoginUser(request);
         ThrowUtils.throwIf(queryRequest == null, ErrorCode.PARAMS_ERROR, "查询参数不能为空");
 
-        // 普通用户只能查询自己的流水，管理员可以查询指定用户的流水
-        Long targetUserId;
-        if (UserRoleEnum.ADMIN.getValue().equals(loginUser.getUserRole())) {
-            // 管理员：从请求中获取要查询的用户ID，如果为空则查所有用户
-            targetUserId = queryRequest.getUserId();
-        } else {
-            // 普通用户：只能查询自己的流水
-            targetUserId = loginUser.getId();
-        }
-
-        Page<PointLogVO> page = pointLogService.pageLogs(targetUserId, queryRequest);
+        // 管理员可以查询指定用户的流水，如果userId为空则查询所有用户
+        Page<PointLogVO> page = pointLogService.pageLogs(queryRequest.getUserId(), queryRequest);
         return ResultUtils.success(page);
     }
 
@@ -176,6 +188,20 @@ public class PointController {
     public BaseResponse<List<PointRuleVO>> getAllRules() {
         List<PointRuleVO> rules = pointRuleService.getAllRules();
         return ResultUtils.success(rules);
+    }
+
+    /**
+     * 获取用户积分账户列表（管理员）
+     *
+     * @param queryRequest 查询请求
+     * @return 分页结果
+     */
+    @PostMapping("/accounts")
+    @AuthCheck(mustRole = "admin")
+    public BaseResponse<Page<UserAccountVO>> listAccounts(@RequestBody UserAccountQueryRequest queryRequest) {
+        ThrowUtils.throwIf(queryRequest == null, ErrorCode.PARAMS_ERROR, "查询参数不能为空");
+        Page<UserAccountVO> page = userAccountService.pageAccounts(queryRequest);
+        return ResultUtils.success(page);
     }
 
     /**

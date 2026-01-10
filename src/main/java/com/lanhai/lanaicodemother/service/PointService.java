@@ -1,8 +1,5 @@
 package com.lanhai.lanaicodemother.service;
 
-import com.lanhai.lanaicodemother.model.entity.App;
-import com.lanhai.lanaicodemother.model.entity.User;
-
 /**
  * 积分系统综合服务层。
  * 提供积分消耗、邀请码处理等综合业务
@@ -14,7 +11,7 @@ public interface PointService {
     /**
      * 处理用户注册时的邀请码
      *
-     * @param userId 用户ID
+     * @param userId         用户ID
      * @param invitationCode 邀请码
      */
     void handleInvitationCode(Long userId, String invitationCode);
@@ -22,7 +19,7 @@ public interface PointService {
     /**
      * 检查用户积分是否足够
      *
-     * @param userId 用户ID
+     * @param userId         用户ID
      * @param requiredPoints 需要的积分数
      * @return 是否足够
      */
@@ -32,7 +29,7 @@ public interface PointService {
      * 消耗积分（生成应用）
      *
      * @param userId 用户ID
-     * @param appId 应用ID
+     * @param appId  应用ID
      * @return 是否成功
      */
     boolean consumePointsForGenerate(Long userId, Long appId);
@@ -41,7 +38,7 @@ public interface PointService {
      * 消耗积分（部署应用）
      *
      * @param userId 用户ID
-     * @param appId 应用ID
+     * @param appId  应用ID
      * @return 是否成功
      */
     boolean consumePointsForDeploy(Long userId, Long appId);
@@ -50,7 +47,7 @@ public interface PointService {
      * 退还积分（生成/部署失败时）
      *
      * @param userId 用户ID
-     * @param appId 应用ID
+     * @param appId  应用ID
      * @param points 要退还的积分数
      * @return 是否成功
      */
