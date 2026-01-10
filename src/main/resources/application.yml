@@ -4,8 +4,8 @@ spring:
   # session 配置
   session:
     store-type: redis
-    # session 30 天过期
-    timeout: 2592000
+    # session 7 天过期
+    timeout: 604800
   # mysql - 具体配置在 profile 文件中（application-local.yml 或 application-prod.yml）
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -19,10 +19,10 @@ server:
   port: 8123
   servlet:
     context-path: /api
-    # cookie 30 天过期
+    # cookie 7 天过期
     session:
       cookie:
-        max-age: 2592000
+        max-age: 604800
 
 # springdoc-openapi
 springdoc:
