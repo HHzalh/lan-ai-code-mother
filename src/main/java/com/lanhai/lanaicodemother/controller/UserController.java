@@ -17,6 +17,7 @@ import com.lanhai.lanaicodemother.service.UserService;
 import com.mybatisflex.core.paginate.Page;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -27,12 +28,16 @@ import java.util.List;
  *
  * @author <a href="https://gitee.com/hhzalh">致爱蓝海</a>
  */
+@Slf4j
 @RestController
 @RequestMapping("/user")
 public class UserController {
 
     @Resource
     private UserService userService;
+
+    @Resource
+    private com.lanhai.lanaicodemother.service.PointService pointService;
 
     /**
      * 用户注册
@@ -46,8 +51,23 @@ public class UserController {
         String userAccount = userRegisterRequest.getUserAccount();
         String userPassword = userRegisterRequest.getUserPassword();
         String checkPassword = userRegisterRequest.getCheckPassword();
-        long result = userService.userRegister(userAccount, userPassword, checkPassword);
-        return ResultUtils.success(result);
+        String invitationCode = userRegisterRequest.getInvitationCode();
+
+        // 1. 注册用户
+        long userId = userService.userRegister(userAccount, userPassword, checkPassword);
+
+        // 2. 处理邀请码（如果填写了）
+        if (cn.hutool.core.util.StrUtil.isNotBlank(invitationCode)) {
+            try {
+                pointService.handleInvitationCode(userId, invitationCode);
+            } catch (Exception e) {
+                // 邀请码处理失败不影响注册，记录日志即可
+                log.error("处理邀请码失败，用户ID：{}，邀请码：{}，错误：{}",
+                        userId, invitationCode, e.getMessage(), e);
+            }
+        }
+
+        return ResultUtils.success(userId);
     }
 
     /**

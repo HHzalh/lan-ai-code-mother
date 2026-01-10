@@ -25,6 +25,7 @@ import com.lanhai.lanaicodemother.model.vo.AppVO;
 import com.lanhai.lanaicodemother.model.vo.UserVO;
 import com.lanhai.lanaicodemother.service.AppService;
 import com.lanhai.lanaicodemother.service.ChatHistoryService;
+import com.lanhai.lanaicodemother.service.PointService;
 import com.lanhai.lanaicodemother.service.ScreenshotService;
 import com.lanhai.lanaicodemother.service.UserService;
 import com.lanhai.lanaicodemother.utils.GoodAppCacheUtils;
@@ -80,6 +81,12 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
 
     @Resource
     private GoodAppCacheUtils goodAppCacheUtils;
+
+    @Resource
+    private PointService pointService;
+
+    @Resource
+    private com.lanhai.lanaicodemother.service.PointRuleService pointRuleService;
 
     @Override
     public AppVO getAppVO(App app) {
@@ -163,10 +170,23 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         }
         // 5. 通过校验后，添加用户消息到对话历史
         chatHistoryService.addChatMessage(appId, message, ChatHistoryMessageTypeEnum.USER.getValue(), loginUser.getId());
-        // 6. 调用 AI 生成代码（流式）
-        Flux<String> codeStream = aiCodeGeneratorFacade.generateAndSaveCodeStream(message, codeGenTypeEnum, appId);
-        // 7. 收集 AI 响应内容并在完成后记录到对话历史
-        return streamHandlerExecutor.doExecute(codeStream, chatHistoryService, appId, loginUser, codeGenTypeEnum);
+
+        // 6. 消耗积分（非首次生成）
+        try {
+            pointService.consumePointsForGenerate(loginUser.getId(), appId);
+
+            // 7. 调用 AI 生成代码（流式）
+            Flux<String> codeStream = aiCodeGeneratorFacade.generateAndSaveCodeStream(message, codeGenTypeEnum, appId);
+
+            // 8. 收集 AI 响应内容并在完成后记录到对话历史
+            return streamHandlerExecutor.doExecute(codeStream, chatHistoryService, appId, loginUser, codeGenTypeEnum);
+        } catch (Exception e) {
+            // 生成失败，退还积分
+            Long generateCost = pointRuleService.getRuleValue(com.lanhai.lanaicodemother.model.enums.PointRuleKeyEnum.GENERATE_COST);
+            log.error("生成应用失败，开始退还积分，用户ID：{}，应用ID：{}，退还积分：{}", loginUser.getId(), appId, generateCost);
+            pointService.refundPoints(loginUser.getId(), appId, generateCost);
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "生成应用失败：" + e.getMessage());
+        }
     }
 
     @Override
@@ -181,7 +201,9 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         if (!app.getUserId().equals(loginUser.getId())) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限部署该应用");
         }
-        // 4. 检查是否已有 deployKey
+        // 4. 消耗积分
+        pointService.consumePointsForDeploy(loginUser.getId(), appId);
+        // 5. 检查是否已有 deployKey
         String deployKey = app.getDeployKey();
         // 没有则生成 6 位 deployKey（大小写字母 + 数字）
         if (StrUtil.isBlank(deployKey)) {
@@ -240,15 +262,15 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
     @Override
     public void generateAppScreenshotAsync(Long appId, String appUrl) {
         // 使用虚拟线程异步执行
-        Thread.startVirtualThread(() -> {
-            // 调用截图服务生成截图并上传
-            String screenshotUrl = screenshotService.generateAndUploadScreenshot(appUrl);
-            // 更新应用封面字段
-            App updateApp = new App();
-            updateApp.setId(appId);
-            updateApp.setCover(screenshotUrl);
-            boolean updated = this.updateById(updateApp);
-            ThrowUtils.throwIf(!updated, ErrorCode.OPERATION_ERROR, "更新应用封面字段失败");
+        Thread.startVirtualThread(() ->  {
+                // 调用截图服务生成截图并上传
+                String screenshotUrl = screenshotService.generateAndUploadScreenshot(appUrl);
+                // 更新应用封面字段
+                App updateApp = new App();
+                updateApp.setId(appId);
+                updateApp.setCover(screenshotUrl);
+                boolean updated = this.updateById(updateApp);
+                ThrowUtils.throwIf(!updated, ErrorCode.OPERATION_ERROR, "更新应用封面字段失败");
         });
     }
 
@@ -267,10 +289,10 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         App oldApp = this.getById(entity.getId());
         Integer oldPriority = oldApp != null ? oldApp.getPriority() : null;
         Integer newPriority = entity.getPriority();
-        
+
         // 执行更新
         boolean result = super.updateById(entity);
-        
+
         // 判断是否需要删除缓存：
         // 1. 修改前是精选应用（应用信息可能改变）
         // 2. 修改后是精选应用（新增或保持精选状态，但信息改变了）

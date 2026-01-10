@@ -1,0 +1,236 @@
+package com.lanhai.lanaicodemother.controller;
+
+import com.lanhai.lanaicodemother.annotation.AuthCheck;
+import com.lanhai.lanaicodemother.common.BaseResponse;
+import com.lanhai.lanaicodemother.common.ResultUtils;
+import com.lanhai.lanaicodemother.exception.ErrorCode;
+import com.lanhai.lanaicodemother.exception.ThrowUtils;
+import com.lanhai.lanaicodemother.model.dto.point.PointLogQueryRequest;
+import com.lanhai.lanaicodemother.model.dto.point.PointRuleUpdateRequest;
+import com.lanhai.lanaicodemother.model.dto.point.PointSignInResponse;
+import com.lanhai.lanaicodemother.model.entity.User;
+import com.lanhai.lanaicodemother.model.enums.UserRoleEnum;
+import com.lanhai.lanaicodemother.model.vo.point.PointLogVO;
+import com.lanhai.lanaicodemother.model.vo.point.PointRuleVO;
+import com.lanhai.lanaicodemother.model.vo.point.PointSignInRecordVO;
+import com.lanhai.lanaicodemother.model.vo.point.UserAccountVO;
+import com.lanhai.lanaicodemother.service.*;
+import com.mybatisflex.core.paginate.Page;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+import java.util.List;
+
+/**
+ * 积分系统 控制层。
+ *
+ * @author 积分系统
+ */
+@RestController
+@RequestMapping("/point")
+public class PointController {
+
+    @Resource
+    private UserAccountService userAccountService;
+
+    @Resource
+    private PointSignInService pointSignInService;
+
+    @Resource
+    private PointLogService pointLogService;
+
+    @Resource
+    private PointRuleService pointRuleService;
+
+    @Resource
+    private PointService pointService;
+
+    @Resource
+    private UserService userService;
+
+    /**
+     * 获取我的积分账户
+     *
+     * @param request HTTP请求
+     * @return 积分账户VO
+     */
+    @GetMapping("/account")
+    public BaseResponse<UserAccountVO> getMyAccount(HttpServletRequest request) {
+        User loginUser = userService.getLoginUser(request);
+        UserAccountVO accountVO = userAccountService.getAccountVO(loginUser.getId());
+        return ResultUtils.success(accountVO);
+    }
+
+    /**
+     * 用户签到
+     *
+     * @param request HTTP请求
+     * @return 签到结果
+     */
+    @PostMapping("/sign-in")
+    public BaseResponse<PointSignInResponse> signIn(HttpServletRequest request) {
+        User loginUser = userService.getLoginUser(request);
+        PointSignInResponse response = pointSignInService.signIn(loginUser.getId());
+        return ResultUtils.success(response);
+    }
+
+    /**
+     * 获取今日签到状态
+     *
+     * @param request HTTP请求
+     * @return 签到状态
+     */
+    @GetMapping("/sign-status")
+    public BaseResponse<Boolean> getSignStatus(HttpServletRequest request) {
+        User loginUser = userService.getLoginUser(request);
+        Boolean signed = pointSignInService.getTodaySignInStatus(loginUser.getId());
+        return ResultUtils.success(signed);
+    }
+
+    /**
+     * 获取签到日历
+     *
+     * @param request   HTTP请求
+     * @param startDate 开始日期
+     * @param endDate   结束日期
+     * @return 签到记录列表
+     */
+    @GetMapping("/sign-calendar")
+    public BaseResponse<List<PointSignInRecordVO>> getSignInCalendar(
+            HttpServletRequest request,
+            @RequestParam(required = false) LocalDate startDate,
+            @RequestParam(required = false) LocalDate endDate) {
+        User loginUser = userService.getLoginUser(request);
+        List<PointSignInRecordVO> calendar = pointSignInService.getSignInCalendar(
+                loginUser.getId(), startDate, endDate);
+        return ResultUtils.success(calendar);
+    }
+
+    /**
+     * 获取积分流水
+     * 普通用户只能查询自己的流水，管理员可以查询指定用户的流水
+     *
+     * @param request       HTTP请求
+     * @param queryRequest  查询请求
+     * @return 分页结果
+     */
+    @PostMapping("/logs")
+    public BaseResponse<Page<PointLogVO>> getLogs(
+            HttpServletRequest request,
+            @RequestBody PointLogQueryRequest queryRequest) {
+        User loginUser = userService.getLoginUser(request);
+        ThrowUtils.throwIf(queryRequest == null, ErrorCode.PARAMS_ERROR, "查询参数不能为空");
+
+        // 普通用户只能查询自己的流水，管理员可以查询指定用户的流水
+        Long targetUserId;
+        if (UserRoleEnum.ADMIN.getValue().equals(loginUser.getUserRole())) {
+            // 管理员：从请求中获取要查询的用户ID，如果为空则查所有用户
+            targetUserId = queryRequest.getUserId();
+        } else {
+            // 普通用户：只能查询自己的流水
+            targetUserId = loginUser.getId();
+        }
+
+        Page<PointLogVO> page = pointLogService.pageLogs(targetUserId, queryRequest);
+        return ResultUtils.success(page);
+    }
+
+    /**
+     * 获取我的邀请码
+     *
+     * @param request HTTP请求
+     * @return 邀请码信息
+     */
+    @GetMapping("/invitation/my-code")
+    public BaseResponse<String> getMyInvitationCode(HttpServletRequest request) {
+        User loginUser = userService.getLoginUser(request);
+        String code = userAccountService.getOrCreateInvitationCode(loginUser.getId());
+        return ResultUtils.success(code);
+    }
+
+    /**
+     * 处理邀请码（在注册时调用）
+     *
+     * @param request        HTTP请求
+     * @param invitationCode 邀请码
+     * @return 处理结果
+     */
+    @PostMapping("/invitation/handle")
+    public BaseResponse<Void> handleInvitationCode(
+            HttpServletRequest request,
+            @RequestParam String invitationCode) {
+        User loginUser = userService.getLoginUser(request);
+        pointService.handleInvitationCode(loginUser.getId(), invitationCode);
+        return ResultUtils.success(null);
+    }
+
+    /**
+     * 获取积分规则（管理员）
+     *
+     * @return 规则列表
+     */
+    @GetMapping("/rules/all")
+    public BaseResponse<List<PointRuleVO>> getAllRules() {
+        List<PointRuleVO> rules = pointRuleService.getAllRules();
+        return ResultUtils.success(rules);
+    }
+
+    /**
+     * 更新积分规则（管理员）
+     *
+     * @param updateRequest 更新请求
+     * @return 更新结果
+     */
+    @PutMapping("/rules")
+    @AuthCheck(mustRole = "admin")
+    public BaseResponse<Boolean> updateRule(@RequestBody PointRuleUpdateRequest updateRequest) {
+        ThrowUtils.throwIf(updateRequest == null, ErrorCode.PARAMS_ERROR, "参数不能为空");
+        boolean updated = pointRuleService.updateRule(updateRequest);
+        return ResultUtils.success(updated);
+    }
+
+
+    /**
+     * 管理员给用户发放积分
+     *
+     * @param userId 用户ID
+     * @param points 积分数
+     * @param remark 备注
+     * @return 发放结果
+     */
+    @PostMapping("/rules/grant")
+    @AuthCheck(mustRole = "admin")
+    public BaseResponse<Boolean> grantPoints(
+            @RequestParam Long userId,
+            @RequestParam Long points,
+            @RequestParam String remark) {
+        ThrowUtils.throwIf(userId == null, ErrorCode.PARAMS_ERROR, "用户ID不能为空");
+        ThrowUtils.throwIf(points == null || points <= 0, ErrorCode.PARAMS_ERROR, "积分数必须大于0");
+        ThrowUtils.throwIf(StringUtils.isBlank(remark), ErrorCode.PARAMS_ERROR, "备注不能为空");
+        boolean granted = pointService.grantPoints(userId, points, remark);
+        return ResultUtils.success(granted);
+    }
+
+    /**
+     * 管理员给所有用户发放积分
+     *
+     * @param points 积分数
+     * @param remark 备注
+     * @return 发放结果
+     */
+    @PostMapping("/rules/grant-all")
+    @AuthCheck(mustRole = "admin")
+    public BaseResponse<Integer> grantPointsToAll(
+            @RequestParam Long points,
+            @RequestParam String remark) {
+        ThrowUtils.throwIf(points == null || points <= 0, ErrorCode.PARAMS_ERROR, "积分数必须大于0");
+        ThrowUtils.throwIf(StringUtils.isBlank(remark), ErrorCode.PARAMS_ERROR, "备注不能为空");
+        int count = pointService.grantPointsToAll(points, remark);
+        return ResultUtils.success(count);
+    }
+
+}
+

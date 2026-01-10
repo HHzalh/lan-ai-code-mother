@@ -1,0 +1,252 @@
+package com.lanhai.lanaicodemother.service.impl;
+
+
+import cn.hutool.core.util.StrUtil;
+import com.lanhai.lanaicodemother.exception.ErrorCode;
+import com.lanhai.lanaicodemother.exception.ThrowUtils;
+import com.lanhai.lanaicodemother.mapper.PointLogMapper;
+import com.lanhai.lanaicodemother.mapper.UserAccountMapper;
+import com.lanhai.lanaicodemother.model.entity.UserAccount;
+import com.lanhai.lanaicodemother.model.enums.PointBusinessTypeEnum;
+import com.lanhai.lanaicodemother.model.enums.PointRuleKeyEnum;
+import com.lanhai.lanaicodemother.service.PointService;
+import com.lanhai.lanaicodemother.service.UserAccountService;
+import com.lanhai.lanaicodemother.utils.RedisDistributedLock;
+import com.mybatisflex.core.query.QueryWrapper;
+import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+/**
+ * 积分系统综合服务层实现。
+ *
+ * @author 积分系统
+ */
+@Slf4j
+@Service
+public class PointServiceImpl implements PointService {
+
+    /**
+     * 邀请奖励锁前缀
+     */
+    private static final String INVITE_LOCK_PREFIX = "point:invite:";
+    @Resource
+    private UserAccountService userAccountService;
+    @Resource
+    private UserAccountMapper userAccountMapper;
+    @Resource
+    private PointLogMapper pointLogMapper;
+    @Resource
+    private RedisDistributedLock redisDistributedLock;
+
+    @Resource
+    private com.lanhai.lanaicodemother.service.PointRuleService pointRuleService;
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void handleInvitationCode(Long userId, String invitationCode) {
+        if (StrUtil.isBlank(invitationCode)) {
+            return;
+        }
+
+        // 1. 查询邀请人账户
+        QueryWrapper queryWrapper = new QueryWrapper();
+        queryWrapper.eq("invitation_code", invitationCode);
+        UserAccount inviterAccount = userAccountMapper.selectOneByQuery(queryWrapper);
+        ThrowUtils.throwIf(inviterAccount == null, ErrorCode.PARAMS_ERROR, "邀请码无效");
+
+        // 2. 使用分布式锁处理邀请逻辑
+        String lockKey = INVITE_LOCK_PREFIX + invitationCode + ":" + userId;
+        redisDistributedLock.executeWithLock(lockKey, 3, 10, () -> doHandleInvitation(userId, inviterAccount, invitationCode));
+    }
+
+    /**
+     * 执行邀请逻辑
+     */
+    private void doHandleInvitation(Long userId, UserAccount inviterAccount, String invitationCode) {
+        Long inviterId = inviterAccount.getUserId();
+
+        // 1. 检查是否已经处理过（查询流水记录）
+        QueryWrapper queryWrapper = new QueryWrapper();
+        queryWrapper.eq("user_id", userId);
+        queryWrapper.eq("business_type", PointBusinessTypeEnum.INVITE_NEW.getValue());
+        queryWrapper.eq("business_id", invitationCode);
+        long count = pointLogMapper.selectCountByQuery(queryWrapper);
+        ThrowUtils.throwIf(count > 0, ErrorCode.OPERATION_ERROR, "该邀请码已使用");
+
+        // 2. 先更新邀请人邀请统计（使用乐观锁，在增加积分之前）
+        UserAccount updateInviter = new UserAccount();
+        updateInviter.setId(inviterAccount.getId());
+        updateInviter.setVersion(inviterAccount.getVersion());
+
+        Long inviterPoints = pointRuleService.getRuleValue(PointRuleKeyEnum.INVITE_REWARD);
+        int updated = userAccountMapper.updateInviteStatsWithVersion(updateInviter, inviterPoints);
+        ThrowUtils.throwIf(updated == 0, ErrorCode.OPERATION_ERROR, "更新邀请统计失败");
+
+        // 3. 给被邀请人发放积分
+        Long inviteePoints = pointRuleService.getRuleValue(PointRuleKeyEnum.INVITE_NEW);
+        userAccountService.addPoints(userId, inviteePoints, PointBusinessTypeEnum.INVITE_NEW.getValue(), invitationCode, "邀请注册奖励");
+
+        // 4. 给邀请人发放积分
+        userAccountService.addPoints(inviterId, inviterPoints, PointBusinessTypeEnum.INVITE_REWARD.getValue(), String.valueOf(userId), "邀请用户注册奖励");
+
+        log.info("邀请奖励发放成功，被邀请人ID：{}，邀请人ID：{}，被邀请人获得积分：{}，邀请人获得积分：{}",
+                userId, inviterId, inviteePoints, inviterPoints);
+    }
+
+    @Override
+    public boolean checkPointsEnough(Long userId, Long requiredPoints) {
+        UserAccount account = userAccountService.getByUserId(userId);
+        if (account == null) {
+            return false;
+        }
+        return account.getAvailablePoints() >= requiredPoints;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean consumePointsForGenerate(Long userId, Long appId) {
+        // 1. 检查是否首次生成
+        QueryWrapper queryWrapper = new QueryWrapper();
+        queryWrapper.eq("user_id", userId);
+        queryWrapper.eq("business_type", PointBusinessTypeEnum.GENERATE.getValue());
+        long count = pointLogMapper.selectCountByQuery(queryWrapper);
+
+        if (count == 0) {
+            // 首次生成，不消耗，反而奖励
+            Long firstGeneratePoints = pointRuleService.getRuleValue(PointRuleKeyEnum.FIRST_GENERATE);
+            userAccountService.addPoints(userId, firstGeneratePoints,
+                    PointBusinessTypeEnum.FIRST_GENERATE.getValue(), String.valueOf(appId), "首次生成应用奖励");
+            log.info("首次生成应用奖励发放成功，用户ID：{}，应用ID：{}，积分：{}", userId, appId, firstGeneratePoints);
+            return true;
+        }
+
+        // 2. 非首次生成，检查积分是否足够
+        Long generateCost = pointRuleService.getRuleValue(PointRuleKeyEnum.GENERATE_COST);
+        if (!checkPointsEnough(userId, generateCost)) {
+            throw new RuntimeException("积分不足，需要" + generateCost + "积分");
+        }
+
+        // 3. 扣减积分
+        userAccountService.deductPoints(userId, generateCost,
+                PointBusinessTypeEnum.GENERATE.getValue(), String.valueOf(appId), "生成应用消耗积分");
+
+        log.info("生成应用消耗积分，用户ID：{}，应用ID：{}，积分：{}", userId, appId, generateCost);
+        return true;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean consumePointsForDeploy(Long userId, Long appId) {
+        // 1. 检查积分是否足够
+        Long deployCost = pointRuleService.getRuleValue(PointRuleKeyEnum.DEPLOY_COST);
+        if (!checkPointsEnough(userId, deployCost)) {
+            throw new RuntimeException("积分不足，需要" + deployCost + "积分");
+        }
+
+        // 2. 扣减积分
+        userAccountService.deductPoints(userId, deployCost,
+                PointBusinessTypeEnum.DEPLOY.getValue(), String.valueOf(appId), "部署应用消耗积分");
+
+        log.info("部署应用消耗积分，用户ID：{}，应用ID：{}，积分：{}", userId, appId, deployCost);
+        return true;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean refundPoints(Long userId, Long appId, Long points) {
+        // 使用虚拟线程异步处理退款
+        Thread.startVirtualThread(() ->  {
+            try {
+                userAccountService.addPoints(userId, points,
+                        PointBusinessTypeEnum.REFUND.getValue(), String.valueOf(appId), "应用操作失败退款");
+                log.info("积分退款成功，用户ID：{}，应用ID：{}，积分：{}", userId, appId, points);
+            } catch (Exception e) {
+                log.error("积分退款失败，用户ID：{}，应用ID：{}，积分：{}，错误：{}",
+                        userId, appId, points, e.getMessage(), e);
+            }
+        });
+
+        // TODO: 后续改为消息队列处理
+
+        return true;
+    }
+
+    @Override
+    public Long calculateSignInPoints(Long userId) {
+        // 1. 获取签到基础积分
+        Long basePoints = pointRuleService.getRuleValue(PointRuleKeyEnum.SIGN_IN_BASE);
+
+        // 2. 获取用户连续天数
+        UserAccount account = userAccountService.getByUserId(userId);
+        ThrowUtils.throwIf(account == null, ErrorCode.NOT_FOUND_ERROR, "积分账户不存在");
+        Integer continuousDays = account.getContinuousDays();
+
+        // 3. 计算连续奖励（固定规则，只可修改不可新增）
+        Long bonusPoints = 0L;
+        if (continuousDays >= 3) {
+            bonusPoints += pointRuleService.getRuleValue(PointRuleKeyEnum.SIGN_IN_CONTINUOUS_3);
+        }
+        if (continuousDays >= 7) {
+            bonusPoints += pointRuleService.getRuleValue(PointRuleKeyEnum.SIGN_IN_CONTINUOUS_7);
+        }
+        if (continuousDays >= 30) {
+            bonusPoints += pointRuleService.getRuleValue(PointRuleKeyEnum.SIGN_IN_CONTINUOUS_30);
+        }
+
+        return basePoints + bonusPoints;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean grantPoints(Long userId, Long points, String remark) {
+        ThrowUtils.throwIf(userId == null, ErrorCode.PARAMS_ERROR, "用户ID不能为空");
+        ThrowUtils.throwIf(points == null || points <= 0, ErrorCode.PARAMS_ERROR, "积分数必须大于0");
+        ThrowUtils.throwIf(StrUtil.isBlank(remark), ErrorCode.PARAMS_ERROR, "备注不能为空");
+
+        // 检查用户账户是否存在
+        UserAccount account = userAccountService.getByUserId(userId);
+        ThrowUtils.throwIf(account == null, ErrorCode.NOT_FOUND_ERROR, "用户积分账户不存在");
+
+        // 发放积分
+        boolean result = userAccountService.addPoints(userId, points,
+                PointBusinessTypeEnum.SYSTEM_GRANT.getValue(), null, remark);
+
+        log.info("管理员发放积分成功，用户ID：{}，积分：{}，备注：{}", userId, points, remark);
+        return result;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int grantPointsToAll(Long points, String remark) {
+        ThrowUtils.throwIf(points == null || points <= 0, ErrorCode.PARAMS_ERROR, "积分数必须大于0");
+        ThrowUtils.throwIf(StrUtil.isBlank(remark), ErrorCode.PARAMS_ERROR, "备注不能为空");
+
+        // 查询所有有效的用户账户
+        QueryWrapper queryWrapper = new QueryWrapper();
+        queryWrapper.eq("isDelete", 0);
+        List<UserAccount> accounts = userAccountService.list(queryWrapper);
+
+        ThrowUtils.throwIf(accounts.isEmpty(), ErrorCode.NOT_FOUND_ERROR, "没有找到用户账户");
+
+        int successCount = 0;
+        for (UserAccount account : accounts) {
+            try {
+                userAccountService.addPoints(account.getUserId(), points,
+                        PointBusinessTypeEnum.SYSTEM_GRANT.getValue(), null, remark);
+                successCount++;
+            } catch (Exception e) {
+                log.error("给用户发放积分失败，用户ID：{}，错误：{}", account.getUserId(), e.getMessage());
+            }
+        }
+
+        log.info("管理员批量发放积分完成，总用户数：{}，成功数：{}，积分：{}，备注：{}",
+                accounts.size(), successCount, points, remark);
+        return successCount;
+    }
+
+}
+

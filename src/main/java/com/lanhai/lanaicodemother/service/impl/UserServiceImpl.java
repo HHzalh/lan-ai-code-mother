@@ -55,7 +55,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
-    
+
     /**
      * 管理员注册密码（从配置读取，如果未配置则不允许管理员注册）
      */
@@ -91,7 +91,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         user.setUserAccount(userAccount);
         user.setUserPassword(encryptPassword);
         user.setUserName("无名");
-        
+
         // 管理员注册密码从配置读取，避免硬编码
         String adminRegisterPassword = getAdminRegisterPassword();
         if (StrUtil.isNotBlank(adminRegisterPassword) && userPassword.equals(adminRegisterPassword)) {
@@ -104,6 +104,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (!saveResult) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "注册失败，数据库错误");
         }
+
+        // 注册成功后，创建积分账户
+        // 积分账户会在用户首次访问时自动创建
+        // 这里不做任何操作
+
         return user.getId();
     }
 
@@ -393,7 +398,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         log.info("密码修改成功，用户ID：{}", userId);
         return true;
     }
-    
+
     /**
      * 获取管理员注册密码
      * 如果未配置，返回空字符串，不允许管理员注册

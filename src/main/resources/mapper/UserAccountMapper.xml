@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lanhai.lanaicodemother.mapper.UserAccountMapper">
+
+    <!-- 乐观锁增加积分 -->
+    <update id="addPointsWithVersion">
+        UPDATE user_account
+        SET available_points = available_points + #{points},
+            total_points = total_points + #{points},
+            version = version + 1,
+            updateTime = NOW()
+        WHERE id = #{account.id}
+          AND version = #{account.version}
+    </update>
+
+    <!-- 乐观锁扣减积分 -->
+    <update id="deductPointsWithVersion">
+        UPDATE user_account
+        SET available_points = available_points - #{points},
+            total_consume = total_consume + #{points},
+            version = version + 1,
+            updateTime = NOW()
+        WHERE id = #{account.id}
+          AND version = #{account.version}
+          AND available_points >= #{points}
+    </update>
+
+    <!-- 乐观锁更新连续天数和最后签到日期 -->
+    <update id="updateSignInStatusWithVersion">
+        UPDATE user_account
+        SET continuous_days = #{continuousDays},
+            last_sign_date = CURDATE(),
+            version = version + 1,
+            updateTime = NOW()
+        WHERE id = #{account.id}
+          AND version = #{account.version}
+    </update>
+
+    <!-- 乐观锁更新邀请统计 -->
+    <update id="updateInviteStatsWithVersion">
+        UPDATE user_account
+        SET invitation_count = invitation_count + 1,
+            total_invite_points = total_invite_points + #{inviterPoints},
+            version = version + 1,
+            updateTime = NOW()
+        WHERE id = #{account.id}
+          AND version = #{account.version}
+    </update>
+
+</mapper>
+
