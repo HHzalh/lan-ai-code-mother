@@ -17,43 +17,6 @@ public interface PointService {
     void handleInvitationCode(Long userId, String invitationCode);
 
     /**
-     * 检查用户积分是否足够
-     *
-     * @param userId         用户ID
-     * @param requiredPoints 需要的积分数
-     * @return 是否足够
-     */
-    boolean checkPointsEnough(Long userId, Long requiredPoints);
-
-    /**
-     * 消耗积分（生成应用）
-     *
-     * @param userId 用户ID
-     * @param appId  应用ID
-     * @return 是否成功
-     */
-    boolean consumePointsForGenerate(Long userId, Long appId);
-
-    /**
-     * 消耗积分（部署应用）
-     *
-     * @param userId 用户ID
-     * @param appId  应用ID
-     * @return 是否成功
-     */
-    boolean consumePointsForDeploy(Long userId, Long appId);
-
-    /**
-     * 退还积分（生成/部署失败时）
-     *
-     * @param userId 用户ID
-     * @param appId  应用ID
-     * @param points 要退还的积分数
-     * @return 是否成功
-     */
-    boolean refundPoints(Long userId, Long appId, Long points);
-
-    /**
      * 计算签到积分
      *
      * @param userId 用户ID

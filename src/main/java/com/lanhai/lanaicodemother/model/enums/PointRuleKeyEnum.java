@@ -51,7 +51,12 @@ public enum PointRuleKeyEnum {
     /**
      * 生成应用消耗积分
      */
-    GENERATE_COST("GENERATE_COST", 20L, "生成应用消耗积分");
+    GENERATE_COST("GENERATE_COST", 20L, "生成应用消耗积分"),
+
+    /**
+     * 下载代码消耗积分
+     */
+    DOWNLOAD_COST("DOWNLOAD_COST", 30L, "下载代码消耗积分");
 
 
     /**

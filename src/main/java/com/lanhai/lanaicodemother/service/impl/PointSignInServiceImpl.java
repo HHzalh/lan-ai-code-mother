@@ -62,9 +62,7 @@ public class PointSignInServiceImpl implements PointSignInService {
      */
     private PointSignInResponse doSignIn(Long userId) {
         // 1. 检查今日是否已签到
-        if (getTodaySignInStatus(userId)) {
-            throw new RuntimeException("今日已签到");
-        }
+        ThrowUtils.throwIf(getTodaySignInStatus(userId), ErrorCode.OPERATION_ERROR, "今日已签到");
 
         // 2. 获取用户账户
         UserAccount account = userAccountService.getByUserId(userId);

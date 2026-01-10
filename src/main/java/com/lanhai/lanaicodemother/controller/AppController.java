@@ -4,6 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.lanhai.lanaicodemother.annotation.AuthCheck;
+import com.lanhai.lanaicodemother.annotation.ConsumePoints;
 import com.lanhai.lanaicodemother.common.BaseResponse;
 import com.lanhai.lanaicodemother.common.DeleteRequest;
 import com.lanhai.lanaicodemother.common.ResultUtils;
@@ -15,10 +16,13 @@ import com.lanhai.lanaicodemother.exception.ThrowUtils;
 import com.lanhai.lanaicodemother.model.dto.app.*;
 import com.lanhai.lanaicodemother.model.entity.App;
 import com.lanhai.lanaicodemother.model.entity.User;
+import com.lanhai.lanaicodemother.model.enums.PointBusinessTypeEnum;
+import com.lanhai.lanaicodemother.model.enums.PointRuleKeyEnum;
 import com.lanhai.lanaicodemother.model.vo.AppVO;
 import com.lanhai.lanaicodemother.ratelimter.annotation.RateLimit;
 import com.lanhai.lanaicodemother.ratelimter.enums.RateLimitType;
 import com.lanhai.lanaicodemother.service.AppService;
+import com.lanhai.lanaicodemother.service.PointService;
 import com.lanhai.lanaicodemother.service.ProjectDownloadService;
 import com.lanhai.lanaicodemother.service.UserService;
 import com.lanhai.lanaicodemother.utils.StaticResourceChecker;
@@ -56,6 +60,9 @@ public class AppController {
 
     @Resource
     private ProjectDownloadService projectDownloadService;
+
+    @Resource
+    private PointService pointService;
 
     /**
      * 创建应用
@@ -294,6 +301,13 @@ public class AppController {
      */
     @GetMapping(value = "/chat/gen/code", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     @RateLimit(limitType = RateLimitType.USER, rate = 3, rateInterval = 60, message = "AI 对话请求过于频繁，请稍后再试")
+    //    TODO 如果限流已经扣减的积分不会回退，待优化
+    @ConsumePoints(
+            businessType = PointBusinessTypeEnum.GENERATE,
+            ruleKey = PointRuleKeyEnum.GENERATE_COST,
+            once = false,
+            businessIdParam = "appId"
+    )
     public Flux<ServerSentEvent<String>> chatToGenCode(@RequestParam Long appId,
                                                        @RequestParam String message,
                                                        HttpServletRequest request) {
@@ -331,6 +345,12 @@ public class AppController {
      * @return 部署 URL
      */
     @PostMapping("/deploy")
+    @ConsumePoints(
+            businessType = PointBusinessTypeEnum.DEPLOY,
+            ruleKey = PointRuleKeyEnum.DEPLOY_COST,
+            once = false,
+            businessIdParam = "appDeployRequest"
+    )
     public BaseResponse<String> deployApp(@RequestBody AppDeployRequest appDeployRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(appDeployRequest == null, ErrorCode.PARAMS_ERROR);
         Long appId = appDeployRequest.getAppId();
@@ -338,6 +358,7 @@ public class AppController {
         // 获取当前登录用户
         User loginUser = userService.getLoginUser(request);
         // 调用服务部署应用
+        // 积分扣减由 AOP 自动处理，只有扣减成功才会执行到这里
         String deployUrl = appService.deployApp(appId, loginUser);
         return ResultUtils.success(deployUrl);
     }
@@ -350,6 +371,12 @@ public class AppController {
      * @param response 响应
      */
     @GetMapping("/download/{appId}")
+    @ConsumePoints(
+            businessType = PointBusinessTypeEnum.DOWNLOAD,
+            ruleKey = PointRuleKeyEnum.DOWNLOAD_COST,
+            once = true,
+            businessIdParam = "appId"
+    )
     public void downloadAppCode(@PathVariable Long appId,
                                 HttpServletRequest request,
                                 HttpServletResponse response) {
@@ -363,6 +390,7 @@ public class AppController {
         if (!app.getUserId().equals(loginUser.getId())) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限下载该应用代码");
         }
+        // 积分扣减由 AOP 自动处理，只有扣减成功才会执行到这里
         // 4. 构建应用代码目录路径（生成目录，非部署目录）
         String codeGenType = app.getCodeGenType();
         String sourceDirName = codeGenType + "_" + appId;

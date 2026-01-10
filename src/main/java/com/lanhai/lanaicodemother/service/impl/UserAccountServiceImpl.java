@@ -157,10 +157,7 @@ public class UserAccountServiceImpl extends ServiceImpl<UserAccountMapper, UserA
         updateAccount.setVersion(account.getVersion());
 
         int updated = this.mapper.addPointsWithVersion(updateAccount, points);
-        if (updated == 0) {
-            log.warn("乐观锁冲突，增加积分失败，用户ID：{}", userId);
-            throw new RuntimeException("操作过于频繁，请重试");
-        }
+        ThrowUtils.throwIf(updated == 0, ErrorCode.TOO_MANY_REQUEST, "操作过于频繁，请重试");
 
         // 3. 查询更新后的账户
         UserAccount updatedAccount = this.getById(account.getId());
@@ -194,10 +191,7 @@ public class UserAccountServiceImpl extends ServiceImpl<UserAccountMapper, UserA
         updateAccount.setVersion(account.getVersion());
 
         int updated = this.mapper.deductPointsWithVersion(updateAccount, points);
-        if (updated == 0) {
-            log.warn("乐观锁冲突或积分不足，扣减积分失败，用户ID：{}", userId);
-            throw new RuntimeException("操作过于频繁，请重试");
-        }
+        ThrowUtils.throwIf(updated == 0, ErrorCode.TOO_MANY_REQUEST, "操作过于频繁，请重试");
 
         // 3. 查询更新后的账户
         UserAccount updatedAccount = this.getById(account.getId());
@@ -231,7 +225,8 @@ public class UserAccountServiceImpl extends ServiceImpl<UserAccountMapper, UserA
                 return code;
             }
         }
-        throw new RuntimeException("生成邀请码失败，请重试");
+        ThrowUtils.throwIf(true, ErrorCode.SYSTEM_ERROR, "生成邀请码失败，请重试");
+        return null;
     }
 
 }
