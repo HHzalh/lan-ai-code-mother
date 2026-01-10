@@ -10,8 +10,7 @@ export const DEPLOY_DOMAIN = import.meta.env.VITE_DEPLOY_DOMAIN || 'http://local
 // 如果设置了环境变量，优先使用环境变量
 // 否则，开发环境使用 localhost，生产环境使用相对路径（通过 nginx 代理）
 export const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  (import.meta.env.PROD ? '/api' : 'http://localhost:8123/api')
+  import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? '/api' : 'http://localhost:8123/api')
 
 // 静态资源地址
 export const STATIC_BASE_URL = `${API_BASE_URL}/static`

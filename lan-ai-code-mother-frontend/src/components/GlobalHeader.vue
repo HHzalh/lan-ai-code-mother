@@ -67,6 +67,7 @@ import {
   AppstoreOutlined,
   BookOutlined,
   ContactsOutlined,
+  GiftOutlined,
   HomeOutlined,
   LoginOutlined,
   LogoutOutlined,
@@ -108,6 +109,12 @@ const originItems = [
     icon: () => h(AppstoreOutlined),
     label: '应用管理',
     title: '应用管理',
+  },
+  {
+    key: '/admin/pointManage',
+    icon: () => h(GiftOutlined),
+    label: '积分管理',
+    title: '积分管理',
   },
   {
     key: 'others',

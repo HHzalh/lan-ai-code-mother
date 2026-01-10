@@ -61,6 +61,24 @@ declare namespace API {
     message?: string
   }
 
+  type BaseResponseInteger = {
+    code?: number
+    data?: number
+    message?: string
+  }
+
+  type BaseResponseListPointRuleVO = {
+    code?: number
+    data?: PointRuleVO[]
+    message?: string
+  }
+
+  type BaseResponseListPointSignInRecordVO = {
+    code?: number
+    data?: PointSignInRecordVO[]
+    message?: string
+  }
+
   type BaseResponseLoginUserVO = {
     code?: number
     data?: LoginUserVO
@@ -85,9 +103,27 @@ declare namespace API {
     message?: string
   }
 
+  type BaseResponsePagePointLogVO = {
+    code?: number
+    data?: PagePointLogVO
+    message?: string
+  }
+
+  type BaseResponsePageUserAccountVO = {
+    code?: number
+    data?: PageUserAccountVO
+    message?: string
+  }
+
   type BaseResponsePageUserVO = {
     code?: number
     data?: PageUserVO
+    message?: string
+  }
+
+  type BaseResponsePointSignInResponse = {
+    code?: number
+    data?: PointSignInResponse
     message?: string
   }
 
@@ -103,9 +139,21 @@ declare namespace API {
     message?: string
   }
 
+  type BaseResponseUserAccountVO = {
+    code?: number
+    data?: UserAccountVO
+    message?: string
+  }
+
   type BaseResponseUserVO = {
     code?: number
     data?: UserVO
+    message?: string
+  }
+
+  type BaseResponseVoid = {
+    code?: number
+    data?: Record<string, any>
     message?: string
   }
 
@@ -163,12 +211,32 @@ declare namespace API {
     id: number
   }
 
+  type getSignInCalendarParams = {
+    startDate?: string
+    endDate?: string
+  }
+
   type getUserByIdParams = {
     id: number
   }
 
   type getUserVOByIdParams = {
     id: number
+  }
+
+  type grantPointsParams = {
+    userId: number
+    points: number
+    remark: string
+  }
+
+  type grantPointsToAllParams = {
+    points: number
+    remark: string
+  }
+
+  type handleInvitationCodeParams = {
+    invitationCode: string
   }
 
   type listAppChatHistoryParams = {
@@ -206,6 +274,24 @@ declare namespace API {
     optimizeCountQuery?: boolean
   }
 
+  type PagePointLogVO = {
+    records?: PointLogVO[]
+    pageNumber?: number
+    pageSize?: number
+    totalPage?: number
+    totalRow?: number
+    optimizeCountQuery?: boolean
+  }
+
+  type PageUserAccountVO = {
+    records?: UserAccountVO[]
+    pageNumber?: number
+    pageSize?: number
+    totalPage?: number
+    totalRow?: number
+    optimizeCountQuery?: boolean
+  }
+
   type PageUserVO = {
     records?: UserVO[]
     pageNumber?: number
@@ -213,6 +299,66 @@ declare namespace API {
     totalPage?: number
     totalRow?: number
     optimizeCountQuery?: boolean
+  }
+
+  type PointLogQueryRequest = {
+    pageNum?: number
+    pageSize?: number
+    sortField?: string
+    sortOrder?: string
+    businessType?: string
+    pointType?: string
+    startTime?: string
+    endTime?: string
+    userId?: number
+  }
+
+  type PointLogVO = {
+    id?: number
+    userId?: number
+    businessType?: string
+    businessTypeText?: string
+    businessId?: string
+    pointType?: string
+    pointTypeText?: string
+    pointChange?: number
+    beforePoints?: number
+    afterPoints?: number
+    remark?: string
+    createTime?: string
+  }
+
+  type PointRuleUpdateRequest = {
+    id: number
+    ruleKey?: string
+    ruleValue?: number
+    ruleDesc?: string
+    status?: number
+  }
+
+  type PointRuleVO = {
+    id?: number
+    ruleKey?: string
+    ruleValue?: number
+    ruleDesc?: string
+    status?: number
+  }
+
+  type PointSignInRecordVO = {
+    id?: number
+    userId?: number
+    signDate?: string
+    daysCount?: number
+    points?: number
+    isBonus?: number
+    createTime?: string
+  }
+
+  type PointSignInResponse = {
+    points?: number
+    continuousDays?: number
+    isBonus?: boolean
+    availablePoints?: number
   }
 
   type ResetPasswordRequest = {
@@ -245,6 +391,33 @@ declare namespace API {
     createTime?: string
     updateTime?: string
     isDelete?: number
+  }
+
+  type UserAccountQueryRequest = {
+    pageNum?: number
+    pageSize?: number
+    sortField?: string
+    sortOrder?: string
+    userId?: number
+    invitationCode?: string
+    minAvailablePoints?: number
+    maxAvailablePoints?: number
+    minTotalPoints?: number
+    maxTotalPoints?: number
+    userNickname?: string
+  }
+
+  type UserAccountVO = {
+    userId?: number
+    invitationCode?: string
+    totalPoints?: number
+    availablePoints?: number
+    freezePoints?: number
+    totalConsume?: number
+    continuousDays?: number
+    lastSignDate?: string
+    invitationCount?: number
+    totalInvitePoints?: number
   }
 
   type UserAddRequest = {
@@ -282,6 +455,7 @@ declare namespace API {
     userAccount?: string
     userPassword?: string
     checkPassword?: string
+    invitationCode?: string
   }
 
   type UserUpdateRequest = {

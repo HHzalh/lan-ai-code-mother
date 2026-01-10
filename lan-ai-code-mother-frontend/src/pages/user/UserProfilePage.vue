@@ -2,9 +2,18 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { message, type UploadProps } from 'ant-design-vue'
-import { LockOutlined, SafetyOutlined, UploadOutlined } from '@ant-design/icons-vue'
+import {
+  CheckCircleOutlined,
+  GiftOutlined,
+  HistoryOutlined,
+  LockOutlined,
+  SafetyOutlined,
+  UploadOutlined,
+} from '@ant-design/icons-vue'
 import { useLoginUserStore } from '@/stores/loginUser'
 import { changePassword, updateUserInfo, uploadUserAvatar } from '@/api/userController'
+import { getMyAccount, getSignInCalendar, getSignStatus, signIn } from '@/api/pointController'
+import dayjs from 'dayjs'
 
 const router = useRouter()
 const loginUserStore = useLoginUserStore()
@@ -12,6 +21,13 @@ const submitting = ref(false)
 const avatarUploading = ref(false)
 const passwordSubmitting = ref(false)
 const showPasswordModal = ref(false)
+
+// 积分相关
+const accountInfo = ref<API.UserAccountVO | null>(null)
+const todaySigned = ref(false)
+const signing = ref(false)
+const signCalendar = ref<API.PointSignInRecordVO[]>([])
+const currentMonth = ref(dayjs())
 
 const formState = reactive<Partial<API.UserUpdateRequest>>({
   id: undefined,
@@ -52,7 +68,136 @@ const initForm = async () => {
 
 onMounted(() => {
   initForm()
+  loadAccountInfo()
+  loadSignStatus()
+  loadSignCalendar()
 })
+
+// 加载积分账户信息
+const loadAccountInfo = async () => {
+  try {
+    const res = await getMyAccount()
+    if (res.data.code === 0 && res.data.data) {
+      accountInfo.value = res.data.data
+    }
+  } catch (error) {
+    console.error('加载积分账户失败：', error)
+  }
+}
+
+// 加载今日签到状态
+const loadSignStatus = async () => {
+  try {
+    const res = await getSignStatus()
+    if (res.data.code === 0) {
+      todaySigned.value = res.data.data ?? false
+    }
+  } catch (error) {
+    console.error('加载签到状态失败：', error)
+  }
+}
+
+// 加载签到日历
+const loadSignCalendar = async () => {
+  try {
+    const startDate = currentMonth.value.startOf('month').format('YYYY-MM-DD')
+    const endDate = currentMonth.value.endOf('month').format('YYYY-MM-DD')
+    const res = await getSignInCalendar({
+      startDate,
+      endDate,
+    })
+    if (res.data.code === 0 && res.data.data) {
+      signCalendar.value = res.data.data
+    }
+  } catch (error) {
+    console.error('加载签到日历失败：', error)
+  }
+}
+
+// 执行签到
+const handleSignIn = async () => {
+  if (todaySigned.value) {
+    message.warning('今日已签到')
+    return
+  }
+  signing.value = true
+  try {
+    const res = await signIn()
+    if (res.data.code === 0 && res.data.data) {
+      const data = res.data.data
+      message.success(
+        `签到成功！获得 ${data.points} 积分，连续签到 ${data.continuousDays} 天${data.isBonus ? '，获得额外奖励！' : ''}`,
+      )
+      todaySigned.value = true
+      await loadAccountInfo()
+      await loadSignCalendar()
+    } else {
+      message.error(res.data.message ?? '签到失败')
+    }
+  } catch (error: any) {
+    message.error(error?.response?.data?.message ?? '签到失败，请重试')
+  } finally {
+    signing.value = false
+  }
+}
+
+// 判断某天是否已签到
+const isDateSigned = (date: string) => {
+  return signCalendar.value.some((record) => record.signDate === date)
+}
+
+// 获取某天的签到信息
+const getSignInfo = (date: string) => {
+  return signCalendar.value.find((record) => record.signDate === date)
+}
+
+// 切换月份
+const changeMonth = (direction: 'prev' | 'next') => {
+  if (direction === 'prev') {
+    currentMonth.value = currentMonth.value.subtract(1, 'month')
+  } else {
+    currentMonth.value = currentMonth.value.add(1, 'month')
+  }
+  loadSignCalendar()
+}
+
+// 生成当月日历
+const calendarDays = computed(() => {
+  const start = currentMonth.value.startOf('month')
+  const end = currentMonth.value.endOf('month')
+  const days: Array<{
+    date: string
+    day: number
+    signed: boolean
+    info?: API.PointSignInRecordVO
+  }> = []
+
+  // 填充月初空白
+  const startDay = start.day()
+  for (let i = 0; i < startDay; i++) {
+    days.push({ date: '', day: 0, signed: false })
+  }
+
+  // 填充日期
+  let current = start
+  while (current.isBefore(end) || current.isSame(end, 'day')) {
+    const dateStr = current.format('YYYY-MM-DD')
+    days.push({
+      date: dateStr,
+      day: current.date(),
+      signed: isDateSigned(dateStr),
+      info: getSignInfo(dateStr),
+    })
+    current = current.add(1, 'day')
+  }
+
+  return days
+})
+
+// 跳转到积分流水页面
+const goToPointLogs = () => {
+  router.push('/user/point-logs')
+}
 
 const toBase64 = (file: File) =>
   new Promise<string>((resolve, reject) => {
@@ -228,6 +373,89 @@ const handlePasswordSubmit = async () => {
           <a-button :loading="submitting" html-type="submit" type="primary">保存修改</a-button>
         </a-form-item>
       </a-form>
+    </section>
+
+    <!-- 积分签到模块 -->
+    <section class="profile-card point-card">
+      <div class="card-header">
+        <span class="line"></span>
+        <h3>积分中心</h3>
+      </div>
+
+      <!-- 积分账户信息 -->
+      <div class="point-account">
+        <div class="account-item">
+          <div class="account-label">可用积分</div>
+          <div class="account-value">{{ accountInfo?.availablePoints ?? 0 }}</div>
+        </div>
+        <div class="account-item">
+          <div class="account-label">总积分</div>
+          <div class="account-value">{{ accountInfo?.totalPoints ?? 0 }}</div>
+        </div>
+        <div class="account-item">
+          <div class="account-label">连续签到</div>
+          <div class="account-value">{{ accountInfo?.continuousDays ?? 0 }} 天</div>
+        </div>
+        <div class="account-item">
+          <div class="account-label">邀请人数</div>
+          <div class="account-value">{{ accountInfo?.invitationCount ?? 0 }}</div>
+        </div>
+      </div>
+
+      <!-- 签到按钮 -->
+      <div class="sign-in-section">
+        <a-button
+          :disabled="todaySigned"
+          :loading="signing"
+          class="sign-in-btn"
+          size="large"
+          type="primary"
+          @click="handleSignIn"
+        >
+          <template #icon>
+            <CheckCircleOutlined v-if="todaySigned" />
+            <GiftOutlined v-else />
+          </template>
+          {{ todaySigned ? '今日已签到' : '立即签到' }}
+        </a-button>
+        <a-button class="view-logs-btn" size="large" @click="goToPointLogs">
+          <HistoryOutlined />
+          积分流水
+        </a-button>
+      </div>
+
+      <!-- 签到日历 -->
+      <div class="sign-calendar">
+        <div class="calendar-header">
+          <a-button class="month-nav-btn" @click="changeMonth('prev')"> ←</a-button>
+          <h4>{{ currentMonth.format('YYYY年MM月') }}</h4>
+          <a-button class="month-nav-btn" @click="changeMonth('next')"> →</a-button>
+        </div>
+        <div class="calendar-grid">
+          <div class="calendar-weekday">日</div>
+          <div class="calendar-weekday">一</div>
+          <div class="calendar-weekday">二</div>
+          <div class="calendar-weekday">三</div>
+          <div class="calendar-weekday">四</div>
+          <div class="calendar-weekday">五</div>
+          <div class="calendar-weekday">六</div>
+          <div
+            v-for="(day, index) in calendarDays"
+            :key="index"
+            :class="[
+              'calendar-day',
+              {
+                'calendar-day-signed': day.signed,
+                'calendar-day-today': day.date === dayjs().format('YYYY-MM-DD'),
+                'calendar-day-empty': !day.date,
+              },
+            ]"
+          >
+            <span v-if="day.date" class="day-number">{{ day.day }}</span>
+            <span v-if="day.signed" class="day-check">✓</span>
+          </div>
+        </div>
+      </div>
     </section>
 
     <section class="profile-card password-card">
@@ -616,6 +844,151 @@ const handlePasswordSubmit = async () => {
   transform: translateY(0);
 }
 
+/* 积分签到模块样式 */
+.point-card {
+  margin-top: 24px;
+}
+
+.point-account {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f5f7ff 0%, #e0f2ff 100%);
+  border-radius: 12px;
+}
+
+.account-item {
+  text-align: center;
+}
+
+.account-label {
+  font-size: 14px;
+  color: #5f6b7c;
+  margin-bottom: 8px;
+}
+
+.account-value {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1890ff;
+}
+
+.sign-in-section {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.sign-in-btn {
+  flex: 1;
+  height: 48px;
+  font-size: 16px;
+  font-weight: 500;
+  border-radius: 8px;
+}
+
+.view-logs-btn {
+  height: 48px;
+  border-radius: 8px;
+}
+
+.sign-calendar {
+  margin-top: 24px;
+}
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.calendar-header h4 {
+  margin: 0;
+  font-size: 18px;
+  color: #1f2d3d;
+}
+
+.month-nav-btn {
+  border: none;
+  background: transparent;
+  color: #1890ff;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 4px 12px;
+}
+
+.month-nav-btn:hover {
+  background: #f0f2f5;
+  border-radius: 4px;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+
+.calendar-weekday {
+  text-align: center;
+  padding: 8px;
+  font-weight: 500;
+  color: #5f6b7c;
+  font-size: 14px;
+}
+
+.calendar-day {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: #f5f7ff;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.calendar-day:hover {
+  background: #e0f2ff;
+}
+
+.calendar-day-empty {
+  background: transparent;
+  cursor: default;
+}
+
+.calendar-day-today {
+  background: linear-gradient(135deg, #1890ff 0%, #6bc1ff 100%);
+  color: white;
+  font-weight: 600;
+}
+
+.calendar-day-signed {
+  background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+  color: white;
+}
+
+.calendar-day-signed.calendar-day-today {
+  background: linear-gradient(135deg, #1890ff 0%, #6bc1ff 100%);
+}
+
+.day-number {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.day-check {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
 @media (max-width: 768px) {
   .profile-hero {
     flex-direction: column;
@@ -649,6 +1022,22 @@ const handlePasswordSubmit = async () => {
   .cancel-button,
   .submit-button {
     width: 100%;
+  }
+
+  .point-account {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .sign-in-section {
+    flex-direction: column;
+  }
+
+  .calendar-grid {
+    gap: 4px;
+  }
+
+  .calendar-day {
+    font-size: 12px;
   }
 }
 </style>

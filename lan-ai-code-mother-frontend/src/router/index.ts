@@ -9,6 +9,8 @@ import AppManagePage from '@/pages/admin/AppManagePage.vue'
 import AppChatPage from '@/pages/app/AppChatPage.vue'
 import AppEditPage from '@/pages/app/AppEditPage.vue'
 import ChatManagePage from '@/pages/admin/ChatManagePage.vue'
+import PointManagePage from '@/pages/admin/PointManagePage.vue'
+import PointLogsPage from '@/pages/user/PointLogsPage.vue'
 import QuickStartPage from '@/pages/QuickStartPage.vue'
 import HelpDocsPage from '@/pages/HelpDocsPage.vue'
 
@@ -49,6 +51,16 @@ const router = createRouter({
       path: '/admin/ChatManage',
       name: '对话管理',
       component: ChatManagePage,
+    },
+    {
+      path: '/admin/pointManage',
+      name: '积分管理',
+      component: PointManagePage,
+    },
+    {
+      path: '/user/point-logs',
+      name: '积分流水',
+      component: PointLogsPage,
     },
     {
       path: '/app/chat/:id',
