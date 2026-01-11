@@ -4,15 +4,24 @@ import { useRouter } from 'vue-router'
 import { message, type UploadProps } from 'ant-design-vue'
 import {
   CheckCircleOutlined,
+  EditOutlined,
   GiftOutlined,
   HistoryOutlined,
   LockOutlined,
+  MailOutlined,
   SafetyOutlined,
-  UploadOutlined,
+  ShoppingOutlined,
+  UserOutlined,
 } from '@ant-design/icons-vue'
 import { useLoginUserStore } from '@/stores/loginUser'
 import { changePassword, updateUserInfo, uploadUserAvatar } from '@/api/userController'
-import { getMyAccount, getSignInCalendar, getSignStatus, signIn } from '@/api/pointController'
+import {
+  getMyAccount,
+  getMyInvitationCode,
+  getSignInCalendar,
+  getSignStatus,
+  signIn,
+} from '@/api/pointController'
 import dayjs from 'dayjs'
 
 const router = useRouter()
@@ -20,6 +29,7 @@ const loginUserStore = useLoginUserStore()
 const submitting = ref(false)
 const avatarUploading = ref(false)
 const passwordSubmitting = ref(false)
+const showEditModal = ref(false)
 const showPasswordModal = ref(false)
 
 // 积分相关
@@ -28,6 +38,7 @@ const todaySigned = ref(false)
 const signing = ref(false)
 const signCalendar = ref<API.PointSignInRecordVO[]>([])
 const currentMonth = ref(dayjs())
+const invitationCode = ref<string>('')
 
 const formState = reactive<Partial<API.UserUpdateRequest>>({
   id: undefined,
@@ -45,6 +56,12 @@ const passwordForm = reactive<API.UserChangePasswordRequest>({
 
 const displayAvatar = computed(() => {
   return formState.userAvatar
+})
+
+// 计算已加入天数
+const joinedDays = computed(() => {
+  if (!loginUserStore.loginUser.createTime) return 0
+  return dayjs().diff(dayjs(loginUserStore.loginUser.createTime), 'day')
 })
 
 const initForm = async () => {
@@ -71,6 +88,7 @@ onMounted(() => {
   loadAccountInfo()
   loadSignStatus()
   loadSignCalendar()
+  loadInvitationCode()
 })
 
 // 加载积分账户信息
@@ -82,6 +100,18 @@ const loadAccountInfo = async () => {
     }
   } catch (error) {
     console.error('加载积分账户失败：', error)
+  }
+}
+
+// 加载邀请码
+const loadInvitationCode = async () => {
+  try {
+    const res = await getMyInvitationCode()
+    if (res.data.code === 0 && res.data.data) {
+      invitationCode.value = res.data.data
+    }
+  } catch (error) {
+    console.error('加载邀请码失败：', error)
   }
 }
 
@@ -194,18 +224,34 @@ const calendarDays = computed(() => {
   return days
 })
 
+// 跳转到积分商城
+const goToPointMall = () => {
+  router.push('/user/point-mall')
+}
+
 // 跳转到积分流水页面
 const goToPointLogs = () => {
   router.push('/user/point-logs')
 }
 
-const toBase64 = (file: File) =>
-  new Promise<string>((resolve, reject) => {
-    const reader = new FileReader()
-    reader.readAsDataURL(file)
-    reader.onload = () => resolve(reader.result as string)
-    reader.onerror = (error) => reject(error)
+// 打开编辑资料弹窗
+const openEditModal = () => {
+  showEditModal.value = true
+  // 重置表单数据
+  const user = loginUserStore.loginUser
+  Object.assign(formState, {
+    id: user.id,
+    userAccount: user.userAccount,
+    userName: user.userName,
+    userProfile: user.userProfile,
+    userAvatar: user.userAvatar,
   })
+}
+
+// 关闭编辑资料弹窗
+const closeEditModal = () => {
+  showEditModal.value = false
+}
 
 const handleAvatarUpload: UploadProps['beforeUpload'] = async (file) => {
   avatarUploading.value = true
@@ -246,6 +292,7 @@ const handleSubmit = async () => {
     if (res.data.code === 0) {
       message.success('资料已更新')
       await loginUserStore.fetchLoginUser()
+      closeEditModal()
     } else {
       message.error(res.data.message ?? '更新失败')
     }
@@ -312,124 +359,84 @@ const handlePasswordSubmit = async () => {
 
 <template>
   <div class="profile-wrapper">
-    <section class="profile-hero">
-      <div class="hero-content">
-        <p class="eyebrow">PROFILE</p>
-        <h2>个人资料中心</h2>
-        <p class="subtitle">让世界看到更棒的你</p>
-      </div>
-      <div class="hero-divider"></div>
-      <div class="hero-avatar">
-        <a-avatar :size="96" :src="displayAvatar" />
-        <p class="avatar-tip">{{ formState.userName || '无名' }}</p>
-      </div>
-    </section>
-
+    <!-- 用户资料卡片 -->
     <section class="profile-card">
-      <div class="card-header">
-        <span class="line"></span>
-        <h3>基础信息</h3>
-      </div>
-      <a-form
-        :label-col="{ span: 5 }"
-        :model="formState"
-        :wrapper-col="{ span: 19 }"
-        label-align="left"
-        @finish="handleSubmit"
-      >
-        <a-form-item label="账号">
-          <a-input v-model:value="formState.userAccount" disabled />
-        </a-form-item>
-        <a-form-item
-          :rules="[{ required: true, message: '请输入昵称' }]"
-          label="昵称"
-          name="userName"
-        >
-          <a-input v-model:value="formState.userName" placeholder="请输入昵称" />
-        </a-form-item>
-        <a-form-item label="头像">
-          <div class="avatar-uploader">
-            <a-avatar :size="80" :src="displayAvatar" />
-            <a-upload
-              :before-upload="handleAvatarUpload"
-              :show-upload-list="false"
-              accept="image/*"
-            >
-              <a-button :loading="avatarUploading" type="default">
-                <UploadOutlined />
-                重新上传
-              </a-button>
-            </a-upload>
+      <div class="profile-info">
+        <!-- 左侧用户信息 -->
+        <div class="user-info-left">
+          <a-avatar :size="80" :src="displayAvatar" class="user-avatar" />
+          <div class="user-details">
+            <h3 class="user-name">{{ formState.userName || '未设置' }}</h3>
+            <p class="user-account">@{{ formState.userAccount }}</p>
+            <div class="user-stats">
+              <div class="stat-item">
+                <span class="stat-label">积分</span>
+                <span class="stat-value">{{ accountInfo?.availablePoints ?? 0 }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">已加入</span>
+                <span class="stat-value">{{ joinedDays }}天</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">邮箱</span>
+                <a-tag class="stat-tag" color="orange">未绑定</a-tag>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">邀请码</span>
+                <span class="stat-value code">{{ invitationCode || '加载中...' }}</span>
+              </div>
+            </div>
           </div>
-        </a-form-item>
-        <a-form-item label="个人简介" name="userProfile">
-          <a-textarea
-            v-model:value="formState.userProfile"
-            :rows="4"
-            placeholder="介绍一下自己，内容会显示在个人名片中"
-          />
-        </a-form-item>
-        <a-form-item :wrapper-col="{ span: 19, offset: 5 }" class="form-actions">
-          <a-button :loading="submitting" html-type="submit" type="primary">保存修改</a-button>
-        </a-form-item>
-      </a-form>
-    </section>
+        </div>
 
-    <!-- 积分签到模块 -->
-    <section class="profile-card point-card">
-      <div class="card-header">
-        <span class="line"></span>
-        <h3>积分中心</h3>
-      </div>
-
-      <!-- 积分账户信息 -->
-      <div class="point-account">
-        <div class="account-item">
-          <div class="account-label">可用积分</div>
-          <div class="account-value">{{ accountInfo?.availablePoints ?? 0 }}</div>
-        </div>
-        <div class="account-item">
-          <div class="account-label">总积分</div>
-          <div class="account-value">{{ accountInfo?.totalPoints ?? 0 }}</div>
-        </div>
-        <div class="account-item">
-          <div class="account-label">连续签到</div>
-          <div class="account-value">{{ accountInfo?.continuousDays ?? 0 }} 天</div>
-        </div>
-        <div class="account-item">
-          <div class="account-label">邀请人数</div>
-          <div class="account-value">{{ accountInfo?.invitationCount ?? 0 }}</div>
-        </div>
-      </div>
-
-      <!-- 签到按钮 -->
-      <div class="sign-in-section">
-        <a-button
-          :disabled="todaySigned"
-          :loading="signing"
-          class="sign-in-btn"
-          size="large"
-          type="primary"
-          @click="handleSignIn"
-        >
-          <template #icon>
+        <!-- 右侧操作按钮 -->
+        <div class="user-actions">
+          <a-button class="action-btn" type="primary" @click="goToPointMall">
+            <ShoppingOutlined />
+            积分商城
+            <span class="points-badge">{{ accountInfo?.availablePoints ?? 0 }}</span>
+          </a-button>
+          <a-button class="action-btn" @click="goToPointLogs">
+            <HistoryOutlined />
+            积分详情
+          </a-button>
+          <a-button
+            :disabled="todaySigned"
+            :loading="signing"
+            class="action-btn"
+            type="primary"
+            @click="handleSignIn"
+          >
             <CheckCircleOutlined v-if="todaySigned" />
             <GiftOutlined v-else />
-          </template>
-          {{ todaySigned ? '今日已签到' : '立即签到' }}
-        </a-button>
-        <a-button class="view-logs-btn" size="large" @click="goToPointLogs">
-          <HistoryOutlined />
-          积分流水
-        </a-button>
+            {{ todaySigned ? '今日已签到' : '立即签到' }}
+          </a-button>
+          <a-button class="action-btn" type="primary" @click="openEditModal">
+            <EditOutlined />
+            编辑资料
+          </a-button>
+        </div>
       </div>
+    </section>
 
-      <!-- 签到日历 -->
+    <!-- 签到日历 -->
+    <section class="profile-card calendar-card">
+      <div class="card-header">
+        <h3>签到日历</h3>
+      </div>
       <div class="sign-calendar">
         <div class="calendar-header">
-          <a-button class="month-nav-btn" @click="changeMonth('prev')"> ←</a-button>
+          <a-button class="month-nav-btn" @click="changeMonth('prev')">
+            <template #icon>
+              <span>←</span>
+            </template>
+          </a-button>
           <h4>{{ currentMonth.format('YYYY年MM月') }}</h4>
-          <a-button class="month-nav-btn" @click="changeMonth('next')"> →</a-button>
+          <a-button class="month-nav-btn" @click="changeMonth('next')">
+            <template #icon>
+              <span>→</span>
+            </template>
+          </a-button>
         </div>
         <div class="calendar-grid">
           <div class="calendar-weekday">日</div>
@@ -458,27 +465,121 @@ const handlePasswordSubmit = async () => {
       </div>
     </section>
 
-    <section class="profile-card password-card">
-      <div class="card-header">
-        <span class="line"></span>
-        <h3>安全设置</h3>
+    <!-- 编辑资料弹窗 -->
+    <a-modal
+      v-model:open="showEditModal"
+      :footer="null"
+      :title="null"
+      class="edit-modal"
+      width="800px"
+      @cancel="closeEditModal"
+    >
+      <div class="modal-header">
+        <h3>编辑个人信息</h3>
+        <p class="modal-subtitle">修改您的个人信息和账户设置</p>
       </div>
-      <div class="password-content">
-        <div class="password-info">
-          <div class="password-icon">
-            <LockOutlined />
-          </div>
-          <div class="password-text">
-            <h4>登录密码</h4>
-            <p>定期修改密码可以让账号更安全</p>
+
+      <div class="modal-content">
+        <!-- 用户资料卡片 -->
+        <div class="modal-profile-card">
+          <a-avatar :size="64" :src="displayAvatar" />
+          <div class="modal-profile-info">
+            <h4>{{ formState.userName || '未设置' }}</h4>
+            <p>@{{ formState.userAccount }}</p>
+            <div class="modal-profile-stats">
+              <div class="modal-stat-item">
+                <GiftOutlined />
+                <span>积分 {{ accountInfo?.availablePoints ?? 0 }}</span>
+              </div>
+              <div class="modal-stat-item">
+                <UserOutlined />
+                <span>已加入 {{ joinedDays }}天</span>
+              </div>
+              <div class="modal-stat-item">
+                <MailOutlined />
+                <a-tag color="orange" size="small">未绑定</a-tag>
+              </div>
+            </div>
           </div>
         </div>
-        <a-button type="primary" @click="openPasswordModal">
-          <SafetyOutlined />
-          修改密码
-        </a-button>
+
+        <!-- 基本信息 -->
+        <div class="modal-section">
+          <div class="section-header">
+            <EditOutlined class="section-icon" />
+            <h4>基本信息</h4>
+          </div>
+          <a-form
+            :model="formState"
+            autocomplete="off"
+            class="edit-form"
+            name="editProfile"
+            @finish="handleSubmit"
+          >
+            <a-form-item
+              :rules="[{ required: true, message: '请输入用户名' }]"
+              label="* 用户名"
+              name="userName"
+            >
+              <a-input v-model:value="formState.userName" placeholder="请输入用户名" size="large" />
+            </a-form-item>
+            <a-form-item class="form-actions">
+              <a-button :loading="submitting" html-type="submit" size="large" type="primary">
+                <template #icon>
+                  <SafetyOutlined />
+                </template>
+                保存修改
+              </a-button>
+              <a-button size="large" @click="closeEditModal">
+                <template #icon>
+                  <span>↻</span>
+                </template>
+                重置
+              </a-button>
+            </a-form-item>
+          </a-form>
+        </div>
+
+        <!-- 邮箱管理 -->
+        <div class="modal-section">
+          <div class="section-header">
+            <MailOutlined class="section-icon" />
+            <h4>邮箱管理</h4>
+          </div>
+          <div class="email-management">
+            <div class="email-status">
+              <MailOutlined />
+              <span>暂未绑定邮箱</span>
+              <a-tag color="orange" size="small">未绑定</a-tag>
+            </div>
+            <a-button class="bind-email-btn" size="large" type="primary">
+              <MailOutlined />
+              绑定邮箱
+            </a-button>
+          </div>
+        </div>
+
+        <!-- 安全设置 -->
+        <div class="modal-section">
+          <div class="section-header">
+            <SafetyOutlined class="section-icon" />
+            <h4>安全设置</h4>
+          </div>
+          <div class="security-settings">
+            <div class="security-item">
+              <div class="security-info">
+                <h5>登录密码</h5>
+                <p>用于登录账户的密码</p>
+              </div>
+              <a-button class="change-password-btn" size="large" @click="openPasswordModal">
+                <LockOutlined />
+                修改密码
+              </a-button>
+            </div>
+          </div>
+        </div>
       </div>
-    </section>
+    </a-modal>
 
     <!-- 修改密码弹窗 -->
     <a-modal
@@ -554,9 +655,7 @@ const handlePasswordSubmit = async () => {
 
         <a-form-item class="password-form-actions">
           <div class="button-group">
-            <a-button class="cancel-button" size="large" @click="closePasswordModal">
-              取消
-            </a-button>
+            <a-button class="cancel-button" size="large" @click="closePasswordModal">取消</a-button>
             <a-button
               :loading="passwordSubmitting"
               class="submit-button"
@@ -575,7 +674,7 @@ const handlePasswordSubmit = async () => {
 
 <style scoped>
 .profile-wrapper {
-  max-width: 960px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 24px 0 64px;
   display: flex;
@@ -583,142 +682,388 @@ const handlePasswordSubmit = async () => {
   gap: 24px;
 }
 
-.profile-hero {
-  background: linear-gradient(120deg, #e0f2ff, #f5f7ff);
-  border-radius: 18px;
-  padding: 28px 32px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(24, 144, 255, 0.15);
-}
-
-.hero-content {
-  flex: 1;
-}
-
-.eyebrow {
-  letter-spacing: 0.4em;
-  font-size: 12px;
-  color: #3c92ff;
-  margin-bottom: 8px;
-}
-
-.profile-hero h2 {
-  margin: 0;
-  font-size: 28px;
-  color: #1f2d3d;
-}
-
-.subtitle {
-  margin-top: 8px;
-  color: #5f6b7c;
-}
-
-.hero-divider {
-  width: 1px;
-  height: 80px;
-  background: rgba(255, 255, 255, 0.7);
-  margin: 0 32px;
-}
-
-.hero-avatar {
-  text-align: center;
-}
-
-.avatar-tip {
-  margin-top: 8px;
-  color: #4f5969;
-}
-
 .profile-card {
   background: #fff;
   border-radius: 18px;
-  padding: 32px 40px 40px;
+  padding: 32px 40px;
   box-shadow: 0 12px 35px rgba(15, 39, 80, 0.07);
   border: 1px solid #f0f2f5;
 }
 
-.card-header {
+.profile-info {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 32px;
+}
+
+.user-info-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  flex: 1;
+}
+
+.user-avatar {
+  flex-shrink: 0;
+  border: 3px solid #f0f2f5;
+}
+
+.user-details {
+  flex: 1;
+}
+
+.user-name {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #1f2d3d;
+}
+
+.user-account {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  color: #8c8c8c;
+}
+
+.user-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+
+.stat-item {
   display: flex;
   align-items: center;
+  gap: 8px;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #8c8c8c;
+}
+
+.stat-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2d3d;
+}
+
+.stat-value.code {
+  font-family: 'Courier New', monospace;
+  color: #1890ff;
+  font-weight: 600;
+}
+
+.stat-tag {
+  margin: 0;
+}
+
+.user-actions {
+  display: flex;
+  flex-direction: column;
   gap: 12px;
-  margin-bottom: 32px;
+  min-width: 150px;
+}
+
+.action-btn {
+  height: 42px;
+  font-size: 15px;
+  font-weight: 500;
+  border-radius: 8px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.points-badge {
+  margin-left: 4px;
+  font-weight: 600;
+}
+
+.calendar-card {
+  margin-top: 0;
+}
+
+.card-header {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #f0f2f5;
 }
 
 .card-header h3 {
   margin: 0;
-  position: relative;
-  padding-bottom: 8px;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f2d3d;
 }
 
-.card-header h3::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 100%;
-  height: 3px;
-  background: linear-gradient(90deg, #1890ff, #6bc1ff);
-  border-radius: 2px;
+.sign-calendar {
+  margin-top: 0;
 }
 
-.card-header .line {
-  display: none;
-}
-
-.avatar-uploader {
+.calendar-header {
   display: flex;
   align-items: center;
-  gap: 16px;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.calendar-header h4 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2d3d;
+}
+
+.month-nav-btn {
+  border: none;
+  background: transparent;
+  color: #1890ff;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 4px 12px;
+  border-radius: 6px;
+  transition: all 0.3s;
+}
+
+.month-nav-btn:hover {
+  background: #f0f2f5;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 12px;
+}
+
+.calendar-weekday {
+  text-align: center;
+  padding: 12px;
+  font-weight: 600;
+  color: #5f6b7c;
+  font-size: 14px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.calendar-day {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: #f8f9fa;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s;
+  min-height: 48px;
+}
+
+.calendar-day:hover {
+  background: #e0f2ff;
+  transform: translateY(-2px);
+}
+
+.calendar-day-empty {
+  background: transparent;
+  cursor: default;
+}
+
+.calendar-day-today {
+  background: linear-gradient(135deg, #1890ff 0%, #6bc1ff 100%);
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+}
+
+.calendar-day-signed {
+  background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(82, 196, 26, 0.3);
+}
+
+.calendar-day-signed.calendar-day-today {
+  background: linear-gradient(135deg, #1890ff 0%, #6bc1ff 100%);
+}
+
+.day-number {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.day-check {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* 编辑资料弹窗样式 */
+.edit-modal :deep(.ant-modal-content) {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.edit-modal :deep(.ant-modal-body) {
+  padding: 0;
+}
+
+.modal-header {
+  padding: 32px 32px 24px;
+  background: linear-gradient(120deg, #e0f2ff, #f5f7ff);
+  border-bottom: 1px solid #f0f2f5;
+}
+
+.modal-header h3 {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #1f2d3d;
+}
+
+.modal-subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: #5f6b7c;
+}
+
+.modal-content {
+  padding: 32px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.modal-profile-card {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 24px;
+  background: linear-gradient(120deg, #f5f7ff, #fff);
+  border-radius: 12px;
+  margin-bottom: 32px;
+  border: 1px solid #f0f2f5;
+}
+
+.modal-profile-info h4 {
+  margin: 0 0 4px 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f2d3d;
+}
+
+.modal-profile-info p {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: #8c8c8c;
+}
+
+.modal-profile-stats {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.modal-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #5f6b7c;
+}
+
+.modal-section {
+  margin-bottom: 32px;
+}
+
+.modal-section:last-child {
+  margin-bottom: 0;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.section-icon {
+  font-size: 20px;
+  color: #1890ff;
+}
+
+.section-header h4 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2d3d;
+}
+
+.edit-form {
+  padding: 20px;
+  background: #fafafa;
+  border-radius: 12px;
 }
 
 .form-actions {
   margin-top: 24px;
+  margin-bottom: 0;
+  display: flex;
+  gap: 12px;
 }
 
-.password-card {
-  margin-top: 24px;
-}
-
-.password-content {
+.email-management {
+  padding: 20px;
+  background: #fafafa;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24px 0;
 }
 
-.password-info {
+.email-status {
   display: flex;
   align-items: center;
-  gap: 16px;
-  flex: 1;
+  gap: 12px;
+  font-size: 15px;
+  color: #5f6b7c;
 }
 
-.password-icon {
-  width: 48px;
-  height: 48px;
+.bind-email-btn {
+  border-radius: 8px;
+}
+
+.security-settings {
+  padding: 20px;
+  background: #fafafa;
   border-radius: 12px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 20px;
 }
 
-.password-text h4 {
+.security-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.security-info h5 {
   margin: 0 0 4px 0;
   font-size: 16px;
+  font-weight: 600;
   color: #1f2d3d;
-  font-weight: 500;
 }
 
-.password-text p {
+.security-info p {
   margin: 0;
   font-size: 14px;
   color: #5f6b7c;
+}
+
+.change-password-btn {
+  border-radius: 8px;
 }
 
 /* 修改密码弹窗样式 */
@@ -729,26 +1074,6 @@ const handlePasswordSubmit = async () => {
 
 .password-modal :deep(.ant-modal-body) {
   padding: 0;
-}
-
-.modal-header {
-  padding: 32px 32px 24px;
-  text-align: center;
-  background: linear-gradient(120deg, #e0f2ff, #f5f7ff);
-  border-bottom: 1px solid #f0f2f5;
-}
-
-.modal-header h3 {
-  margin: 0 0 8px 0;
-  font-size: 24px;
-  color: #1f2d3d;
-  font-weight: 600;
-}
-
-.modal-subtitle {
-  margin: 0;
-  font-size: 14px;
-  color: #5f6b7c;
 }
 
 .password-form {
@@ -844,200 +1169,63 @@ const handlePasswordSubmit = async () => {
   transform: translateY(0);
 }
 
-/* 积分签到模块样式 */
-.point-card {
-  margin-top: 24px;
-}
-
-.point-account {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-bottom: 24px;
-  padding: 20px;
-  background: linear-gradient(135deg, #f5f7ff 0%, #e0f2ff 100%);
-  border-radius: 12px;
-}
-
-.account-item {
-  text-align: center;
-}
-
-.account-label {
-  font-size: 14px;
-  color: #5f6b7c;
-  margin-bottom: 8px;
-}
-
-.account-value {
-  font-size: 24px;
-  font-weight: 600;
-  color: #1890ff;
-}
-
-.sign-in-section {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 32px;
-}
-
-.sign-in-btn {
-  flex: 1;
-  height: 48px;
-  font-size: 16px;
-  font-weight: 500;
-  border-radius: 8px;
-}
-
-.view-logs-btn {
-  height: 48px;
-  border-radius: 8px;
-}
-
-.sign-calendar {
-  margin-top: 24px;
-}
-
-.calendar-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
-}
-
-.calendar-header h4 {
-  margin: 0;
-  font-size: 18px;
-  color: #1f2d3d;
-}
-
-.month-nav-btn {
-  border: none;
-  background: transparent;
-  color: #1890ff;
-  cursor: pointer;
-  font-size: 18px;
-  padding: 4px 12px;
-}
-
-.month-nav-btn:hover {
-  background: #f0f2f5;
-  border-radius: 4px;
-}
-
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 8px;
-}
-
-.calendar-weekday {
-  text-align: center;
-  padding: 8px;
-  font-weight: 500;
-  color: #5f6b7c;
-  font-size: 14px;
-}
-
-.calendar-day {
-  aspect-ratio: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  background: #f5f7ff;
-  position: relative;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.calendar-day:hover {
-  background: #e0f2ff;
-}
-
-.calendar-day-empty {
-  background: transparent;
-  cursor: default;
-}
-
-.calendar-day-today {
-  background: linear-gradient(135deg, #1890ff 0%, #6bc1ff 100%);
-  color: white;
-  font-weight: 600;
-}
-
-.calendar-day-signed {
-  background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
-  color: white;
-}
-
-.calendar-day-signed.calendar-day-today {
-  background: linear-gradient(135deg, #1890ff 0%, #6bc1ff 100%);
-}
-
-.day-number {
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.day-check {
-  position: absolute;
-  top: 2px;
-  right: 4px;
-  font-size: 12px;
-  font-weight: bold;
-}
-
 @media (max-width: 768px) {
-  .profile-hero {
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .hero-divider {
-    width: 60%;
-    height: 1px;
-    margin: 12px 0;
-  }
-
   .profile-card {
     padding: 24px;
   }
 
-  .password-content {
+  .profile-info {
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .user-actions {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .action-btn {
+    flex: 1;
+    min-width: 120px;
+  }
+
+  .user-stats {
+    gap: 16px;
+  }
+
+  .calendar-grid {
+    gap: 8px;
+  }
+
+  .calendar-day {
+    min-height: 40px;
+    font-size: 13px;
+  }
+
+  .modal-content {
+    padding: 24px;
+  }
+
+  .modal-profile-card {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .email-management {
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
   }
 
-  .password-form {
-    padding: 24px;
+  .security-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
   }
 
   .button-group {
     flex-direction: column;
-  }
-
-  .cancel-button,
-  .submit-button {
-    width: 100%;
-  }
-
-  .point-account {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .sign-in-section {
-    flex-direction: column;
-  }
-
-  .calendar-grid {
-    gap: 4px;
-  }
-
-  .calendar-day {
-    font-size: 12px;
   }
 }
 </style>
