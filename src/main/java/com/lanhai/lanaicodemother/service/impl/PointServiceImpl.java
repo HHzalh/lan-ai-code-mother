@@ -120,6 +120,40 @@ public class PointServiceImpl implements PointService {
         return basePoints + bonusPoints;
     }
 
+    /**
+     * 根据连续签到天数计算应得积分（使用更新后的天数）
+     * 每7天为一个周期，循环发放额外奖励：
+     * - 周期第3天：发放3天额外奖励
+     * - 周期第7天：发放7天额外奖励
+     *
+     * @param continuousDays 连续签到天数（更新后的值）
+     * @return 应得积分
+     */
+    public Long calculateSignInPointsByDays(Integer continuousDays) {
+        // 1. 获取签到基础积分
+        Long basePoints = pointRuleService.getRuleValue(PointRuleKeyEnum.SIGN_IN_BASE);
+
+        // 2. 计算在7天周期中的天数（支持循环奖励）
+        int daysInCycle = continuousDays % 7;
+        if (daysInCycle == 0) {
+            daysInCycle = 7; // 如果是7的倍数，说明是周期第7天
+        }
+
+        // 3. 计算连续奖励（只在周期第3天和第7天发放额外奖励）
+        Long bonusPoints = 0L;
+        if (daysInCycle == 3) {
+            // 周期第3天，发放3天额外奖励
+            bonusPoints = pointRuleService.getRuleValue(PointRuleKeyEnum.SIGN_IN_CONTINUOUS_3);
+            log.info("触发连续签到{}天（周期第3天）额外奖励，额外积分：{}", continuousDays, bonusPoints);
+        } else if (daysInCycle == 7) {
+            // 周期第7天，发放7天额外奖励
+            bonusPoints = pointRuleService.getRuleValue(PointRuleKeyEnum.SIGN_IN_CONTINUOUS_7);
+            log.info("触发连续签到{}天（周期第7天）额外奖励，额外积分：{}", continuousDays, bonusPoints);
+        }
+
+        return basePoints + bonusPoints;
+    }
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean grantPoints(Long userId, Long points, String remark) {

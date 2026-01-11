@@ -12,7 +12,6 @@ import com.lanhai.lanaicodemother.model.dto.point.UserAccountQueryRequest;
 import com.lanhai.lanaicodemother.model.entity.User;
 import com.lanhai.lanaicodemother.model.vo.point.PointLogVO;
 import com.lanhai.lanaicodemother.model.vo.point.PointRuleVO;
-import com.lanhai.lanaicodemother.model.vo.point.PointSignInRecordVO;
 import com.lanhai.lanaicodemother.model.vo.point.UserAccountVO;
 import com.lanhai.lanaicodemother.service.*;
 import com.mybatisflex.core.paginate.Page;
@@ -21,7 +20,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -88,25 +86,6 @@ public class PointController {
         User loginUser = userService.getLoginUser(request);
         Boolean signed = pointSignInService.getTodaySignInStatus(loginUser.getId());
         return ResultUtils.success(signed);
-    }
-
-    /**
-     * 获取签到日历
-     *
-     * @param request   HTTP请求
-     * @param startDate 开始日期
-     * @param endDate   结束日期
-     * @return 签到记录列表
-     */
-    @GetMapping("/sign-calendar")
-    public BaseResponse<List<PointSignInRecordVO>> getSignInCalendar(
-            HttpServletRequest request,
-            @RequestParam(required = false) LocalDate startDate,
-            @RequestParam(required = false) LocalDate endDate) {
-        User loginUser = userService.getLoginUser(request);
-        List<PointSignInRecordVO> calendar = pointSignInService.getSignInCalendar(
-                loginUser.getId(), startDate, endDate);
-        return ResultUtils.success(calendar);
     }
 
     /**

@@ -25,6 +25,14 @@ public interface PointService {
     Long calculateSignInPoints(Long userId);
 
     /**
+     * 根据连续签到天数计算应得积分
+     *
+     * @param continuousDays 连续签到天数
+     * @return 应得积分数
+     */
+    Long calculateSignInPointsByDays(Integer continuousDays);
+
+    /**
      * 管理员给用户发放积分
      *
      * @param userId 用户ID

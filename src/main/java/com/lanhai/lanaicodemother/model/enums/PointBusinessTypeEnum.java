@@ -18,11 +18,6 @@ public enum PointBusinessTypeEnum {
     SIGN_IN("SIGN_IN", "签到"),
 
     /**
-     * 签到奖励（连续签到奖励）
-     */
-    SIGN_IN_BONUS("SIGN_IN_BONUS", "签到奖励"),
-
-    /**
      * 注册奖励（所有新用户注册的基础奖励）
      */
     REGISTER_REWARD("REGISTER_REWARD", "注册奖励"),

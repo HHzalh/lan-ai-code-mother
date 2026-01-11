@@ -1,6 +1,5 @@
 package com.lanhai.lanaicodemother.service.impl;
 
-import cn.hutool.core.bean.BeanUtil;
 import com.lanhai.lanaicodemother.exception.ErrorCode;
 import com.lanhai.lanaicodemother.exception.ThrowUtils;
 import com.lanhai.lanaicodemother.mapper.PointSignInRecordMapper;
@@ -9,7 +8,7 @@ import com.lanhai.lanaicodemother.model.dto.point.PointSignInResponse;
 import com.lanhai.lanaicodemother.model.entity.PointSignInRecord;
 import com.lanhai.lanaicodemother.model.entity.UserAccount;
 import com.lanhai.lanaicodemother.model.enums.PointBusinessTypeEnum;
-import com.lanhai.lanaicodemother.model.vo.point.PointSignInRecordVO;
+import com.lanhai.lanaicodemother.model.enums.PointRuleKeyEnum;
 import com.lanhai.lanaicodemother.service.PointService;
 import com.lanhai.lanaicodemother.service.PointSignInService;
 import com.lanhai.lanaicodemother.service.UserAccountService;
@@ -17,13 +16,12 @@ import com.lanhai.lanaicodemother.utils.RedisDistributedLock;
 import com.mybatisflex.core.query.QueryWrapper;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * 签到 服务层实现。
@@ -48,6 +46,8 @@ public class PointSignInServiceImpl implements PointSignInService {
     private PointService pointService;
     @Resource
     private RedisDistributedLock redisDistributedLock;
+    @Autowired
+    private PointRuleServiceImpl pointRuleServiceImpl;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -84,8 +84,8 @@ public class PointSignInServiceImpl implements PointSignInService {
             }
         }
 
-        // 4. 计算应得积分
-        Long points = pointService.calculateSignInPoints(userId);
+        // 4. 计算应得积分（使用更新后的连续天数）
+        Long points = pointService.calculateSignInPointsByDays(continuousDays);
 
         // 5. 更新签到状态（使用乐观锁，在增加积分之前）
         UserAccount updateAccount = new UserAccount();
@@ -96,7 +96,18 @@ public class PointSignInServiceImpl implements PointSignInService {
         ThrowUtils.throwIf(updated == 0, ErrorCode.OPERATION_ERROR, "签到失败，请重试");
 
         // 6. 增加积分
-        userAccountService.addPoints(userId, points, PointBusinessTypeEnum.SIGN_IN.getValue(), null, "签到获得积分");
+        // 6.1 发放基础签到积分（每天都有）
+        userAccountService.addPoints(userId, pointRuleServiceImpl.getRuleValue(PointRuleKeyEnum.SIGN_IN_BASE),
+                PointBusinessTypeEnum.SIGN_IN.getValue(), null, "签到获得积分");
+
+        // 6.2 发放连续签到额外奖励（只在第3天和第7天）
+        Long basePoints = pointRuleServiceImpl.getRuleValue(PointRuleKeyEnum.SIGN_IN_BASE);
+        if (points > basePoints) {
+            Long bonusPoints = points - basePoints;
+            String bonusDesc = "连续签到" + continuousDays + "天额外获得积分";
+            userAccountService.addPoints(userId, bonusPoints,
+                    PointBusinessTypeEnum.SIGN_IN.getValue(), null, bonusDesc);
+        }
 
         // 7. 记录签到记录
         PointSignInRecord record = new PointSignInRecord();
@@ -127,28 +138,6 @@ public class PointSignInServiceImpl implements PointSignInService {
         queryWrapper.eq("user_id", userId);
         queryWrapper.eq("sign_date", today);
         return signInRecordMapper.selectCountByQuery(queryWrapper) > 0;
-    }
-
-    @Override
-    public List<PointSignInRecordVO> getSignInCalendar(Long userId, LocalDate startDate, LocalDate endDate) {
-        QueryWrapper queryWrapper = new QueryWrapper();
-        queryWrapper.eq("user_id", userId);
-        if (startDate != null) {
-            queryWrapper.ge("sign_date", startDate);
-        }
-        if (endDate != null) {
-            queryWrapper.le("sign_date", endDate);
-        }
-        queryWrapper.orderBy("sign_date", false);
-
-        List<PointSignInRecord> records = signInRecordMapper.selectListByQuery(queryWrapper);
-        return records.stream()
-                .map(record -> {
-                    PointSignInRecordVO vo = new PointSignInRecordVO();
-                    BeanUtil.copyProperties(record, vo);
-                    return vo;
-                })
-                .collect(Collectors.toList());
     }
 
 }
