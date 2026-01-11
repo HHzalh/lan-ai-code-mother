@@ -3,6 +3,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import {
+  AppstoreOutlined,
   CheckCircleOutlined,
   EditOutlined,
   GiftOutlined,
@@ -17,13 +18,10 @@ import {
 import type { UploadProps } from 'ant-design-vue'
 import { useLoginUserStore } from '@/stores/loginUser'
 import { changePassword, updateUserInfo, uploadUserAvatar } from '@/api/userController'
-import {
-  getMyAccount,
-  getMyInvitationCode,
-  getSignInCalendar,
-  getSignStatus,
-  signIn,
-} from '@/api/pointController'
+import { getMyAccount, getMyInvitationCode, getSignStatus, signIn } from '@/api/pointController'
+import { listMyAppVoByPage } from '@/api/appController'
+import AppCard from '@/components/AppCard.vue'
+import { getDeployUrl } from '@/config/env'
 import dayjs from 'dayjs'
 
 const router = useRouter()
@@ -38,9 +36,16 @@ const showPasswordModal = ref(false)
 const accountInfo = ref<API.UserAccountVO | null>(null)
 const todaySigned = ref(false)
 const signing = ref(false)
-const signCalendar = ref<API.PointSignInRecordVO[]>([])
-const currentMonth = ref(dayjs())
 const invitationCode = ref<string>('')
+
+// 我的应用相关
+const myApps = ref<API.AppVO[]>([])
+const appsPage = reactive({
+  current: 1,
+  pageSize: 6,
+  total: 0,
+})
+const appsLoading = ref(false)
 
 const formState = reactive<Partial<API.UserUpdateRequest>>({
   id: undefined,
@@ -89,8 +94,8 @@ onMounted(() => {
   initForm()
   loadAccountInfo()
   loadSignStatus()
-  loadSignCalendar()
   loadInvitationCode()
+  loadMyApps()
 })
 
 // 加载积分账户信息
@@ -129,23 +134,6 @@ const loadSignStatus = async () => {
   }
 }
 
-// 加载签到日历
-const loadSignCalendar = async () => {
-  try {
-    const startDate = currentMonth.value.startOf('month').format('YYYY-MM-DD')
-    const endDate = currentMonth.value.endOf('month').format('YYYY-MM-DD')
-    const res = await getSignInCalendar({
-      startDate,
-      endDate,
-    })
-    if (res.data.code === 0 && res.data.data) {
-      signCalendar.value = res.data.data
-    }
-  } catch (error) {
-    console.error('加载签到日历失败：', error)
-  }
-}
-
 // 执行签到
 const handleSignIn = async () => {
   if (todaySigned.value) {
@@ -162,7 +150,6 @@ const handleSignIn = async () => {
       )
       todaySigned.value = true
       await loadAccountInfo()
-      await loadSignCalendar()
     } else {
       message.error(res.data.message ?? '签到失败')
     }
@@ -173,58 +160,51 @@ const handleSignIn = async () => {
   }
 }
 
-// 判断某天是否已签到
-const isDateSigned = (date: string) => {
-  return signCalendar.value.some((record) => record.signDate === date)
-}
-
-// 获取某天的签到信息
-const getSignInfo = (date: string) => {
-  return signCalendar.value.find((record) => record.signDate === date)
-}
-
-// 切换月份
-const changeMonth = (direction: 'prev' | 'next') => {
-  if (direction === 'prev') {
-    currentMonth.value = currentMonth.value.subtract(1, 'month')
-  } else {
-    currentMonth.value = currentMonth.value.add(1, 'month')
+// 加载我的应用
+const loadMyApps = async () => {
+  if (!loginUserStore.loginUser.id) {
+    return
   }
-  loadSignCalendar()
-}
-
-// 生成当月日历
-const calendarDays = computed(() => {
-  const start = currentMonth.value.startOf('month')
-  const end = currentMonth.value.endOf('month')
-  const days: Array<{
-    date: string
-    day: number
-    signed: boolean
-    info?: API.PointSignInRecordVO
-  }> = []
-
-  // 填充月初空白
-  const startDay = start.day()
-  for (let i = 0; i < startDay; i++) {
-    days.push({ date: '', day: 0, signed: false })
-  }
-
-  // 填充日期
-  let current = start
-  while (current.isBefore(end) || current.isSame(end, 'day')) {
-    const dateStr = current.format('YYYY-MM-DD')
-    days.push({
-      date: dateStr,
-      day: current.date(),
-      signed: isDateSigned(dateStr),
-      info: getSignInfo(dateStr),
+  appsLoading.value = true
+  try {
+    const res = await listMyAppVoByPage({
+      pageNum: appsPage.current,
+      pageSize: appsPage.pageSize,
+      sortField: 'createTime',
+      sortOrder: 'desc',
     })
-    current = current.add(1, 'day')
+    if (res.data.code === 0 && res.data.data) {
+      myApps.value = res.data.data.records || []
+      appsPage.total = res.data.data.totalRow || 0
+    }
+  } catch (error) {
+    console.error('加载我的应用失败：', error)
+  } finally {
+    appsLoading.value = false
   }
+}
 
-  return days
-})
+// 查看应用对话
+const viewAppChat = (appId: string | number | undefined) => {
+  if (appId) {
+    router.push(`/app/chat/${appId}`)
+  }
+}
+
+// 查看应用作品
+const viewAppWork = (app: API.AppVO) => {
+  if (app.deployKey) {
+    const url = getDeployUrl(app.deployKey)
+    window.open(url, '_blank')
+  }
+}
+
+// 切换应用列表页码
+const handleAppsPageChange = (page: number, pageSize: number) => {
+  appsPage.current = page
+  appsPage.pageSize = pageSize
+  loadMyApps()
+}
 
 // 跳转到积分商城
 const goToPointMall = () => {
@@ -420,48 +400,37 @@ const handlePasswordSubmit = async () => {
       </div>
     </section>
 
-    <!-- 签到日历 -->
-    <section class="profile-card calendar-card">
-      <div class="card-header">
-        <h3>签到日历</h3>
-      </div>
-      <div class="sign-calendar">
-        <div class="calendar-header">
-          <a-button class="month-nav-btn" @click="changeMonth('prev')">
-            <template #icon>
-              <span>←</span>
-            </template>
-          </a-button>
-          <h4>{{ currentMonth.format('YYYY年MM月') }}</h4>
-          <a-button class="month-nav-btn" @click="changeMonth('next')">
-            <template #icon>
-              <span>→</span>
-            </template>
-          </a-button>
+    <!-- 我的应用 -->
+    <section class="profile-card my-apps-card">
+      <div class="my-apps-header">
+        <div class="apps-title-section">
+          <AppstoreOutlined class="apps-title-icon" />
+          <h3>我的应用</h3>
         </div>
-        <div class="calendar-grid">
-          <div class="calendar-weekday">日</div>
-          <div class="calendar-weekday">一</div>
-          <div class="calendar-weekday">二</div>
-          <div class="calendar-weekday">三</div>
-          <div class="calendar-weekday">四</div>
-          <div class="calendar-weekday">五</div>
-          <div class="calendar-weekday">六</div>
-          <div
-            v-for="(day, index) in calendarDays"
-            :key="index"
-            :class="[
-              'calendar-day',
-              {
-                'calendar-day-signed': day.signed,
-                'calendar-day-today': day.date === dayjs().format('YYYY-MM-DD'),
-                'calendar-day-empty': !day.date,
-              },
-            ]"
-          >
-            <span v-if="day.date" class="day-number">{{ day.day }}</span>
-            <span v-if="day.signed" class="day-check">✓</span>
+      </div>
+      <div class="my-apps-content">
+        <a-spin :spinning="appsLoading">
+          <div v-if="myApps.length > 0" class="apps-grid">
+            <div v-for="app in myApps" :key="app.id" class="app-item">
+              <AppCard :app="app" @view-chat="viewAppChat" @view-work="viewAppWork" />
+            </div>
           </div>
+          <div v-else class="apps-empty">
+            <div class="empty-icon">📱</div>
+            <p class="empty-text">暂无应用</p>
+            <p class="empty-hint">请创建一个应用开始使用</p>
+          </div>
+        </a-spin>
+        <div v-if="appsPage.total > 0" class="apps-pagination">
+          <a-pagination
+            v-model:current="appsPage.current"
+            v-model:page-size="appsPage.pageSize"
+            :total="appsPage.total"
+            :show-size-changer="false"
+            :show-total="(total: number) => `共 ${total} 个应用`"
+            size="small"
+            @change="handleAppsPageChange"
+          />
         </div>
       </div>
     </section>
@@ -801,124 +770,82 @@ const handlePasswordSubmit = async () => {
   font-weight: 600;
 }
 
-.calendar-card {
+.my-apps-card {
   margin-top: 0;
 }
 
-.card-header {
+.my-apps-header {
   margin-bottom: 24px;
   padding-bottom: 16px;
-  border-bottom: 2px solid #f0f2f5;
+  border-bottom: 1px solid #f0f2f5;
 }
 
-.card-header h3 {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 600;
-  color: #1f2d3d;
-}
-
-.sign-calendar {
-  margin-top: 0;
-}
-
-.calendar-header {
+.apps-title-section {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
+  gap: 8px;
 }
 
-.calendar-header h4 {
+.apps-title-icon {
+  font-size: 18px;
+  color: #1890ff;
+}
+
+.my-apps-header h3 {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
   color: #1f2d3d;
 }
 
-.month-nav-btn {
-  border: none;
-  background: transparent;
-  color: #1890ff;
-  cursor: pointer;
-  font-size: 18px;
-  padding: 4px 12px;
-  border-radius: 6px;
-  transition: all 0.3s;
+.my-apps-content {
+  min-height: 200px;
 }
 
-.month-nav-btn:hover {
-  background: #f0f2f5;
-}
-
-.calendar-grid {
+.apps-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 12px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 24px;
 }
 
-.calendar-weekday {
-  text-align: center;
-  padding: 12px;
-  font-weight: 600;
-  color: #5f6b7c;
-  font-size: 14px;
-  background: #f8f9fa;
-  border-radius: 8px;
+.app-item {
+  width: 100%;
 }
 
-.calendar-day {
-  aspect-ratio: 1;
+.apps-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
-  background: #f8f9fa;
-  position: relative;
-  cursor: pointer;
-  transition: all 0.3s;
-  min-height: 48px;
+  padding: 60px 20px;
+  text-align: center;
 }
 
-.calendar-day:hover {
-  background: #e0f2ff;
-  transform: translateY(-2px);
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  opacity: 0.5;
 }
 
-.calendar-day-empty {
-  background: transparent;
-  cursor: default;
-}
-
-.calendar-day-today {
-  background: linear-gradient(135deg, #1890ff 0%, #6bc1ff 100%);
-  color: white;
-  font-weight: 600;
-  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
-}
-
-.calendar-day-signed {
-  background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
-  color: white;
-  box-shadow: 0 4px 12px rgba(82, 196, 26, 0.3);
-}
-
-.calendar-day-signed.calendar-day-today {
-  background: linear-gradient(135deg, #1890ff 0%, #6bc1ff 100%);
-}
-
-.day-number {
-  font-size: 15px;
+.empty-text {
+  font-size: 16px;
   font-weight: 500;
+  color: #5f6b7c;
+  margin: 0 0 8px 0;
 }
 
-.day-check {
-  position: absolute;
-  top: 4px;
-  right: 6px;
-  font-size: 12px;
-  font-weight: bold;
+.empty-hint {
+  font-size: 14px;
+  color: #8c8c8c;
+  margin: 0;
+}
+
+.apps-pagination {
+  display: flex;
+  justify-content: center;
+  padding-top: 16px;
+  border-top: 1px solid #f0f2f5;
 }
 
 /* 编辑资料弹窗样式 */
@@ -1218,13 +1145,17 @@ const handlePasswordSubmit = async () => {
     gap: 16px;
   }
 
-  .calendar-grid {
-    gap: 8px;
+  .apps-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
   }
 
-  .calendar-day {
-    min-height: 40px;
-    font-size: 13px;
+  .apps-empty {
+    padding: 40px 20px;
+  }
+
+  .empty-icon {
+    font-size: 48px;
   }
 
   .modal-content {
