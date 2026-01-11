@@ -55,6 +55,10 @@ const myAxios = axios.create({
 // 全局请求拦截器
 myAxios.interceptors.request.use(
   function (config) {
+    // FormData 不需要处理，直接跳过
+    if (config.data instanceof FormData) {
+      return config
+    }
     // 处理 POST/PUT 请求 body 中的大数字精度丢失问题
     if (config.data && typeof config.data === 'object') {
       config.data = convertBigNumbersToString(config.data)

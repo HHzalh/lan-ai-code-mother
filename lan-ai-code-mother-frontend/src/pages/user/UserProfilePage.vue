@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { message, type UploadProps } from 'ant-design-vue'
+import { message } from 'ant-design-vue'
 import {
   CheckCircleOutlined,
   EditOutlined,
@@ -11,8 +11,10 @@ import {
   MailOutlined,
   SafetyOutlined,
   ShoppingOutlined,
+  UploadOutlined,
   UserOutlined,
 } from '@ant-design/icons-vue'
+import type { UploadProps } from 'ant-design-vue'
 import { useLoginUserStore } from '@/stores/loginUser'
 import { changePassword, updateUserInfo, uploadUserAvatar } from '@/api/userController'
 import {
@@ -259,10 +261,9 @@ const handleAvatarUpload: UploadProps['beforeUpload'] = async (file) => {
     const formData = new FormData()
     formData.append('file', file)
     const res = await uploadUserAvatar(
-      { file: '' },
+      {} as API.uploadUserAvatarParams,
       {
         data: formData,
-        params: undefined,
       },
     )
     if (res.data.code === 0 && res.data.data) {
@@ -272,8 +273,8 @@ const handleAvatarUpload: UploadProps['beforeUpload'] = async (file) => {
     } else {
       message.error(res.data.message ?? '上传失败，请重试')
     }
-  } catch (error) {
-    message.error('上传失败，请重试')
+  } catch (error: any) {
+    message.error(error?.response?.data?.message ?? '上传失败，请重试')
   } finally {
     avatarUploading.value = false
   }
@@ -516,12 +517,34 @@ const handlePasswordSubmit = async () => {
             name="editProfile"
             @finish="handleSubmit"
           >
+            <a-form-item label="头像">
+              <div class="avatar-uploader">
+                <a-avatar :size="80" :src="displayAvatar" />
+                <a-upload
+                  :before-upload="handleAvatarUpload"
+                  :show-upload-list="false"
+                  accept="image/*"
+                >
+                  <a-button :loading="avatarUploading" type="default">
+                    <UploadOutlined />
+                    重新上传
+                  </a-button>
+                </a-upload>
+              </div>
+            </a-form-item>
             <a-form-item
               :rules="[{ required: true, message: '请输入用户名' }]"
               label="* 用户名"
               name="userName"
             >
               <a-input v-model:value="formState.userName" placeholder="请输入用户名" size="large" />
+            </a-form-item>
+            <a-form-item label="个人简介" name="userProfile">
+              <a-textarea
+                v-model:value="formState.userProfile"
+                :rows="4"
+                placeholder="介绍一下自己，内容会显示在个人名片中"
+              />
             </a-form-item>
             <a-form-item class="form-actions">
               <a-button :loading="submitting" html-type="submit" size="large" type="primary">
@@ -530,12 +553,7 @@ const handlePasswordSubmit = async () => {
                 </template>
                 保存修改
               </a-button>
-              <a-button size="large" @click="closeEditModal">
-                <template #icon>
-                  <span>↻</span>
-                </template>
-                重置
-              </a-button>
+              <a-button size="large" @click="closeEditModal">重置</a-button>
             </a-form-item>
           </a-form>
         </div>
@@ -1007,6 +1025,12 @@ const handlePasswordSubmit = async () => {
   padding: 20px;
   background: #fafafa;
   border-radius: 12px;
+}
+
+.avatar-uploader {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
 .form-actions {

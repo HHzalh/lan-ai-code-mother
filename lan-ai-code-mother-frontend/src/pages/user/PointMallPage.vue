@@ -30,45 +30,20 @@
           <h3>获得积分</h3>
         </div>
         <div class="rule-list">
-          <div class="rule-item">
+          <div v-for="rule in incomeRules" :key="rule.id" class="rule-item">
             <div class="rule-item-icon">
-              <UserAddOutlined />
+              <component :is="getIncomeIcon(rule.ruleKey)" />
             </div>
             <div class="rule-item-content">
-              <div class="rule-item-title">用户注册</div>
-              <div class="rule-item-desc">新用户注册成功即可获得积分奖励</div>
+              <div class="rule-item-title">{{ getRuleTitle(rule.ruleKey) }}</div>
+              <div class="rule-item-desc">{{ rule.ruleDesc || getRuleDefaultDesc(rule.ruleKey) }}</div>
             </div>
-            <div class="rule-item-points income">+30</div>
-          </div>
-          <div class="rule-item">
-            <div class="rule-item-icon">
-              <LinkOutlined />
+            <div class="rule-item-points income" v-if="rule.status !== 0">
+              +{{ rule.ruleValue }}
             </div>
-            <div class="rule-item-content">
-              <div class="rule-item-title">邀请码注册</div>
-              <div class="rule-item-desc">使用他人邀请码注册可获得额外积分</div>
+            <div class="rule-item-points disabled" v-else>
+              已禁用
             </div>
-            <div class="rule-item-points income">+50</div>
-          </div>
-          <div class="rule-item">
-            <div class="rule-item-icon">
-              <TeamOutlined />
-            </div>
-            <div class="rule-item-content">
-              <div class="rule-item-title">邀请他人</div>
-              <div class="rule-item-desc">成功邀请他人注册并使用您的邀请码</div>
-            </div>
-            <div class="rule-item-points income">+50</div>
-          </div>
-          <div class="rule-item">
-            <div class="rule-item-icon">
-              <CalendarOutlined />
-            </div>
-            <div class="rule-item-content">
-              <div class="rule-item-title">每日签到</div>
-              <div class="rule-item-desc">每日签到可获得积分</div>
-            </div>
-            <div class="rule-item-points income">+10</div>
           </div>
         </div>
       </div>
@@ -80,25 +55,20 @@
           <h3>消耗积分</h3>
         </div>
         <div class="rule-list">
-          <div class="rule-item">
+          <div v-for="rule in expenseRules" :key="rule.id" class="rule-item">
             <div class="rule-item-icon">
-              <RocketOutlined />
+              <component :is="getExpenseIcon(rule.ruleKey)" />
             </div>
             <div class="rule-item-content">
-              <div class="rule-item-title">创建应用</div>
-              <div class="rule-item-desc">使用AI生成新的应用项目</div>
+              <div class="rule-item-title">{{ getRuleTitle(rule.ruleKey) }}</div>
+              <div class="rule-item-desc">{{ rule.ruleDesc }}</div>
             </div>
-            <div class="rule-item-points expense">-5</div>
-          </div>
-          <div class="rule-item">
-            <div class="rule-item-icon">
-              <MessageOutlined />
+            <div class="rule-item-points expense" v-if="rule.status !== 0">
+              -{{ rule.ruleValue }}
             </div>
-            <div class="rule-item-content">
-              <div class="rule-item-title">AI对话</div>
-              <div class="rule-item-desc">与AI助手进行对话交流</div>
+            <div class="rule-item-points disabled" v-else>
+              已禁用
             </div>
-            <div class="rule-item-points expense">-2</div>
           </div>
         </div>
       </div>
@@ -147,19 +117,49 @@
       <div class="faq-list">
         <div class="faq-item">
           <RightOutlined class="faq-icon" />
-          <div class="faq-text">积分有有效期吗?</div>
+          <div class="faq-content">
+            <div class="faq-question">积分有有效期吗?</div>
+            <div class="faq-answer">积分永久有效,不会过期,您可以随时使用。</div>
+          </div>
         </div>
         <div class="faq-item">
           <RightOutlined class="faq-icon" />
-          <div class="faq-text">积分不足时怎么办?</div>
+          <div class="faq-content">
+            <div class="faq-question">积分不足时怎么办?</div>
+            <div class="faq-answer">
+              您可以通过每日签到、邀请好友注册等方式获得积分。建议提前规划积分使用,避免在需要时积分不足。
+            </div>
+          </div>
         </div>
         <div class="faq-item">
           <RightOutlined class="faq-icon" />
-          <div class="faq-text">邀请码在哪里查看?</div>
+          <div class="faq-content">
+            <div class="faq-question">邀请码在哪里查看?</div>
+            <div class="faq-answer">您可以在个人中心页面查看您的专属邀请码,分享给好友使用可获得奖励积分。</div>
+          </div>
         </div>
         <div class="faq-item">
           <RightOutlined class="faq-icon" />
-          <div class="faq-text">积分可以转让吗?</div>
+          <div class="faq-content">
+            <div class="faq-question">积分可以转让吗?</div>
+            <div class="faq-answer">积分不支持转让,但您可以通过邀请好友注册的方式帮助好友获得积分奖励。</div>
+          </div>
+        </div>
+        <div class="faq-item">
+          <RightOutlined class="faq-icon" />
+          <div class="faq-content">
+            <div class="faq-question">签到有额外奖励吗?</div>
+            <div class="faq-answer">连续签到会有额外奖励,连续3天可获得额外积分,连续7天可获得更多奖励。</div>
+          </div>
+        </div>
+        <div class="faq-item">
+          <RightOutlined class="faq-icon" />
+          <div class="faq-content">
+            <div class="faq-question">如何快速获得积分?</div>
+            <div class="faq-answer">
+              最快速的方式是邀请好友注册,每成功邀请一位好友可获得奖励积分。同时每日签到也是稳定的积分来源。
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -174,7 +174,7 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   AimOutlined,
@@ -183,6 +183,7 @@ import {
   BulbOutlined,
   CalendarOutlined,
   FileTextOutlined,
+  GiftOutlined,
   LinkOutlined,
   MessageOutlined,
   QuestionCircleOutlined,
@@ -193,11 +194,69 @@ import {
   TeamOutlined,
   ThunderboltOutlined,
   UserAddOutlined,
+  DownloadOutlined,
 } from '@ant-design/icons-vue'
-import { getMyAccount } from '@/api/pointController'
+import { getMyAccount, getAllRules } from '@/api/pointController'
 
 const router = useRouter()
 const accountInfo = ref<API.UserAccountVO | null>(null)
+const rules = ref<API.PointRuleVO[]>([])
+
+// 获得积分的规则键
+const INCOME_RULE_KEYS = ['REGISTER_REWARD', 'INVITE_NEW', 'INVITE_REWARD', 'SIGN_IN_BASE','SIGN_IN_CONTINUOUS_3','SIGN_IN_CONTINUOUS_7']
+
+// 消耗积分的规则键
+const EXPENSE_RULE_KEYS = ['GENERATE_COST', 'DEPLOY_COST', 'DOWNLOAD_COST']
+
+// 计算获得的积分规则（只显示启用的）
+const incomeRules = computed(() => {
+  return rules.value
+    .filter((rule) => INCOME_RULE_KEYS.includes(rule.ruleKey || ''))
+    .filter((rule) => rule.status !== 0)
+})
+
+// 计算消耗的积分规则（显示所有，包括禁用的）
+const expenseRules = computed(() => {
+  return rules.value.filter((rule) => EXPENSE_RULE_KEYS.includes(rule.ruleKey || ''))
+})
+
+// 获取规则标题
+const getRuleTitle = (ruleKey?: string) => {
+  const titleMap: Record<string, string> = {
+    REGISTER_REWARD: '用户注册',
+    INVITE_NEW: '邀请码注册',
+    INVITE_REWARD: '邀请他人',
+    SIGN_IN_BASE: '每日签到',
+    SIGN_IN_CONTINUOUS_3: '连续签到3天',
+    SIGN_IN_CONTINUOUS_7: '连续签到7天',
+    GENERATE_COST: '生成应用',
+    DEPLOY_COST: '部署应用',
+    DOWNLOAD_COST: '下载代码',
+  }
+  return titleMap[ruleKey || ''] || ruleKey || ''
+}
+
+
+// 获取获得积分图标
+const getIncomeIcon = (ruleKey?: string) => {
+  const iconMap: Record<string, any> = {
+    REGISTER_REWARD: UserAddOutlined,
+    INVITE_NEW: LinkOutlined,
+    INVITE_REWARD: TeamOutlined,
+    SIGN_IN_BASE: CalendarOutlined,
+  }
+  return iconMap[ruleKey || ''] || GiftOutlined
+}
+
+// 获取消耗积分图标
+const getExpenseIcon = (ruleKey?: string) => {
+  const iconMap: Record<string, any> = {
+    GENERATE_COST: RocketOutlined,
+    DEPLOY_COST: RocketOutlined,
+    DOWNLOAD_COST: DownloadOutlined,
+  }
+  return iconMap[ruleKey || ''] || MessageOutlined
+}
 
 const loadAccountInfo = async () => {
   try {
@@ -210,12 +269,24 @@ const loadAccountInfo = async () => {
   }
 }
 
+const loadRules = async () => {
+  try {
+    const res = await getAllRules()
+    if (res.data.code === 0 && res.data.data) {
+      rules.value = res.data.data || []
+    }
+  } catch (error) {
+    console.error('加载积分规则失败：', error)
+  }
+}
+
 const goBack = () => {
   router.push('/user/profile')
 }
 
 onMounted(() => {
   loadAccountInfo()
+  loadRules()
 })
 </script>
 
@@ -384,6 +455,11 @@ onMounted(() => {
   color: #ff4d4f;
 }
 
+.rule-item-points.disabled {
+  color: #bfbfbf;
+  font-size: 14px;
+}
+
 .suggestions-list {
   display: flex;
   flex-direction: column;
@@ -421,17 +497,16 @@ onMounted(() => {
 .faq-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
 .faq-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
-  padding: 16px;
+  padding: 20px;
   background: #f8f9fa;
-  border-radius: 10px;
-  cursor: pointer;
+  border-radius: 12px;
   transition: all 0.3s;
 }
 
@@ -443,11 +518,25 @@ onMounted(() => {
 .faq-icon {
   color: #8c8c8c;
   font-size: 14px;
+  margin-top: 4px;
+  flex-shrink: 0;
 }
 
-.faq-text {
+.faq-content {
+  flex: 1;
+}
+
+.faq-question {
   font-size: 15px;
+  font-weight: 600;
   color: #1f2d3d;
+  margin-bottom: 8px;
+}
+
+.faq-answer {
+  font-size: 14px;
+  color: #5f6b7c;
+  line-height: 1.6;
 }
 
 .back-button-container {
@@ -490,6 +579,15 @@ onMounted(() => {
 
   .rule-item-points {
     align-self: flex-end;
+  }
+
+  .faq-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .faq-icon {
+    margin-top: 0;
   }
 }
 </style>
