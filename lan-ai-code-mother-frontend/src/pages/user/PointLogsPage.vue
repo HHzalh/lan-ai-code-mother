@@ -220,6 +220,7 @@ const getBusinessTypeColor = (type?: string) => {
     INVITEE_BONUS: 'cyan',
     INVITER_BONUS: 'purple',
     GENERATE: 'orange',
+    DOWNLOAD: 'geekblue',
     DEPLOY: 'red',
     SYSTEM_GRANT: 'magenta',
   }

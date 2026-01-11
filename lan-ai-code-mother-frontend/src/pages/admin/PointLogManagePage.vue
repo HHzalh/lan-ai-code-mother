@@ -22,6 +22,7 @@
           <a-select-option value="INVITEE_BONUS">被邀请人奖励</a-select-option>
           <a-select-option value="INVITER_BONUS">邀请人奖励</a-select-option>
           <a-select-option value="GENERATE">生成消耗</a-select-option>
+          <a-select-option value="DOWNLOAD">下载代码</a-select-option>
           <a-select-option value="DEPLOY">部署消耗</a-select-option>
           <a-select-option value="SYSTEM_GRANT">系统发放</a-select-option>
         </a-select>
@@ -143,7 +144,7 @@
           </a-form-item>
         </a-form>
         <div class="modal-footer">
-          <a-button class="cancel-btn" size="large" @click="resetGrantForm"> 取消 </a-button>
+          <a-button class="cancel-btn" size="large" @click="resetGrantForm"> 取消</a-button>
           <a-button
             :loading="granting"
             class="confirm-btn"
@@ -327,6 +328,7 @@ const getBusinessTypeColor = (type?: string) => {
     INVITEE_BONUS: 'cyan',
     INVITER_BONUS: 'purple',
     GENERATE: 'orange',
+    DOWNLOAD: 'geekblue',
     DEPLOY: 'red',
     SYSTEM_GRANT: 'magenta',
   }

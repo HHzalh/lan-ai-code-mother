@@ -192,19 +192,16 @@
           <a-form-item
             :rules="[
               { required: true, message: '请输入积分数' },
-              { type: 'number', min: 1, message: '积分数必须大于0' },
+              { pattern: /^[1-9]\d*$/, message: '积分数必须为大于0的整数' },
             ]"
             label="积分数"
             name="points"
           >
-            <a-input-number
+            <a-input
               v-model:value="grantForm.points"
-              :min="1"
-              :precision="0"
               class="form-input"
               placeholder="请输入要发放的积分数"
               size="large"
-              style="width: 100%"
             />
           </a-form-item>
           <a-form-item
@@ -221,7 +218,7 @@
           </a-form-item>
         </a-form>
         <div class="modal-footer">
-          <a-button class="cancel-btn" size="large" @click="resetGrantForm"> 取消 </a-button>
+          <a-button class="cancel-btn" size="large" @click="resetGrantForm"> 取消</a-button>
           <a-button
             :loading="granting"
             class="confirm-btn"
@@ -267,19 +264,16 @@
           <a-form-item
             :rules="[
               { required: true, message: '请输入积分数' },
-              { type: 'number', min: 1, message: '积分数必须大于0' },
+              { pattern: /^[1-9]\d*$/, message: '积分数必须为大于0的整数' },
             ]"
             label="积分数"
             name="points"
           >
-            <a-input-number
+            <a-input
               v-model:value="grantAllForm.points"
-              :min="1"
-              :precision="0"
               class="form-input"
               placeholder="请输入要发放的积分数"
               size="large"
-              style="width: 100%"
             />
           </a-form-item>
           <a-form-item
@@ -296,7 +290,7 @@
           </a-form-item>
         </a-form>
         <div class="modal-footer">
-          <a-button class="cancel-btn" size="large" @click="resetGrantAllForm"> 取消 </a-button>
+          <a-button class="cancel-btn" size="large" @click="resetGrantAllForm"> 取消</a-button>
           <a-button
             :loading="granting"
             class="confirm-btn"
@@ -420,7 +414,7 @@ const grantModalVisible = ref(false)
 const granting = ref(false)
 const grantForm = ref({
   userId: '',
-  points: undefined as number | undefined,
+  points: '',
   remark: '',
 })
 
@@ -428,7 +422,7 @@ const grantForm = ref({
 const showGrantModal = (record: API.UserAccountVO) => {
   grantForm.value = {
     userId: String(record.userId),
-    points: undefined,
+    points: '',
     remark: '',
   }
   grantModalVisible.value = true
@@ -454,7 +448,7 @@ const handleGrant = async () => {
   granting.value = true
   try {
     const res = await grantPoints({
-      userId: Number(grantForm.value.userId),
+      userId: grantForm.value.userId as unknown as number,
       points: grantForm.value.points,
       remark: grantForm.value.remark,
     })
@@ -475,14 +469,14 @@ const handleGrant = async () => {
 // 批量发放积分弹窗相关
 const grantAllModalVisible = ref(false)
 const grantAllForm = ref({
-  points: undefined as number | undefined,
+  points: '',
   remark: '',
 })
 
 // 显示批量发放积分弹窗
 const showGrantAllModal = () => {
   grantAllForm.value = {
-    points: undefined,
+    points: '',
     remark: '',
   }
   grantAllModalVisible.value = true
