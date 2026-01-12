@@ -64,7 +64,7 @@
         <div class="footer-divider"></div>
         <div class="copyright-info">
           <p class="copyright">
-            © 2025
+            © 2026
             <a
               class="author-link"
               href="https://www.gitee.com/hhzalh"
