@@ -1,6 +1,5 @@
 package com.lanhai.lanaicodemother.controller;
 
-import cn.hutool.core.bean.BeanUtil;
 import com.lanhai.lanaicodemother.annotation.AuthCheck;
 import com.lanhai.lanaicodemother.common.BaseResponse;
 import com.lanhai.lanaicodemother.common.DeleteRequest;
@@ -21,8 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-
 /**
  * 用户 控制层。
  *
@@ -36,9 +33,6 @@ public class UserController {
     @Resource
     private UserService userService;
 
-    @Resource
-    private com.lanhai.lanaicodemother.service.PointService pointService;
-
     /**
      * 用户注册
      *
@@ -48,25 +42,12 @@ public class UserController {
     @PostMapping("/register")
     public BaseResponse<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
         ThrowUtils.throwIf(userRegisterRequest == null, ErrorCode.PARAMS_ERROR);
-        String userAccount = userRegisterRequest.getUserAccount();
-        String userPassword = userRegisterRequest.getUserPassword();
-        String checkPassword = userRegisterRequest.getCheckPassword();
-        String invitationCode = userRegisterRequest.getInvitationCode();
-
-        // 1. 注册用户
-        long userId = userService.userRegister(userAccount, userPassword, checkPassword);
-
-        // 2. 处理邀请码（如果填写了）
-        if (cn.hutool.core.util.StrUtil.isNotBlank(invitationCode)) {
-            try {
-                pointService.handleInvitationCode(userId, invitationCode);
-            } catch (Exception e) {
-                // 邀请码处理失败不影响注册，记录日志即可
-                log.error("处理邀请码失败，用户ID：{}，邀请码：{}，错误：{}",
-                        userId, invitationCode, e.getMessage(), e);
-            }
-        }
-
+        long userId = userService.userRegister(
+                userRegisterRequest.getUserAccount(),
+                userRegisterRequest.getUserPassword(),
+                userRegisterRequest.getCheckPassword(),
+                userRegisterRequest.getInvitationCode()
+        );
         return ResultUtils.success(userId);
     }
 
@@ -186,22 +167,13 @@ public class UserController {
     @PostMapping("/update/info")
     public BaseResponse<Boolean> updateUserInfo(@RequestBody UserUpdateRequest userUpdateRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(userUpdateRequest == null, ErrorCode.PARAMS_ERROR);
-        // 获取当前登录用户
         User loginUser = userService.getLoginUser(request);
-        // 创建更新对象，只更新 userName 和 userProfile
-        User updateUser = new User();
-        updateUser.setId(loginUser.getId());
-        // 只更新请求中提供的字段
-        if (userUpdateRequest.getUserName() != null) {
-            updateUser.setUserName(userUpdateRequest.getUserName());
-        }
-        if (userUpdateRequest.getUserProfile() != null) {
-            updateUser.setUserProfile(userUpdateRequest.getUserProfile());
-        }
-        // 执行更新
-        boolean result = userService.updateById(updateUser);
-        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
-        return ResultUtils.success(true);
+        boolean result = userService.updateUserInfo(
+                loginUser.getId(),
+                userUpdateRequest.getUserName(),
+                userUpdateRequest.getUserProfile()
+        );
+        return ResultUtils.success(result);
     }
 
     /**
@@ -211,15 +183,8 @@ public class UserController {
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Long> addUser(@RequestBody UserAddRequest userAddRequest) {
         ThrowUtils.throwIf(userAddRequest == null, ErrorCode.PARAMS_ERROR);
-        User user = new User();
-        BeanUtil.copyProperties(userAddRequest, user);
-        // 默认密码 12345678
-        final String DEFAULT_PASSWORD = "12345678";
-        String encryptPassword = userService.getEncryptPassword(DEFAULT_PASSWORD);
-        user.setUserPassword(encryptPassword);
-        boolean result = userService.save(user);
-        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
-        return ResultUtils.success(user.getId());
+        Long userId = userService.createUserWithDefaultPassword(userAddRequest);
+        return ResultUtils.success(userId);
     }
 
     /**
@@ -263,14 +228,9 @@ public class UserController {
     @PostMapping("/update")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Boolean> updateUser(@RequestBody UserUpdateRequest userUpdateRequest) {
-        if (userUpdateRequest == null || userUpdateRequest.getId() == null) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
-        }
-        User user = new User();
-        BeanUtil.copyProperties(userUpdateRequest, user);
-        boolean result = userService.updateById(user);
-        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
-        return ResultUtils.success(true);
+        ThrowUtils.throwIf(userUpdateRequest == null || userUpdateRequest.getId() == null, ErrorCode.PARAMS_ERROR);
+        boolean result = userService.updateUser(userUpdateRequest);
+        return ResultUtils.success(result);
     }
 
     /**
@@ -282,14 +242,7 @@ public class UserController {
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Page<UserVO>> listUserVOByPage(@RequestBody UserQueryRequest userQueryRequest) {
         ThrowUtils.throwIf(userQueryRequest == null, ErrorCode.PARAMS_ERROR);
-        long pageNum = userQueryRequest.getPageNum();
-        long pageSize = userQueryRequest.getPageSize();
-        Page<User> userPage = userService.page(Page.of(pageNum, pageSize),
-                userService.getQueryWrapper(userQueryRequest));
-        // 数据脱敏
-        Page<UserVO> userVOPage = new Page<>(pageNum, pageSize, userPage.getTotalRow());
-        List<UserVO> userVOList = userService.getUserVOList(userPage.getRecords());
-        userVOPage.setRecords(userVOList);
+        Page<UserVO> userVOPage = userService.listUserVOByPage(userQueryRequest);
         return ResultUtils.success(userVOPage);
     }
 

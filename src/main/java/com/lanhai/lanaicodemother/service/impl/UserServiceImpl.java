@@ -8,7 +8,9 @@ import com.lanhai.lanaicodemother.exception.ErrorCode;
 import com.lanhai.lanaicodemother.exception.ThrowUtils;
 import com.lanhai.lanaicodemother.manager.CosManager;
 import com.lanhai.lanaicodemother.mapper.UserMapper;
+import com.lanhai.lanaicodemother.model.dto.user.UserAddRequest;
 import com.lanhai.lanaicodemother.model.dto.user.UserQueryRequest;
+import com.lanhai.lanaicodemother.model.dto.user.UserUpdateRequest;
 import com.lanhai.lanaicodemother.model.entity.User;
 import com.lanhai.lanaicodemother.model.entity.UserAccount;
 import com.lanhai.lanaicodemother.model.enums.PointBusinessTypeEnum;
@@ -16,10 +18,13 @@ import com.lanhai.lanaicodemother.model.enums.PointRuleKeyEnum;
 import com.lanhai.lanaicodemother.model.enums.UserRoleEnum;
 import com.lanhai.lanaicodemother.model.vo.LoginUserVO;
 import com.lanhai.lanaicodemother.model.vo.UserVO;
+import com.lanhai.lanaicodemother.service.PointRuleService;
+import com.lanhai.lanaicodemother.service.PointService;
 import com.lanhai.lanaicodemother.service.UserAccountService;
 import com.lanhai.lanaicodemother.service.UserService;
 import com.lanhai.lanaicodemother.utils.MailUtils;
 import com.lanhai.lanaicodemother.utils.RegexUtils;
+import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
@@ -64,7 +69,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private UserAccountService userAccountService;
 
     @Resource
-    private com.lanhai.lanaicodemother.service.PointRuleService pointRuleService;
+    private PointRuleService pointRuleService;
+
+    @Resource
+    private PointService pointService;
 
     /**
      * 管理员注册密码（从配置读取，如果未配置则不允许管理员注册）
@@ -73,7 +81,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private String adminRegisterPassword;
 
     @Override
-    public long userRegister(String userAccount, String userPassword, String checkPassword) {
+    public long userRegister(String userAccount, String userPassword, String checkPassword, String invitationCode) {
         // 1. 校验
         if (StrUtil.hasBlank(userAccount, userPassword, checkPassword)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数为空");
@@ -132,7 +140,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             log.error("发放注册奖励失败，用户ID：{}，错误：{}", user.getId(), e.getMessage(), e);
         }
 
-        return user.getId();
+        long userId = user.getId();
+
+        // 处理邀请码（如果填写了）
+        if (StrUtil.isNotBlank(invitationCode)) {
+            try {
+                pointService.handleInvitationCode(userId, invitationCode);
+            } catch (Exception e) {
+                // 邀请码处理失败不影响注册，记录日志即可
+                log.error("处理邀请码失败，用户ID：{}，邀请码：{}，错误：{}",
+                        userId, invitationCode, e.getMessage(), e);
+            }
+        }
+
+        return userId;
     }
 
     @Override
@@ -420,6 +441,95 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         log.info("密码修改成功，用户ID：{}", userId);
         return true;
+    }
+
+    @Override
+    @Transactional
+    public boolean updateUserInfo(Long userId, String userName, String userProfile) {
+        // 1. 参数校验
+        ThrowUtils.throwIf(userId == null, ErrorCode.PARAMS_ERROR, "用户ID不能为空");
+        ThrowUtils.throwIf(StrUtil.isBlank(userName) && StrUtil.isBlank(userProfile),
+                ErrorCode.PARAMS_ERROR, "至少提供一个更新字段");
+
+        // 2. 构建更新对象
+        User updateUser = new User();
+        updateUser.setId(userId);
+        if (StrUtil.isNotBlank(userName)) {
+            updateUser.setUserName(userName);
+        }
+        if (StrUtil.isNotBlank(userProfile)) {
+            updateUser.setUserProfile(userProfile);
+        }
+
+        // 3. 执行更新
+        boolean result = this.updateById(updateUser);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "更新失败");
+
+        log.info("用户信息更新成功，用户ID：{}", userId);
+        return true;
+    }
+
+    @Override
+    @Transactional
+    public Long createUserWithDefaultPassword(UserAddRequest userAddRequest) {
+        ThrowUtils.throwIf(userAddRequest == null, ErrorCode.PARAMS_ERROR);
+
+        // 1. DTO 转 Entity
+        User user = new User();
+        BeanUtil.copyProperties(userAddRequest, user);
+
+        // 2. 设置默认密码并加密
+        final String DEFAULT_PASSWORD = "12345678";
+        String encryptPassword = getEncryptPassword(DEFAULT_PASSWORD);
+        user.setUserPassword(encryptPassword);
+
+        // 3. 保存到数据库
+        boolean saveResult = this.save(user);
+        ThrowUtils.throwIf(!saveResult, ErrorCode.OPERATION_ERROR, "创建用户失败");
+
+        log.info("管理员创建用户成功，用户ID：{}，账号：{}", user.getId(), user.getUserAccount());
+        return user.getId();
+    }
+
+    @Override
+    @Transactional
+    public boolean updateUser(UserUpdateRequest userUpdateRequest) {
+        ThrowUtils.throwIf(userUpdateRequest == null || userUpdateRequest.getId() == null,
+                ErrorCode.PARAMS_ERROR);
+
+        // 1. DTO 转 Entity
+        User user = new User();
+        BeanUtil.copyProperties(userUpdateRequest, user);
+
+        // 2. 执行更新
+        boolean result = this.updateById(user);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "更新用户失败");
+
+        log.info("管理员更新用户成功，用户ID：{}", user.getId());
+        return true;
+    }
+
+    @Override
+    public Page<UserVO> listUserVOByPage(
+            UserQueryRequest userQueryRequest) {
+        ThrowUtils.throwIf(userQueryRequest == null, ErrorCode.PARAMS_ERROR);
+
+        // 1. 构建分页参数
+        long pageNum = userQueryRequest.getPageNum();
+        long pageSize = userQueryRequest.getPageSize();
+
+        // 2. 执行分页查询
+        Page<User> userPage = this.page(
+                Page.of(pageNum, pageSize),
+                this.getQueryWrapper(userQueryRequest)
+        );
+
+        // 3. 数据脱敏
+        Page<UserVO> userVOPage = new Page<>(pageNum, pageSize, userPage.getTotalRow());
+        List<UserVO> userVOList = this.getUserVOList(userPage.getRecords());
+        userVOPage.setRecords(userVOList);
+
+        return userVOPage;
     }
 
     /**
