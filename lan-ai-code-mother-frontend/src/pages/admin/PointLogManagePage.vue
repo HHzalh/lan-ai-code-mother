@@ -42,10 +42,6 @@
       <a-form-item>
         <a-button html-type="submit" type="primary">搜索</a-button>
         <a-button style="margin-left: 8px" @click="resetSearch">重置</a-button>
-        <a-button style="margin-left: 8px" type="primary" @click="showGrantModal">
-          <GiftOutlined />
-          积分奖励
-        </a-button>
       </a-form-item>
     </a-form>
     <a-divider />
@@ -82,92 +78,13 @@
         </template>
       </template>
     </a-table>
-
-    <!-- 发放积分弹窗 -->
-    <a-modal
-      v-model:open="grantModalVisible"
-      :centered="true"
-      :footer="null"
-      class="grant-modal"
-      title="积分奖励"
-      width="560px"
-      @cancel="resetGrantForm"
-    >
-      <div class="grant-modal-content">
-        <div class="modal-header">
-          <GiftOutlined class="modal-icon" />
-          <span class="modal-title">为用户发放积分</span>
-        </div>
-        <a-form :label-col="{ span: 5 }" :model="grantForm" :wrapper-col="{ span: 19 }">
-          <a-form-item
-            :rules="[{ required: true, message: '请输入用户ID' }]"
-            label="用户ID"
-            name="userId"
-          >
-            <a-input
-              v-model:value="grantForm.userId"
-              class="form-input"
-              placeholder="请输入用户ID"
-              size="large"
-              style="width: 100%"
-            />
-          </a-form-item>
-          <a-form-item
-            :rules="[
-              { required: true, message: '请输入积分数' },
-              { type: 'number', min: 1, message: '积分数必须大于0' },
-            ]"
-            label="积分数"
-            name="points"
-          >
-            <a-input-number
-              v-model:value="grantForm.points"
-              :min="1"
-              :precision="0"
-              class="form-input"
-              placeholder="请输入要发放的积分数"
-              size="large"
-              style="width: 100%"
-            />
-          </a-form-item>
-          <a-form-item
-            :rules="[{ required: true, message: '请输入备注' }]"
-            label="备注"
-            name="remark"
-          >
-            <a-textarea
-              v-model:value="grantForm.remark"
-              :rows="4"
-              class="form-input"
-              placeholder="请输入发放积分的备注说明"
-            />
-          </a-form-item>
-        </a-form>
-        <div class="modal-footer">
-          <a-button class="cancel-btn" size="large" @click="resetGrantForm"> 取消</a-button>
-          <a-button
-            :loading="granting"
-            class="confirm-btn"
-            size="large"
-            type="primary"
-            @click="handleGrant"
-          >
-            <template #icon>
-              <GiftOutlined />
-            </template>
-            确认发放
-          </a-button>
-        </div>
-      </div>
-    </a-modal>
   </div>
 </template>
 
 <script lang="ts" setup>
 import { computed, onMounted, reactive, ref } from 'vue'
-import { getLogs, grantPoints } from '@/api/pointController'
+import { getLogs } from '@/api/pointController'
 import { message } from 'ant-design-vue'
-import { GiftOutlined } from '@ant-design/icons-vue'
 import { formatTime } from '@/utils/time'
 
 const columns = [
@@ -223,15 +140,6 @@ const searchParams = reactive<API.PointLogQueryRequest>({
 const data = ref<API.PointLogVO[]>([])
 const total = ref(0)
 
-// 发放积分相关
-const grantModalVisible = ref(false)
-const granting = ref(false)
-const grantForm = reactive({
-  userId: undefined as string | undefined,
-  points: undefined as number | undefined,
-  remark: '',
-})
-
 // 获取数据
 const fetchData = async () => {
   try {
@@ -278,46 +186,6 @@ const resetSearch = () => {
   searchParams.businessType = undefined
   searchParams.pointType = undefined
   doSearch()
-}
-
-// 显示发放积分弹窗
-const showGrantModal = () => {
-  grantModalVisible.value = true
-}
-
-// 重置发放表单
-const resetGrantForm = () => {
-  grantForm.userId = undefined
-  grantForm.points = undefined
-  grantForm.remark = ''
-  grantModalVisible.value = false
-}
-
-// 处理发放积分
-const handleGrant = async () => {
-  if (!grantForm.userId || !grantForm.points || !grantForm.remark) {
-    message.warning('请填写完整信息')
-    return
-  }
-  granting.value = true
-  try {
-    const res = await grantPoints({
-      userId: grantForm.userId,
-      points: grantForm.points,
-      remark: grantForm.remark,
-    })
-    if (res.data.code === 0) {
-      message.success('积分发放成功')
-      resetGrantForm()
-      fetchData()
-    } else {
-      message.error(res.data.message ?? '发放失败')
-    }
-  } catch (error) {
-    message.error('发放失败，请重试')
-  } finally {
-    granting.value = false
-  }
 }
 
 // 获取业务类型颜色
@@ -466,135 +334,5 @@ onMounted(() => {
 
 :deep(.ant-input) {
   height: 40px;
-}
-
-/* 弹窗样式 */
-:deep(.grant-modal) {
-  .ant-modal-header {
-    border-bottom: none;
-    padding-bottom: 0;
-  }
-
-  .ant-modal-close {
-    top: 16px;
-    right: 16px;
-  }
-}
-
-.grant-modal-content {
-  padding: 8px 0;
-
-  .modal-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 24px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid #f0f0f0;
-
-    .modal-icon {
-      font-size: 28px;
-      color: #1890ff;
-    }
-
-    .modal-title {
-      font-size: 20px;
-      font-weight: 600;
-      color: #1f2d3d;
-    }
-  }
-
-  :deep(.ant-form) {
-    .ant-form-item-label > label {
-      font-size: 15px;
-      font-weight: 500;
-      color: #1f2d3d;
-    }
-
-    .ant-form-item {
-      margin-bottom: 20px;
-    }
-  }
-
-  .form-input {
-    :deep(.ant-input),
-    :deep(.ant-input-number),
-    :deep(.ant-input-number-input),
-    :deep(.ant-input-number-handler-wrap),
-    :deep(textarea) {
-      border-radius: 8px;
-      border: 1px solid #d9d9d9;
-      transition: all 0.3s;
-
-      &:hover {
-        border-color: #40a9ff;
-      }
-
-      &:focus,
-      &.ant-input-focused {
-        border-color: #1890ff;
-        box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
-      }
-    }
-
-    :deep(.ant-input-number) {
-      width: 100%;
-
-      .ant-input-number-handler-wrap {
-        border-left: 1px solid #d9d9d9;
-
-        .ant-input-number-handler {
-          &:hover {
-            color: #1890ff;
-          }
-        }
-      }
-    }
-  }
-
-  .modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    margin-top: 32px;
-    padding-top: 24px;
-    border-top: 1px solid #f0f0f0;
-
-    .cancel-btn {
-      border-radius: 8px;
-      height: 42px;
-      padding: 0 28px;
-      font-size: 15px;
-      font-weight: 500;
-      color: #595959;
-      border: 1px solid #d9d9d9;
-
-      &:hover {
-        color: #1890ff;
-        border-color: #1890ff;
-      }
-    }
-
-    .confirm-btn {
-      border-radius: 8px;
-      height: 42px;
-      padding: 0 32px;
-      font-size: 15px;
-      font-weight: 600;
-      background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
-      border: none;
-      box-shadow: 0 4px 12px rgba(24, 144, 255, 0.2);
-
-      &:hover:not(:disabled) {
-        background: linear-gradient(135deg, #40a9ff 0%, #1890ff 100%);
-        transform: translateY(-1px);
-        box-shadow: 0 6px 16px rgba(24, 144, 255, 0.3);
-      }
-
-      &:disabled {
-        opacity: 0.6;
-      }
-    }
-  }
 }
 </style>

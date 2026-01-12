@@ -161,10 +161,10 @@ const fetchData = async () => {
       ...searchParams,
     }
     if (startDate.value) {
-      params.startTime = startDate.value.format('YYYY-MM-DD')
+      params.startTime = startDate.value.format('YYYY-MM-DD') + 'T00:00:00'
     }
     if (endDate.value) {
-      params.endTime = endDate.value.format('YYYY-MM-DD')
+      params.endTime = endDate.value.format('YYYY-MM-DD') + 'T23:59:59'
     }
     const res = await getMyLogs(params)
     if (res.data.data) {
