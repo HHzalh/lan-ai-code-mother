@@ -125,21 +125,6 @@ export async function grantPointsToAll(
   })
 }
 
-/** 此处后端没有提供注释 GET /point/sign-calendar */
-export async function getSignInCalendar(
-  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
-  params: API.getSignInCalendarParams,
-  options?: { [key: string]: any },
-) {
-  return request<API.BaseResponseListPointSignInRecordVO>('/point/sign-calendar', {
-    method: 'GET',
-    params: {
-      ...params,
-    },
-    ...(options || {}),
-  })
-}
-
 /** 此处后端没有提供注释 POST /point/sign-in */
 export async function signIn(options?: { [key: string]: any }) {
   return request<API.BaseResponsePointSignInResponse>('/point/sign-in', {

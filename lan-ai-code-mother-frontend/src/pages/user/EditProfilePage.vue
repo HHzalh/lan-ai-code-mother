@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import type { UploadProps } from 'ant-design-vue'
 import { message } from 'ant-design-vue'
 import {
   ArrowLeftOutlined,
@@ -12,7 +13,6 @@ import {
   UploadOutlined,
   UserOutlined,
 } from '@ant-design/icons-vue'
-import type { UploadProps } from 'ant-design-vue'
 import { useLoginUserStore } from '@/stores/loginUser'
 import { changePassword, updateUserInfo, uploadUserAvatar } from '@/api/userController'
 import { getMyAccount } from '@/api/pointController'
@@ -93,12 +93,9 @@ const handleAvatarUpload: UploadProps['beforeUpload'] = async (file) => {
   try {
     const formData = new FormData()
     formData.append('file', file)
-    const res = await uploadUserAvatar(
-      {} as API.uploadUserAvatarParams,
-      {
-        data: formData,
-      },
-    )
+    const res = await uploadUserAvatar({} as API.uploadUserAvatarParams, {
+      data: formData,
+    })
     if (res.data.code === 0 && res.data.data) {
       formState.userAvatar = res.data.data
       message.success('头像已上传')

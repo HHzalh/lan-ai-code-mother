@@ -73,12 +73,6 @@ declare namespace API {
     message?: string
   }
 
-  type BaseResponseListPointSignInRecordVO = {
-    code?: number
-    data?: PointSignInRecordVO[]
-    message?: string
-  }
-
   type BaseResponseLoginUserVO = {
     code?: number
     data?: LoginUserVO
@@ -211,11 +205,6 @@ declare namespace API {
     id: number
   }
 
-  type getSignInCalendarParams = {
-    startDate?: string
-    endDate?: string
-  }
-
   type getUserByIdParams = {
     id: number
   }
@@ -342,16 +331,6 @@ declare namespace API {
     ruleValue?: number
     ruleDesc?: string
     status?: number
-  }
-
-  type PointSignInRecordVO = {
-    id?: number
-    userId?: number
-    signDate?: string
-    daysCount?: number
-    points?: number
-    isBonus?: number
-    createTime?: string
   }
 
   type PointSignInResponse = {

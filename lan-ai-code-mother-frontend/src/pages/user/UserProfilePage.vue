@@ -9,9 +9,7 @@ import {
   GiftOutlined,
   HistoryOutlined,
   LockOutlined,
-  MailOutlined,
   ShoppingOutlined,
-  UserOutlined,
 } from '@ant-design/icons-vue'
 import { useLoginUserStore } from '@/stores/loginUser'
 import { changePassword } from '@/api/userController'
@@ -358,9 +356,9 @@ const handlePasswordSubmit = async () => {
           <a-pagination
             v-model:current="appsPage.current"
             v-model:page-size="appsPage.pageSize"
-            :total="appsPage.total"
             :show-size-changer="false"
             :show-total="(total: number) => `共 ${total} 个应用`"
+            :total="appsPage.total"
             size="small"
             @change="handleAppsPageChange"
           />

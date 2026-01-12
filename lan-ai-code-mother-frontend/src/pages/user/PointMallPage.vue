@@ -36,14 +36,14 @@
             </div>
             <div class="rule-item-content">
               <div class="rule-item-title">{{ getRuleTitle(rule.ruleKey) }}</div>
-              <div class="rule-item-desc">{{ rule.ruleDesc || getRuleDefaultDesc(rule.ruleKey) }}</div>
+              <div class="rule-item-desc">
+                {{ rule.ruleDesc || getRuleDefaultDesc(rule.ruleKey) }}
+              </div>
             </div>
-            <div class="rule-item-points income" v-if="rule.status !== 0">
+            <div v-if="rule.status !== 0" class="rule-item-points income">
               +{{ rule.ruleValue }}
             </div>
-            <div class="rule-item-points disabled" v-else>
-              已禁用
-            </div>
+            <div v-else class="rule-item-points disabled">已禁用</div>
           </div>
         </div>
       </div>
@@ -63,12 +63,10 @@
               <div class="rule-item-title">{{ getRuleTitle(rule.ruleKey) }}</div>
               <div class="rule-item-desc">{{ rule.ruleDesc }}</div>
             </div>
-            <div class="rule-item-points expense" v-if="rule.status !== 0">
+            <div v-if="rule.status !== 0" class="rule-item-points expense">
               -{{ rule.ruleValue }}
             </div>
-            <div class="rule-item-points disabled" v-else>
-              已禁用
-            </div>
+            <div v-else class="rule-item-points disabled">已禁用</div>
           </div>
         </div>
       </div>
@@ -135,21 +133,27 @@
           <RightOutlined class="faq-icon" />
           <div class="faq-content">
             <div class="faq-question">邀请码在哪里查看?</div>
-            <div class="faq-answer">您可以在个人中心页面查看您的专属邀请码,分享给好友使用可获得奖励积分。</div>
+            <div class="faq-answer">
+              您可以在个人中心页面查看您的专属邀请码,分享给好友使用可获得奖励积分。
+            </div>
           </div>
         </div>
         <div class="faq-item">
           <RightOutlined class="faq-icon" />
           <div class="faq-content">
             <div class="faq-question">积分可以转让吗?</div>
-            <div class="faq-answer">积分不支持转让,但您可以通过邀请好友注册的方式帮助好友获得积分奖励。</div>
+            <div class="faq-answer">
+              积分不支持转让,但您可以通过邀请好友注册的方式帮助好友获得积分奖励。
+            </div>
           </div>
         </div>
         <div class="faq-item">
           <RightOutlined class="faq-icon" />
           <div class="faq-content">
             <div class="faq-question">签到有额外奖励吗?</div>
-            <div class="faq-answer">连续签到会有额外奖励,连续3天可获得额外积分,连续7天可获得更多奖励。</div>
+            <div class="faq-answer">
+              连续签到会有额外奖励,连续3天可获得额外积分,连续7天可获得更多奖励。
+            </div>
           </div>
         </div>
         <div class="faq-item">
@@ -182,6 +186,7 @@ import {
   BarChartOutlined,
   BulbOutlined,
   CalendarOutlined,
+  DownloadOutlined,
   FileTextOutlined,
   GiftOutlined,
   LinkOutlined,
@@ -194,16 +199,22 @@ import {
   TeamOutlined,
   ThunderboltOutlined,
   UserAddOutlined,
-  DownloadOutlined,
 } from '@ant-design/icons-vue'
-import { getMyAccount, getAllRules } from '@/api/pointController'
+import { getAllRules, getMyAccount } from '@/api/pointController'
 
 const router = useRouter()
 const accountInfo = ref<API.UserAccountVO | null>(null)
 const rules = ref<API.PointRuleVO[]>([])
 
 // 获得积分的规则键
-const INCOME_RULE_KEYS = ['REGISTER_REWARD', 'INVITE_NEW', 'INVITE_REWARD', 'SIGN_IN_BASE','SIGN_IN_CONTINUOUS_3','SIGN_IN_CONTINUOUS_7']
+const INCOME_RULE_KEYS = [
+  'REGISTER_REWARD',
+  'INVITE_NEW',
+  'INVITE_REWARD',
+  'SIGN_IN_BASE',
+  'SIGN_IN_CONTINUOUS_3',
+  'SIGN_IN_CONTINUOUS_7',
+]
 
 // 消耗积分的规则键
 const EXPENSE_RULE_KEYS = ['GENERATE_COST', 'DEPLOY_COST', 'DOWNLOAD_COST']
@@ -235,7 +246,6 @@ const getRuleTitle = (ruleKey?: string) => {
   }
   return titleMap[ruleKey || ''] || ruleKey || ''
 }
-
 
 // 获取获得积分图标
 const getIncomeIcon = (ruleKey?: string) => {
