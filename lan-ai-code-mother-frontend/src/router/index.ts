@@ -5,6 +5,7 @@ import UserRegisterPage from '@/pages/user/UserRegisterPage.vue'
 import UserFindPasswordPage from '@/pages/user/UserFindPasswordPage.vue'
 import UserManagePage from '@/pages/admin/UserManagePage.vue'
 import UserProfilePage from '@/pages/user/UserProfilePage.vue'
+import EditProfilePage from '@/pages/user/EditProfilePage.vue'
 import AppManagePage from '@/pages/admin/AppManagePage.vue'
 import AppChatPage from '@/pages/app/AppChatPage.vue'
 import AppEditPage from '@/pages/app/AppEditPage.vue'
@@ -82,6 +83,11 @@ const router = createRouter({
       path: '/user/profile',
       name: '个人中心',
       component: UserProfilePage,
+    },
+    {
+      path: '/user/edit-profile',
+      name: '编辑资料',
+      component: EditProfilePage,
     },
     {
       path: '/quick-start',

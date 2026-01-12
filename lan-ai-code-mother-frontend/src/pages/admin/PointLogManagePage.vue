@@ -1,7 +1,7 @@
 <template>
   <div class="point-log-content">
     <!-- 搜索表单 -->
-    <a-form :model="searchParams" layout="inline" @finish="doSearch">
+    <a-form :model="searchParams" class="search-form" layout="inline" @finish="doSearch">
       <a-form-item label="用户ID">
         <a-input
           v-model:value="searchParams.userId"
@@ -40,11 +40,16 @@
         </a-select>
       </a-form-item>
       <a-form-item>
-        <a-button html-type="submit" type="primary">搜索</a-button>
-        <a-button style="margin-left: 8px" @click="resetSearch">重置</a-button>
+        <a-button html-type="submit" type="primary">
+          <SearchOutlined />
+          搜索
+        </a-button>
+        <a-button style="margin-left: 10px" @click="resetSearch">
+          <ReloadOutlined />
+          重置
+        </a-button>
       </a-form-item>
     </a-form>
-    <a-divider />
 
     <!-- 表格 -->
     <a-table
@@ -86,6 +91,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { getLogs } from '@/api/pointController'
 import { message } from 'ant-design-vue'
 import { formatTime } from '@/utils/time'
+import { ReloadOutlined, SearchOutlined } from '@ant-design/icons-vue'
 
 const columns = [
   {
@@ -209,60 +215,50 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
-/* 搜索表单样式优化 */
-:deep(.ant-form) {
-  margin-bottom: 28px;
-}
+<style lang="less" scoped>
+.point-log-content {
+  .search-form {
+    margin-bottom: 24px;
+    padding: 20px;
+    background: #f9f9f9;
+    border-radius: 8px;
 
-:deep(.ant-form-item) {
-  margin-bottom: 20px;
-  margin-right: 24px;
-}
+    :deep(.ant-form-item) {
+      margin-bottom: 16px;
+      margin-right: 24px;
+    }
 
-:deep(.ant-form-item-label > label) {
-  font-size: 14px;
-  font-weight: 500;
-  color: #1f2d3d;
-}
-
-:deep(.ant-divider) {
-  margin: 28px 0;
-  border-color: #f0f0f0;
+    :deep(.ant-btn) {
+      margin-right: 8px;
+    }
+  }
 }
 
 /* 表格样式优化 */
 :deep(.ant-table) {
   font-size: 15px;
-}
 
-:deep(.ant-table-thead > tr > th) {
-  background: #fafafa;
-  font-weight: 600;
-  padding: 20px;
-  border-bottom: 2px solid #e8e8e8;
-  font-size: 15px;
-}
+  .ant-table-thead > tr > th {
+    background: #fafafa;
+    font-weight: 600;
+    padding: 16px;
+    font-size: 15px;
+  }
 
-:deep(.ant-table-tbody > tr > td) {
-  padding: 20px;
-  border-bottom: 1px solid #f0f0f0;
-  font-size: 15px;
-}
+  .ant-table-tbody > tr > td {
+    padding: 16px;
+    font-size: 15px;
+  }
 
-:deep(.ant-table-tbody > tr:hover > td) {
-  background: #f5f7fa;
-  transition: background-color 0.3s ease;
-}
-
-:deep(.ant-table-tbody > tr:last-child > td) {
-  border-bottom: none;
+  .ant-table-tbody > tr:hover > td {
+    background: #f0f7ff;
+  }
 }
 
 /* 标签样式 */
 :deep(.ant-tag) {
   font-size: 13px;
-  padding: 4px 12px;
+  padding: 4px 8px;
   border-radius: 4px;
   margin: 0;
 }
@@ -271,20 +267,20 @@ onMounted(() => {
 :deep(.ant-pagination) {
   margin-top: 32px;
   text-align: right;
-}
 
-:deep(.ant-pagination-item) {
-  height: 36px;
-  line-height: 34px;
-  border-radius: 6px;
-}
+  .ant-pagination-item {
+    height: 36px;
+    line-height: 34px;
+    border-radius: 6px;
+  }
 
-:deep(.ant-pagination-item-active) {
-  border-color: #1890ff;
-}
+  .ant-pagination-item-active {
+    border-color: #1890ff;
+  }
 
-:deep(.ant-pagination-options-quick-jumper input) {
-  border-radius: 6px;
+  .ant-pagination-options-quick-jumper input {
+    border-radius: 6px;
+  }
 }
 
 .point-income {
@@ -311,11 +307,11 @@ onMounted(() => {
   font-weight: 500;
   font-size: 14px;
   transition: all 0.3s ease;
-}
 
-:deep(.ant-btn:hover) {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.15);
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(24, 144, 255, 0.15);
+  }
 }
 
 /* 输入框和选择器样式 */
@@ -327,7 +323,6 @@ onMounted(() => {
 }
 
 :deep(.ant-select-selector) {
-  height: 40px;
   display: flex;
   align-items: center;
 }

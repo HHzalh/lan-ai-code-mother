@@ -3,43 +3,30 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import {
-  AppstoreOutlined,
-  CheckCircleOutlined,
+  ArrowLeftOutlined,
   EditOutlined,
   GiftOutlined,
-  HistoryOutlined,
   LockOutlined,
   MailOutlined,
-  ShoppingOutlined,
+  SafetyOutlined,
+  UploadOutlined,
   UserOutlined,
 } from '@ant-design/icons-vue'
+import type { UploadProps } from 'ant-design-vue'
 import { useLoginUserStore } from '@/stores/loginUser'
-import { changePassword } from '@/api/userController'
-import { getMyAccount, getMyInvitationCode, getSignStatus, signIn } from '@/api/pointController'
-import { listMyAppVoByPage } from '@/api/appController'
-import AppCard from '@/components/AppCard.vue'
-import { getDeployUrl } from '@/config/env'
+import { changePassword, updateUserInfo, uploadUserAvatar } from '@/api/userController'
+import { getMyAccount } from '@/api/pointController'
 import dayjs from 'dayjs'
 
 const router = useRouter()
 const loginUserStore = useLoginUserStore()
+const submitting = ref(false)
+const avatarUploading = ref(false)
 const passwordSubmitting = ref(false)
 const showPasswordModal = ref(false)
 
 // 积分相关
 const accountInfo = ref<API.UserAccountVO | null>(null)
-const todaySigned = ref(false)
-const signing = ref(false)
-const invitationCode = ref<string>('')
-
-// 我的应用相关
-const myApps = ref<API.AppVO[]>([])
-const appsPage = reactive({
-  current: 1,
-  pageSize: 6,
-  total: 0,
-})
-const appsLoading = ref(false)
 
 const formState = reactive<Partial<API.UserUpdateRequest>>({
   id: undefined,
@@ -87,9 +74,6 @@ const initForm = async () => {
 onMounted(() => {
   initForm()
   loadAccountInfo()
-  loadSignStatus()
-  loadInvitationCode()
-  loadMyApps()
 })
 
 // 加载积分账户信息
@@ -104,115 +88,50 @@ const loadAccountInfo = async () => {
   }
 }
 
-// 加载邀请码
-const loadInvitationCode = async () => {
+const handleAvatarUpload: UploadProps['beforeUpload'] = async (file) => {
+  avatarUploading.value = true
   try {
-    const res = await getMyInvitationCode()
+    const formData = new FormData()
+    formData.append('file', file)
+    const res = await uploadUserAvatar(
+      {} as API.uploadUserAvatarParams,
+      {
+        data: formData,
+      },
+    )
     if (res.data.code === 0 && res.data.data) {
-      invitationCode.value = res.data.data
-    }
-  } catch (error) {
-    console.error('加载邀请码失败：', error)
-  }
-}
-
-// 加载今日签到状态
-const loadSignStatus = async () => {
-  try {
-    const res = await getSignStatus()
-    if (res.data.code === 0) {
-      todaySigned.value = res.data.data ?? false
-    }
-  } catch (error) {
-    console.error('加载签到状态失败：', error)
-  }
-}
-
-// 执行签到
-const handleSignIn = async () => {
-  if (todaySigned.value) {
-    message.warning('今日已签到')
-    return
-  }
-  signing.value = true
-  try {
-    const res = await signIn()
-    if (res.data.code === 0 && res.data.data) {
-      const data = res.data.data
-      message.success(
-        `签到成功！获得 ${data.points} 积分，连续签到 ${data.continuousDays} 天${data.isBonus ? '，获得额外奖励！' : ''}`,
-      )
-      todaySigned.value = true
-      await loadAccountInfo()
+      formState.userAvatar = res.data.data
+      message.success('头像已上传')
+      await loginUserStore.fetchLoginUser()
     } else {
-      message.error(res.data.message ?? '签到失败')
+      message.error(res.data.message ?? '上传失败，请重试')
     }
   } catch (error: any) {
-    message.error(error?.response?.data?.message ?? '签到失败，请重试')
+    message.error(error?.response?.data?.message ?? '上传失败，请重试')
   } finally {
-    signing.value = false
+    avatarUploading.value = false
   }
+  return false
 }
 
-// 加载我的应用
-const loadMyApps = async () => {
-  if (!loginUserStore.loginUser.id) {
-    return
-  }
-  appsLoading.value = true
+const handleSubmit = async () => {
+  submitting.value = true
   try {
-    const res = await listMyAppVoByPage({
-      pageNum: appsPage.current,
-      pageSize: appsPage.pageSize,
-      sortField: 'createTime',
-      sortOrder: 'desc',
-    })
-    if (res.data.code === 0 && res.data.data) {
-      myApps.value = res.data.data.records || []
-      appsPage.total = res.data.data.totalRow || 0
+    // 只发送 userName 和 userProfile，后端接口只允许更新这两个字段
+    const updateData: API.UserUpdateRequest = {
+      userName: formState.userName,
+      userProfile: formState.userProfile,
     }
-  } catch (error) {
-    console.error('加载我的应用失败：', error)
+    const res = await updateUserInfo(updateData)
+    if (res.data.code === 0) {
+      message.success('资料已更新')
+      await loginUserStore.fetchLoginUser()
+    } else {
+      message.error(res.data.message ?? '更新失败')
+    }
   } finally {
-    appsLoading.value = false
+    submitting.value = false
   }
-}
-
-// 查看应用对话
-const viewAppChat = (appId: string | number | undefined) => {
-  if (appId) {
-    router.push(`/app/chat/${appId}`)
-  }
-}
-
-// 查看应用作品
-const viewAppWork = (app: API.AppVO) => {
-  if (app.deployKey) {
-    const url = getDeployUrl(app.deployKey)
-    window.open(url, '_blank')
-  }
-}
-
-// 切换应用列表页码
-const handleAppsPageChange = (page: number, pageSize: number) => {
-  appsPage.current = page
-  appsPage.pageSize = pageSize
-  loadMyApps()
-}
-
-// 跳转到积分商城
-const goToPointMall = () => {
-  router.push('/user/point-mall')
-}
-
-// 跳转到积分流水页面
-const goToPointLogs = () => {
-  router.push('/user/point-logs')
-}
-
-// 跳转到编辑资料页面
-const goToEditProfile = () => {
-  router.push('/user/edit-profile')
 }
 
 /**
@@ -269,104 +188,144 @@ const handlePasswordSubmit = async () => {
     passwordSubmitting.value = false
   }
 }
+
+const goBack = () => {
+  router.push('/user/profile')
+}
 </script>
 
 <template>
-  <div class="profile-wrapper">
+  <div class="edit-profile-wrapper">
+    <!-- Hero 区域 -->
+    <section class="edit-hero">
+      <div class="hero-content">
+        <p class="eyebrow">EDIT PROFILE</p>
+        <h2>编辑资料</h2>
+        <p class="subtitle">修改您的个人信息和账户设置</p>
+      </div>
+    </section>
+
     <!-- 用户资料卡片 -->
     <section class="profile-card">
       <div class="profile-info">
-        <!-- 左侧用户信息 -->
-        <div class="user-info-left">
+        <div class="user-avatar-section">
           <a-avatar :size="80" :src="displayAvatar" class="user-avatar" />
-          <div class="user-details">
-            <h3 class="user-name">{{ formState.userName || '未设置' }}</h3>
-            <p class="user-account">@{{ formState.userAccount }}</p>
-            <div class="user-stats">
-              <div class="stat-item">
-                <span class="stat-label">积分</span>
-                <span class="stat-value">{{ accountInfo?.availablePoints ?? 0 }}</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-label">已加入</span>
-                <span class="stat-value">{{ joinedDays }}天</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-label">邮箱</span>
-                <a-tag class="stat-tag" color="orange">未绑定</a-tag>
-              </div>
-              <div class="stat-item">
-                <span class="stat-label">邀请码</span>
-                <span class="stat-value code">{{ invitationCode || '加载中...' }}</span>
-              </div>
-            </div>
+          <div class="avatar-upload">
+            <a-upload
+              :before-upload="handleAvatarUpload"
+              :show-upload-list="false"
+              accept="image/*"
+            >
+              <a-button :loading="avatarUploading" size="large" type="primary">
+                <UploadOutlined />
+                更换头像
+              </a-button>
+            </a-upload>
           </div>
         </div>
-
-        <!-- 右侧操作按钮 -->
-        <div class="user-actions">
-          <a-button class="action-btn" type="primary" @click="goToPointMall">
-            <ShoppingOutlined />
-            积分商城
-            <span class="points-badge">{{ accountInfo?.availablePoints ?? 0 }}</span>
-          </a-button>
-          <a-button class="action-btn" @click="goToPointLogs">
-            <HistoryOutlined />
-            积分详情
-          </a-button>
-          <a-button
-            :disabled="todaySigned"
-            :loading="signing"
-            class="action-btn"
-            type="primary"
-            @click="handleSignIn"
-          >
-            <CheckCircleOutlined v-if="todaySigned" />
-            <GiftOutlined v-else />
-            {{ todaySigned ? '今日已签到' : '立即签到' }}
-          </a-button>
-          <a-button class="action-btn" type="primary" @click="goToEditProfile">
-            <EditOutlined />
-            编辑资料
-          </a-button>
+        <div class="user-details">
+          <h3 class="user-name">{{ formState.userName || '未设置' }}</h3>
+          <p class="user-account">@{{ formState.userAccount }}</p>
+          <div class="user-stats">
+            <div class="stat-item">
+              <GiftOutlined />
+              <span>积分 {{ accountInfo?.availablePoints ?? 0 }}</span>
+            </div>
+            <div class="stat-item">
+              <UserOutlined />
+              <span>已加入 {{ joinedDays }} 天</span>
+            </div>
+            <div class="stat-item">
+              <MailOutlined />
+              <a-tag color="orange" size="small">未绑定邮箱</a-tag>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- 我的应用 -->
-    <section class="profile-card my-apps-card">
-      <div class="my-apps-header">
-        <div class="apps-title-section">
-          <AppstoreOutlined class="apps-title-icon" />
-          <h3>我的应用</h3>
-        </div>
+    <!-- 基本信息卡片 -->
+    <section class="info-card">
+      <div class="card-header">
+        <EditOutlined class="card-icon" />
+        <h3>基本信息</h3>
       </div>
-      <div class="my-apps-content">
-        <a-spin :spinning="appsLoading">
-          <div v-if="myApps.length > 0" class="apps-grid">
-            <div v-for="app in myApps" :key="app.id" class="app-item">
-              <AppCard :app="app" @view-chat="viewAppChat" @view-work="viewAppWork" />
-            </div>
-          </div>
-          <div v-else class="apps-empty">
-            <div class="empty-icon">📱</div>
-            <p class="empty-text">暂无应用</p>
-            <p class="empty-hint">请创建一个应用开始使用</p>
-          </div>
-        </a-spin>
-        <div v-if="appsPage.total > 0" class="apps-pagination">
-          <a-pagination
-            v-model:current="appsPage.current"
-            v-model:page-size="appsPage.pageSize"
-            :total="appsPage.total"
-            :show-size-changer="false"
-            :show-total="(total: number) => `共 ${total} 个应用`"
-            size="small"
-            @change="handleAppsPageChange"
+      <a-form
+        :model="formState"
+        autocomplete="off"
+        class="edit-form"
+        name="editProfile"
+        @finish="handleSubmit"
+      >
+        <a-form-item
+          :rules="[{ required: true, message: '请输入用户名' }]"
+          label="用户名"
+          name="userName"
+        >
+          <a-input v-model:value="formState.userName" placeholder="请输入用户名" size="large" />
+        </a-form-item>
+        <a-form-item label="个人简介" name="userProfile">
+          <a-textarea
+            v-model:value="formState.userProfile"
+            :rows="4"
+            placeholder="介绍一下自己，内容会显示在个人名片中"
           />
+        </a-form-item>
+        <a-form-item class="form-actions">
+          <a-button :loading="submitting" html-type="submit" size="large" type="primary">
+            保存修改
+          </a-button>
+          <a-button size="large" @click="goBack">取消</a-button>
+        </a-form-item>
+      </a-form>
+    </section>
+
+    <!-- 邮箱管理卡片 -->
+    <section class="info-card">
+      <div class="card-header">
+        <MailOutlined class="card-icon" />
+        <h3>邮箱管理</h3>
+      </div>
+      <div class="email-management">
+        <div class="email-status">
+          <MailOutlined />
+          <span>暂未绑定邮箱</span>
+          <a-tag color="orange" size="small">未绑定</a-tag>
+        </div>
+        <a-button class="bind-email-btn" size="large" type="primary">
+          <MailOutlined />
+          绑定邮箱
+        </a-button>
+      </div>
+    </section>
+
+    <!-- 安全设置卡片 -->
+    <section class="info-card">
+      <div class="card-header">
+        <SafetyOutlined class="card-icon" />
+        <h3>安全设置</h3>
+      </div>
+      <div class="security-settings">
+        <div class="security-item">
+          <div class="security-info">
+            <h5>登录密码</h5>
+            <p>用于登录账户的密码，建议定期修改</p>
+          </div>
+          <a-button class="change-password-btn" size="large" @click="openPasswordModal">
+            <LockOutlined />
+            修改密码
+          </a-button>
         </div>
       </div>
     </section>
+
+    <!-- 返回按钮 -->
+    <div class="back-button-container">
+      <a-button class="back-button" size="large" type="primary" @click="goBack">
+        <ArrowLeftOutlined />
+        返回个人中心
+      </a-button>
+    </div>
 
     <!-- 修改密码弹窗 -->
     <a-modal
@@ -460,7 +419,7 @@ const handlePasswordSubmit = async () => {
 </template>
 
 <style scoped>
-.profile-wrapper {
+.edit-profile-wrapper {
   max-width: 1200px;
   margin: 0 auto;
   padding: 24px 0 64px;
@@ -469,31 +428,71 @@ const handlePasswordSubmit = async () => {
   gap: 24px;
 }
 
+/* Hero 区域 */
+.edit-hero {
+  background: linear-gradient(120deg, #e0f2ff, #f5f7ff);
+  border-radius: 18px;
+  padding: 28px 32px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(24, 144, 255, 0.15);
+}
+
+.eyebrow {
+  letter-spacing: 0.4em;
+  font-size: 12px;
+  color: #3c92ff;
+  margin-bottom: 8px;
+}
+
+.edit-hero h2 {
+  margin: 0;
+  font-size: 28px;
+  color: #1f2d3d;
+}
+
+.subtitle {
+  margin-top: 8px;
+  color: #5f6b7c;
+}
+
+/* 用户资料卡片 */
 .profile-card {
-  background: #fff;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 18px;
   padding: 32px 40px;
-  box-shadow: 0 12px 35px rgba(15, 39, 80, 0.07);
-  border: 1px solid #f0f2f5;
+  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+  color: white;
 }
 
 .profile-info {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+  align-items: center;
   gap: 32px;
 }
 
-.user-info-left {
+.user-avatar-section {
   display: flex;
-  align-items: flex-start;
-  gap: 24px;
-  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
 }
 
 .user-avatar {
   flex-shrink: 0;
-  border: 3px solid #f0f2f5;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+}
+
+.avatar-upload :deep(.ant-btn) {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: white;
+  backdrop-filter: blur(10px);
+}
+
+.avatar-upload :deep(.ant-btn:hover) {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: white;
 }
 
 .user-details {
@@ -502,15 +501,16 @@ const handlePasswordSubmit = async () => {
 
 .user-name {
   margin: 0 0 8px 0;
-  font-size: 24px;
+  font-size: 28px;
   font-weight: 600;
-  color: #1f2d3d;
+  color: white;
 }
 
 .user-account {
-  margin: 0 0 16px 0;
+  margin: 0 0 20px 0;
   font-size: 16px;
-  color: #8c8c8c;
+  opacity: 0.9;
+  color: white;
 }
 
 .user-stats {
@@ -523,132 +523,125 @@ const handlePasswordSubmit = async () => {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.stat-label {
-  font-size: 14px;
-  color: #8c8c8c;
-}
-
-.stat-value {
-  font-size: 16px;
-  font-weight: 600;
-  color: #1f2d3d;
-}
-
-.stat-value.code {
-  font-family: 'Courier New', monospace;
-  color: #1890ff;
-  font-weight: 600;
-}
-
-.stat-tag {
-  margin: 0;
-}
-
-.user-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  min-width: 150px;
-}
-
-.action-btn {
-  height: 42px;
   font-size: 15px;
-  font-weight: 500;
-  border-radius: 8px;
-  position: relative;
+  opacity: 0.9;
+}
+
+/* 信息卡片 */
+.info-card {
+  background: #fff;
+  border-radius: 18px;
+  padding: 32px 40px;
+  box-shadow: 0 12px 35px rgba(15, 39, 80, 0.07);
+  border: 1px solid #f0f2f5;
+}
+
+.card-header {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.points-badge {
-  margin-left: 4px;
-  font-weight: 600;
-}
-
-.my-apps-card {
-  margin-top: 0;
-}
-
-.my-apps-header {
+  gap: 12px;
   margin-bottom: 24px;
   padding-bottom: 16px;
   border-bottom: 1px solid #f0f2f5;
 }
 
-.apps-title-section {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.apps-title-icon {
-  font-size: 18px;
+.card-icon {
+  font-size: 24px;
   color: #1890ff;
 }
 
-.my-apps-header h3 {
+.card-header h3 {
   margin: 0;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 600;
   color: #1f2d3d;
 }
 
-.my-apps-content {
-  min-height: 200px;
+.edit-form {
+  padding: 0;
 }
 
-.apps-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  margin-bottom: 24px;
-}
-
-.app-item {
-  width: 100%;
-}
-
-.apps-empty {
+.form-actions {
+  margin-top: 32px;
+  margin-bottom: 0;
   display: flex;
-  flex-direction: column;
+  gap: 12px;
+}
+
+.email-management {
+  padding: 20px;
+  background: #fafafa;
+  border-radius: 12px;
+  display: flex;
   align-items: center;
+  justify-content: space-between;
+}
+
+.email-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 15px;
+  color: #5f6b7c;
+}
+
+.bind-email-btn {
+  border-radius: 8px;
+}
+
+.security-settings {
+  padding: 20px;
+  background: #fafafa;
+  border-radius: 12px;
+}
+
+.security-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.security-info h5 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2d3d;
+}
+
+.security-info p {
+  margin: 0;
+  font-size: 14px;
+  color: #5f6b7c;
+}
+
+.change-password-btn {
+  border-radius: 8px;
+}
+
+/* 返回按钮 */
+.back-button-container {
+  display: flex;
   justify-content: center;
-  padding: 60px 20px;
-  text-align: center;
+  margin-top: 24px;
 }
 
-.empty-icon {
-  font-size: 64px;
-  margin-bottom: 16px;
-  opacity: 0.5;
-}
-
-.empty-text {
+.back-button {
+  height: 48px;
+  padding: 0 32px;
   font-size: 16px;
   font-weight: 500;
-  color: #5f6b7c;
-  margin: 0 0 8px 0;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
 }
 
-.empty-hint {
-  font-size: 14px;
-  color: #8c8c8c;
-  margin: 0;
+.back-button:hover {
+  background: linear-gradient(135deg, #5568d3 0%, #6a3d91 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
 }
 
-.apps-pagination {
-  display: flex;
-  justify-content: center;
-  padding-top: 16px;
-  border-top: 1px solid #f0f2f5;
-}
-
-/* 修改密码弹窗样式 */
+/* 修改密码弹窗 */
 .password-modal :deep(.ant-modal-content) {
   border-radius: 16px;
   overflow: hidden;
@@ -771,44 +764,45 @@ const handlePasswordSubmit = async () => {
 }
 
 @media (max-width: 768px) {
+  .info-card,
   .profile-card {
     padding: 24px;
   }
 
   .profile-info {
     flex-direction: column;
-    gap: 24px;
+    text-align: center;
   }
 
-  .user-actions {
+  .user-avatar-section {
     width: 100%;
-    flex-direction: row;
-    flex-wrap: wrap;
-  }
-
-  .action-btn {
-    flex: 1;
-    min-width: 120px;
   }
 
   .user-stats {
+    justify-content: center;
+  }
+
+  .card-header {
+    margin-bottom: 16px;
+  }
+
+  .email-management {
+    flex-direction: column;
+    align-items: flex-start;
     gap: 16px;
   }
 
-  .apps-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .security-item {
+    flex-direction: column;
+    align-items: flex-start;
     gap: 16px;
-  }
-
-  .apps-empty {
-    padding: 40px 20px;
-  }
-
-  .empty-icon {
-    font-size: 48px;
   }
 
   .button-group {
+    flex-direction: column;
+  }
+
+  .form-actions {
     flex-direction: column;
   }
 }
