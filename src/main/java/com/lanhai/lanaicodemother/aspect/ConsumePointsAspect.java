@@ -1,5 +1,6 @@
 package com.lanhai.lanaicodemother.aspect;
 
+
 import com.lanhai.lanaicodemother.annotation.ConsumePoints;
 import com.lanhai.lanaicodemother.exception.BusinessException;
 import com.lanhai.lanaicodemother.exception.ErrorCode;
@@ -7,6 +8,7 @@ import com.lanhai.lanaicodemother.mapper.PointLogMapper;
 import com.lanhai.lanaicodemother.model.entity.PointLog;
 import com.lanhai.lanaicodemother.model.entity.User;
 import com.lanhai.lanaicodemother.service.PointRuleService;
+import com.lanhai.lanaicodemother.service.PointService;
 import com.lanhai.lanaicodemother.service.UserAccountService;
 import com.lanhai.lanaicodemother.service.UserService;
 import com.mybatisflex.core.query.QueryWrapper;
@@ -44,6 +46,9 @@ public class ConsumePointsAspect {
 
     @Resource
     private UserService userService;
+
+    @Resource
+    private PointService pointService;
 
     @Around("@annotation(com.lanhai.lanaicodemother.annotation.ConsumePoints)")
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
@@ -113,8 +118,33 @@ public class ConsumePointsAspect {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "积分扣减失败");
         }
 
-        // 8. 执行原方法
-        Object result = joinPoint.proceed();
+        // 8. 执行原方法并处理异常
+        Object result;
+        try {
+            result = joinPoint.proceed();
+        } catch (Throwable throwable) {
+            // 8.1 方法执行失败，需要退回积分
+            log.error("业务执行失败，开始退回积分，用户ID：{}，业务类型：{}，业务ID：{}，积分数：{}，异常信息：{}",
+                    userId, annotation.businessType().getText(), businessId, points, throwable.getMessage());
+
+            // 8.2 生成退回备注
+            String refundRemark = String.format("%s失败，退回%d积分", annotation.businessType().getText(), points);
+
+            // 8.3 退回积分
+            try {
+                pointService.grantPoints(userId, points, refundRemark);
+                log.info("积分退回成功，用户ID：{}，业务类型：{}，业务ID：{}，退回积分：{}，备注：{}",
+                        userId, annotation.businessType().getText(), businessId, points, refundRemark);
+            } catch (Exception refundException) {
+                // 退回积分失败，记录错误日志
+                log.error("积分退回失败，用户ID：{}，业务类型：{}，业务ID：{}，应退回积分：{}，备注：{}",
+                        userId, annotation.businessType().getText(), businessId, points, refundRemark, refundException);
+                // 退回失败不应该阻止原异常的抛出，继续抛出原异常
+            }
+
+            // 8.4 重新抛出原异常
+            throw throwable;
+        }
 
         // 9. 如果需要更新业务ID（从返回值中提取真实ID）
         if (needUpdateBusinessId && tempBusinessId != null) {

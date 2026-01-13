@@ -34,10 +34,6 @@ public class PointLogServiceImpl extends ServiceImpl<PointLogMapper, PointLog> i
      * 流水记录缓存Key前缀
      */
     private static final String LOG_CACHE_PREFIX = "point:log:";
-    /**
-     * 流水记录缓存过期时间（天）
-     */
-    private static final long LOG_CACHE_EXPIRE_DAYS = 7;
     @Resource
     private StringRedisTemplate stringRedisTemplate;
 
@@ -96,7 +92,7 @@ public class PointLogServiceImpl extends ServiceImpl<PointLogMapper, PointLog> i
         }
 
         // 按时间倒序
-        queryWrapper.orderBy("createTime", false);
+        queryWrapper.orderBy("createTime", false).orderBy("id", false);
 
         // 分页查询
         int pageSize = queryRequest != null ? queryRequest.getPageSize() : 10;
