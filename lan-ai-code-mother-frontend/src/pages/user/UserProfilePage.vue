@@ -1,15 +1,17 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import {
   AppstoreOutlined,
   CheckCircleOutlined,
+  CopyOutlined,
   EditOutlined,
   GiftOutlined,
   HistoryOutlined,
   LockOutlined,
   ShoppingOutlined,
+  ShareAltOutlined,
 } from '@ant-design/icons-vue'
 import { useLoginUserStore } from '@/stores/loginUser'
 import { changePassword } from '@/api/userController'
@@ -23,14 +25,13 @@ const router = useRouter()
 const loginUserStore = useLoginUserStore()
 const passwordSubmitting = ref(false)
 const showPasswordModal = ref(false)
+const showInvitationCard = ref(false)
 
-// 积分相关
 const accountInfo = ref<API.UserAccountVO | null>(null)
 const todaySigned = ref(false)
 const signing = ref(false)
 const invitationCode = ref<string>('')
 
-// 我的应用相关
 const myApps = ref<API.AppVO[]>([])
 const appsPage = reactive({
   current: 1,
@@ -57,11 +58,66 @@ const displayAvatar = computed(() => {
   return formState.userAvatar
 })
 
-// 计算已加入天数
 const joinedDays = computed(() => {
   if (!loginUserStore.loginUser.createTime) return 0
   return dayjs().diff(dayjs(loginUserStore.loginUser.createTime), 'day')
 })
+
+const invitationLink = computed(() => {
+  return `${window.location.origin}/user/register?invitationCode=${invitationCode.value}`
+})
+
+const generateInvitationText = () => {
+  return `欢迎加入 蓝海智造 智能AI应用生成平台! 🎉
+
+我的邀请码：${invitationCode.value}
+
+👉 使用此邀请码注册，即可获得专属福利！
+
+👉 体验智能应用生成，快速构建AI应用！
+
+👉 加入我们的开发者社区，共同探索AI创新！
+
+访问链接：${invitationLink.value}`
+}
+
+const copyInvitation = async () => {
+  if (!invitationCode.value) {
+    message.warning('邀请码加载中...')
+    return
+  }
+  const invitationText = generateInvitationText()
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(invitationText)
+      message.success('✨ 邀请信息已复制到剪贴板，快去邀请小伙伴吧!')
+    } else {
+      const textArea = document.createElement('textarea')
+      textArea.value = invitationText
+      textArea.style.position = 'fixed'
+      textArea.style.left = '-9999px'
+      document.body.appendChild(textArea)
+      textArea.select()
+      try {
+        document.execCommand('copy')
+        message.success('✨ 邀请信息已复制到剪贴板，快去邀请小伙伴吧!')
+      } catch (err) {
+        message.error('复制失败，请手动复制')
+      }
+      document.body.removeChild(textArea)
+    }
+  } catch (error) {
+    message.error('复制失败，请重试')
+  }
+}
+
+const openInvitationCard = () => {
+  if (!invitationCode.value) {
+    message.warning('邀请码加载中...')
+    return
+  }
+  showInvitationCard.value = true
+}
 
 const initForm = async () => {
   if (!loginUserStore.loginUser.id) {
@@ -90,7 +146,6 @@ onMounted(() => {
   loadMyApps()
 })
 
-// 加载积分账户信息
 const loadAccountInfo = async () => {
   try {
     const res = await getMyAccount()
@@ -102,7 +157,6 @@ const loadAccountInfo = async () => {
   }
 }
 
-// 加载邀请码
 const loadInvitationCode = async () => {
   try {
     const res = await getMyInvitationCode()
@@ -114,7 +168,6 @@ const loadInvitationCode = async () => {
   }
 }
 
-// 加载今日签到状态
 const loadSignStatus = async () => {
   try {
     const res = await getSignStatus()
@@ -126,7 +179,6 @@ const loadSignStatus = async () => {
   }
 }
 
-// 执行签到
 const handleSignIn = async () => {
   if (todaySigned.value) {
     message.warning('今日已签到')
@@ -137,9 +189,7 @@ const handleSignIn = async () => {
     const res = await signIn()
     if (res.data.code === 0 && res.data.data) {
       const data = res.data.data
-      message.success(
-        `签到成功！获得 ${data.points} 积分，连续签到 ${data.continuousDays} 天${data.isBonus ? '，获得额外奖励！' : ''}`,
-      )
+      message.success(`🎁 签到成功！获得 ${data.points} 积分，连续签到 ${data.continuousDays} 天${data.isBonus ? '，获得额外奖励！' : ''}`)
       todaySigned.value = true
       await loadAccountInfo()
     } else {
@@ -152,7 +202,6 @@ const handleSignIn = async () => {
   }
 }
 
-// 加载我的应用
 const loadMyApps = async () => {
   if (!loginUserStore.loginUser.id) {
     return
@@ -176,14 +225,12 @@ const loadMyApps = async () => {
   }
 }
 
-// 查看应用对话
 const viewAppChat = (appId: string | number | undefined) => {
   if (appId) {
     router.push(`/app/chat/${appId}`)
   }
 }
 
-// 查看应用作品
 const viewAppWork = (app: API.AppVO) => {
   if (app.deployKey) {
     const url = getDeployUrl(app.deployKey)
@@ -191,31 +238,24 @@ const viewAppWork = (app: API.AppVO) => {
   }
 }
 
-// 切换应用列表页码
 const handleAppsPageChange = (page: number, pageSize: number) => {
   appsPage.current = page
   appsPage.pageSize = pageSize
   loadMyApps()
 }
 
-// 跳转到积分商城
 const goToPointMall = () => {
   router.push('/user/point-mall')
 }
 
-// 跳转到积分流水页面
 const goToPointLogs = () => {
   router.push('/user/point-logs')
 }
 
-// 跳转到编辑资料页面
 const goToEditProfile = () => {
   router.push('/user/edit-profile')
 }
 
-/**
- * 验证确认密码
- */
 const validateCheckPassword = (rule: unknown, value: string, callback: (error?: Error) => void) => {
   if (value && value !== passwordForm.newPassword) {
     callback(new Error('两次输入密码不一致'))
@@ -224,19 +264,6 @@ const validateCheckPassword = (rule: unknown, value: string, callback: (error?: 
   }
 }
 
-/**
- * 打开修改密码弹窗
- */
-const openPasswordModal = () => {
-  passwordForm.oldPassword = ''
-  passwordForm.newPassword = ''
-  passwordForm.checkPassword = ''
-  showPasswordModal.value = true
-}
-
-/**
- * 关闭修改密码弹窗
- */
 const closePasswordModal = () => {
   showPasswordModal.value = false
   passwordForm.oldPassword = ''
@@ -244,9 +271,6 @@ const closePasswordModal = () => {
   passwordForm.checkPassword = ''
 }
 
-/**
- * 提交修改密码
- */
 const handlePasswordSubmit = async () => {
   passwordSubmitting.value = true
   try {
@@ -254,7 +278,6 @@ const handlePasswordSubmit = async () => {
     if (res.data.code === 0) {
       message.success('密码修改成功，请使用新密码登录')
       closePasswordModal()
-      // 可以选择退出登录，让用户重新登录
       setTimeout(() => {
         router.push('/user/login')
       }, 1500)
@@ -270,187 +293,202 @@ const handlePasswordSubmit = async () => {
 </script>
 
 <template>
-  <div class="profile-wrapper">
-    <!-- 用户资料卡片 -->
-    <section class="profile-card">
-      <div class="profile-info">
-        <!-- 左侧用户信息 -->
-        <div class="user-info-left">
-          <a-avatar :size="80" :src="displayAvatar" class="user-avatar" />
-          <div class="user-details">
-            <h3 class="user-name">{{ formState.userName || '未设置' }}</h3>
-            <p class="user-account">@{{ formState.userAccount }}</p>
-            <div class="user-stats">
-              <div class="stat-item">
-                <span class="stat-label">积分</span>
-                <span class="stat-value">{{ accountInfo?.availablePoints ?? 0 }}</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-label">已加入</span>
-                <span class="stat-value">{{ joinedDays }}天</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-label">邮箱</span>
-                <a-tag class="stat-tag" color="orange">未绑定</a-tag>
-              </div>
-              <div class="stat-item">
-                <span class="stat-label">邀请码</span>
-                <span class="stat-value code">{{ invitationCode || '加载中...' }}</span>
-              </div>
-            </div>
+  <div class="user-profile-page">
+    <!-- 用户信息卡片 -->
+    <a-card class="profile-card" :bordered="false">
+      <div class="profile-header">
+        <div class="avatar-section">
+          <a-avatar :size="100" :src="displayAvatar">
+            <template #icon>
+              <UserOutlined />
+            </template>
+          </a-avatar>
+          <div class="user-info">
+            <h2 class="user-name">{{ formState.userName || '未设置昵称' }}</h2>
+            <p class="user-account">{{ formState.userAccount }}</p>
+            <p class="user-profile">{{ formState.userProfile || '这个人很懒，什么都没留下~' }}</p>
           </div>
         </div>
+      </div>
 
-        <!-- 右侧操作按钮 -->
-        <div class="user-actions">
-          <a-button class="action-btn" type="primary" @click="goToPointMall">
-            <ShoppingOutlined />
-            积分商城
-            <span class="points-badge">{{ accountInfo?.availablePoints ?? 0 }}</span>
-          </a-button>
-          <a-button class="action-btn" @click="goToPointLogs">
-            <HistoryOutlined />
-            积分详情
-          </a-button>
-          <a-button
-            :disabled="todaySigned"
-            :loading="signing"
-            class="action-btn"
-            type="primary"
-            @click="handleSignIn"
-          >
-            <CheckCircleOutlined v-if="todaySigned" />
-            <GiftOutlined v-else />
-            {{ todaySigned ? '今日已签到' : '立即签到' }}
-          </a-button>
-          <a-button class="action-btn" type="primary" @click="goToEditProfile">
-            <EditOutlined />
-            编辑资料
+      <!-- 用户统计 -->
+      <div class="user-stats">
+        <div class="stat-item">
+          <span class="stat-label">💎 积分</span>
+          <span class="stat-value">{{ accountInfo?.availablePoints ?? 0 }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">📅 已加入</span>
+          <span class="stat-value">{{ joinedDays }} 天</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">📧 邮箱</span>
+          <span class="stat-value stat-email">{{ loginUserStore.loginUser.userEmail || '未绑定' }}</span>
+        </div>
+        <div class="stat-item stat-item-invitation">
+          <span class="stat-label">🎁 邀请码</span>
+          <a-button class="invitation-code-btn" size="small" type="primary" @click="openInvitationCard">
+            {{ invitationCode || '加载中...' }}
+            <ShareAltOutlined />
           </a-button>
         </div>
       </div>
-    </section>
+
+      <!-- 操作按钮 -->
+      <div class="action-buttons">
+        <a-button class="action-btn action-btn-gift" size="large" @click="handleSignIn" :loading="signing">
+          <GiftOutlined />
+          {{ todaySigned ? '今日已签到' : '每日签到' }}
+        </a-button>
+        <a-button class="action-btn action-btn-primary" size="large" @click="goToPointMall">
+          <ShoppingOutlined />
+          积分商城
+        </a-button>
+        <a-button class="action-btn action-btn-edit" size="large" @click="goToEditProfile">
+          <EditOutlined />
+          编辑资料
+        </a-button>
+        <a-button class="action-btn" size="large" @click="goToPointLogs">
+          <HistoryOutlined />
+          积分明细
+        </a-button>
+      </div>
+    </a-card>
 
     <!-- 我的应用 -->
-    <section class="profile-card my-apps-card">
-      <div class="my-apps-header">
-        <div class="apps-title-section">
-          <AppstoreOutlined class="apps-title-icon" />
-          <h3>我的应用</h3>
+    <a-card class="apps-card" :bordered="false">
+      <template #title>
+        <div class="card-title">
+          <AppstoreOutlined />
+          我的应用
         </div>
-      </div>
-      <div class="my-apps-content">
-        <a-spin :spinning="appsLoading">
-          <div v-if="myApps.length > 0" class="apps-grid">
-            <div v-for="app in myApps" :key="app.id" class="app-item">
-              <AppCard :app="app" @view-chat="viewAppChat" @view-work="viewAppWork" />
-            </div>
-          </div>
-          <div v-else class="apps-empty">
-            <div class="empty-icon">📱</div>
-            <p class="empty-text">暂无应用</p>
-            <p class="empty-hint">请创建一个应用开始使用</p>
-          </div>
-        </a-spin>
-        <div v-if="appsPage.total > 0" class="apps-pagination">
-          <a-pagination
-            v-model:current="appsPage.current"
-            v-model:page-size="appsPage.pageSize"
-            :show-size-changer="false"
-            :show-total="(total: number) => `共 ${total} 个应用`"
-            :total="appsPage.total"
-            size="small"
-            @change="handleAppsPageChange"
+      </template>
+      <template #extra>
+        <a-button type="link" @click="() => router.push('/')">创建新应用</a-button>
+      </template>
+
+      <a-spin :spinning="appsLoading">
+        <div v-if="myApps.length > 0" class="apps-grid">
+          <AppCard
+            v-for="app in myApps"
+            :key="app.id"
+            :app="app"
+            @view-chat="viewAppChat"
+            @view-work="viewAppWork"
           />
         </div>
+        <a-empty v-else description="暂无应用，快去创建一个吧~" />
+      </a-spin>
+
+      <div v-if="appsPage.total > 0" class="pagination-wrapper">
+        <a-pagination
+          v-model:current="appsPage.current"
+          v-model:page-size="appsPage.pageSize"
+          :total="appsPage.total"
+          :show-size-changer="true"
+          :show-total="(total) => `共 ${total} 个应用`"
+          @change="handleAppsPageChange"
+        />
       </div>
-    </section>
+    </a-card>
+
+    <!-- 邀请卡片弹窗 -->
+    <a-modal
+      v-model:open="showInvitationCard"
+      :footer="null"
+      :title="null"
+      class="invitation-modal"
+      width="500px"
+      @cancel="showInvitationCard = false"
+    >
+      <div class="invitation-card">
+        <div class="invitation-header">
+          <div class="invitation-icon">🎉</div>
+          <h3 class="invitation-title">邀请好友加入蓝海智造</h3>
+          <p class="invitation-subtitle">分享邀请码，双方均可获得积分奖励</p>
+        </div>
+        <div class="invitation-content">
+          <div class="invitation-code-section">
+            <div class="invitation-code-label">🎯 我的邀请码</div>
+            <div class="invitation-code-display">
+              <span class="invitation-code-text">{{ invitationCode }}</span>
+              <a-button class="copy-btn" size="large" type="primary" @click="copyInvitation">
+                <CopyOutlined />
+                复制邀请信息
+              </a-button>
+            </div>
+          </div>
+          <div class="invitation-rewards">
+            <div class="reward-item">
+              <div class="reward-icon">🎁</div>
+              <div class="reward-content">
+                <div class="reward-title">被邀请人奖励</div>
+                <div class="reward-value">+50 积分</div>
+              </div>
+            </div>
+            <div class="reward-item">
+              <div class="reward-icon">💰</div>
+              <div class="reward-content">
+                <div class="reward-title">邀请人奖励</div>
+                <div class="reward-value">+30 积分</div>
+              </div>
+            </div>
+          </div>
+          <div class="invitation-steps">
+            <div class="step-title">📋 邀请步骤</div>
+            <div class="step-list">
+              <div class="step-item">
+                <span class="step-number">1</span>
+                <span class="step-text">点击复制邀请信息</span>
+              </div>
+              <div class="step-item">
+                <span class="step-number">2</span>
+                <span class="step-text">分享给好友或朋友圈</span>
+              </div>
+              <div class="step-item">
+                <span class="step-number">3</span>
+                <span class="step-text">好友注册成功即可获得奖励</span>
+              </div>
+            </div>
+          </div>
+          <div class="invitation-link-section">
+            <div class="link-label">🔗 邀请链接</div>
+            <div class="link-display">
+              <span class="link-text">{{ invitationLink }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </a-modal>
 
     <!-- 修改密码弹窗 -->
     <a-modal
       v-model:open="showPasswordModal"
-      :footer="null"
-      :title="null"
-      class="password-modal"
-      width="520px"
+      title="修改密码"
+      :confirm-loading="passwordSubmitting"
+      @ok="handlePasswordSubmit"
       @cancel="closePasswordModal"
     >
-      <div class="modal-header">
-        <h3>修改密码</h3>
-        <p class="modal-subtitle">为了您的账号安全，请定期修改密码</p>
-      </div>
       <a-form
         :model="passwordForm"
-        autocomplete="off"
-        class="password-form"
-        name="changePassword"
-        @finish="handlePasswordSubmit"
+        :label-col="{ span: 6 }"
+        :wrapper-col="{ span: 16 }"
       >
-        <a-form-item :rules="[{ required: true, message: '请输入旧密码' }]" name="oldPassword">
-          <a-input-password
-            v-model:value="passwordForm.oldPassword"
-            class="password-input"
-            placeholder="请输入旧密码"
-            size="large"
-          >
-            <template #prefix>
-              <LockOutlined />
-            </template>
-          </a-input-password>
+        <a-form-item label="原密码" name="oldPassword" :rules="[{ required: true, message: '请输入原密码' }]">
+          <a-input-password v-model:value="passwordForm.oldPassword" placeholder="请输入原密码" />
         </a-form-item>
-
-        <a-form-item
-          :rules="[
-            { required: true, message: '请输入新密码' },
-            { min: 8, message: '密码不能小于 8 位' },
-          ]"
-          name="newPassword"
-        >
-          <a-input-password
-            v-model:value="passwordForm.newPassword"
-            class="password-input"
-            placeholder="请输入新密码（至少8位）"
-            size="large"
-          >
-            <template #prefix>
-              <LockOutlined />
-            </template>
-          </a-input-password>
+        <a-form-item label="新密码" name="newPassword" :rules="[{ required: true, message: '请输入新密码' }]">
+          <a-input-password v-model:value="passwordForm.newPassword" placeholder="请输入新密码（6-16位）" />
         </a-form-item>
-
         <a-form-item
-          :rules="[
-            { required: true, message: '请确认新密码' },
-            { min: 8, message: '密码不能小于 8 位' },
-            { validator: validateCheckPassword },
-          ]"
+          label="确认密码"
           name="checkPassword"
+          :rules="[
+            { required: true, message: '请再次输入新密码' },
+            { validator: validateCheckPassword }
+          ]"
         >
-          <a-input-password
-            v-model:value="passwordForm.checkPassword"
-            class="password-input"
-            placeholder="请确认新密码"
-            size="large"
-          >
-            <template #prefix>
-              <LockOutlined />
-            </template>
-          </a-input-password>
-        </a-form-item>
-
-        <a-form-item class="password-form-actions">
-          <div class="button-group">
-            <a-button class="cancel-button" size="large" @click="closePasswordModal">取消</a-button>
-            <a-button
-              :loading="passwordSubmitting"
-              class="submit-button"
-              html-type="submit"
-              size="large"
-              type="primary"
-            >
-              确认修改
-            </a-button>
-          </div>
+          <a-input-password v-model:value="passwordForm.checkPassword" placeholder="请再次输入新密码" />
         </a-form-item>
       </a-form>
     </a-modal>
@@ -458,356 +496,467 @@ const handlePasswordSubmit = async () => {
 </template>
 
 <style scoped>
-.profile-wrapper {
-  max-width: 1200px;
+.user-profile-page {
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 24px 0 64px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 24px;
 }
 
 .profile-card {
-  background: #fff;
-  border-radius: 18px;
-  padding: 32px 40px;
-  box-shadow: 0 12px 35px rgba(15, 39, 80, 0.07);
-  border: 1px solid #f0f2f5;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-.profile-info {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 32px;
+.profile-header {
+  margin-bottom: 24px;
 }
 
-.user-info-left {
+.avatar-section {
   display: flex;
-  align-items: flex-start;
   gap: 24px;
-  flex: 1;
+  align-items: flex-start;
 }
 
-.user-avatar {
-  flex-shrink: 0;
-  border: 3px solid #f0f2f5;
-}
-
-.user-details {
+.user-info {
   flex: 1;
+  padding-top: 8px;
 }
 
 .user-name {
-  margin: 0 0 8px 0;
   font-size: 24px;
   font-weight: 600;
-  color: #1f2d3d;
+  margin: 0 0 8px 0;
+  color: #1a1a1a;
 }
 
 .user-account {
-  margin: 0 0 16px 0;
-  font-size: 16px;
+  font-size: 14px;
   color: #8c8c8c;
+  margin: 0 0 8px 0;
+}
+
+.user-profile {
+  font-size: 14px;
+  color: #595959;
+  margin: 0;
+  line-height: 1.6;
 }
 
 .user-stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  padding: 20px;
+  background: #fafafa;
+  border-radius: 8px;
+  margin-bottom: 24px;
 }
 
 .stat-item {
   display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.stat-label {
-  font-size: 14px;
-  color: #8c8c8c;
-}
-
-.stat-value {
-  font-size: 16px;
-  font-weight: 600;
-  color: #1f2d3d;
-}
-
-.stat-value.code {
-  font-family: 'Courier New', monospace;
-  color: #1890ff;
-  font-weight: 600;
-}
-
-.stat-tag {
-  margin: 0;
-}
-
-.user-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  min-width: 150px;
-}
-
-.action-btn {
-  height: 42px;
-  font-size: 15px;
-  font-weight: 500;
-  border-radius: 8px;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.points-badge {
-  margin-left: 4px;
-  font-weight: 600;
-}
-
-.my-apps-card {
-  margin-top: 0;
-}
-
-.my-apps-header {
-  margin-bottom: 24px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #f0f2f5;
-}
-
-.apps-title-section {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.apps-title-icon {
-  font-size: 18px;
-  color: #1890ff;
-}
-
-.my-apps-header h3 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #1f2d3d;
-}
-
-.my-apps-content {
-  min-height: 200px;
-}
-
-.apps-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  margin-bottom: 24px;
-}
-
-.app-item {
-  width: 100%;
-}
-
-.apps-empty {
-  display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 60px 20px;
-  text-align: center;
-}
-
-.empty-icon {
-  font-size: 64px;
-  margin-bottom: 16px;
-  opacity: 0.5;
-}
-
-.empty-text {
-  font-size: 16px;
-  font-weight: 500;
-  color: #5f6b7c;
-  margin: 0 0 8px 0;
-}
-
-.empty-hint {
-  font-size: 14px;
-  color: #8c8c8c;
-  margin: 0;
-}
-
-.apps-pagination {
-  display: flex;
-  justify-content: center;
-  padding-top: 16px;
-  border-top: 1px solid #f0f2f5;
-}
-
-/* 修改密码弹窗样式 */
-.password-modal :deep(.ant-modal-content) {
-  border-radius: 16px;
-  overflow: hidden;
-}
-
-.password-modal :deep(.ant-modal-body) {
-  padding: 0;
-}
-
-.modal-header {
-  padding: 32px 32px 24px;
-  background: linear-gradient(120deg, #e0f2ff, #f5f7ff);
-  border-bottom: 1px solid #f0f2f5;
-}
-
-.modal-header h3 {
-  margin: 0 0 8px 0;
-  font-size: 24px;
-  font-weight: 600;
-  color: #1f2d3d;
-}
-
-.modal-subtitle {
-  margin: 0;
-  font-size: 14px;
-  color: #5f6b7c;
-}
-
-.password-form {
-  padding: 32px;
-}
-
-.password-input :deep(.ant-input),
-.password-input :deep(.ant-input-password) {
+  padding: 16px;
+  background: #fff;
   border-radius: 8px;
-  height: 48px;
-  font-size: 15px;
-  padding-left: 40px;
-  border-color: #d9d9d9;
-  transition: all 0.3s;
-}
-
-.password-input :deep(.ant-input:hover),
-.password-input :deep(.ant-input-password:hover) {
-  border-color: #667eea;
-}
-
-.password-input :deep(.ant-input:focus),
-.password-input :deep(.ant-input-focused),
-.password-input :deep(.ant-input-password:focus) {
-  border-color: #667eea;
-  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
-}
-
-.password-input :deep(.ant-input-prefix) {
-  left: 14px;
-  color: #667eea;
-  font-size: 16px;
-}
-
-.password-input :deep(.ant-input-password-icon) {
-  color: #999;
-  font-size: 16px;
-  cursor: pointer;
-  transition: color 0.3s;
-}
-
-.password-input :deep(.ant-input-password-icon:hover) {
-  color: #667eea;
-}
-
-.password-form-actions {
-  margin-top: 32px;
-  margin-bottom: 0;
-}
-
-.button-group {
-  display: flex;
-  gap: 12px;
-  width: 100%;
-}
-
-.cancel-button {
-  flex: 1;
-  height: 48px;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 500;
-  background: #ffffff;
-  border: 1px solid #d9d9d9;
-  color: #666;
+  border: 1px solid #f0f0f0;
   transition: all 0.3s ease;
 }
 
-.cancel-button:hover {
-  border-color: #667eea;
-  color: #667eea;
-  background: #f5f5f5;
+.stat-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-.submit-button {
-  flex: 1;
-  height: 48px;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 500;
+.stat-label {
+  font-size: 13px;
+  color: #8c8c8c;
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.stat-email {
+  font-size: 14px;
+  font-weight: 400;
+  word-break: break-all;
+  text-align: center;
+}
+
+.stat-item-invitation {
+  grid-column: span 1;
+}
+
+.invitation-code-btn {
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border: none;
   transition: all 0.3s ease;
 }
 
-.submit-button:hover {
-  background: linear-gradient(135deg, #5568d3 0%, #6a3d91 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+.invitation-code-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
-.submit-button:active {
-  transform: translateY(0);
+.action-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
 }
 
+.action-btn {
+  height: 48px;
+  font-size: 15px;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.action-btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  color: #fff;
+}
+
+.action-btn-primary:hover {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+.action-btn-gift {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  border: none;
+  color: #fff;
+}
+
+.action-btn-gift:hover {
+  background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
+}
+
+.action-btn-edit {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  border: none;
+  color: #fff;
+}
+
+.action-btn-edit:hover {
+  background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+}
+
+.apps-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.apps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.pagination-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+/* 邀请卡片弹窗样式 */
+.invitation-modal :deep(.ant-modal-content) {
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.invitation-modal :deep(.ant-modal-body) {
+  padding: 0;
+}
+
+.invitation-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.invitation-header {
+  padding: 40px 32px 32px;
+  text-align: center;
+  color: #fff;
+}
+
+.invitation-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.invitation-title {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  color: #fff;
+}
+
+.invitation-subtitle {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+}
+
+.invitation-content {
+  padding: 32px;
+  background: #fff;
+  border-radius: 20px 20px 0 0;
+}
+
+.invitation-code-section {
+  margin-bottom: 24px;
+}
+
+.invitation-code-label {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 12px;
+}
+
+.invitation-code-display {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  background: #f5f5f5;
+  border-radius: 12px;
+}
+
+.invitation-code-text {
+  font-family: 'Courier New', monospace;
+  font-size: 28px;
+  font-weight: 700;
+  color: #667eea;
+  text-align: center;
+  letter-spacing: 2px;
+}
+
+.copy-btn {
+  width: 100%;
+  height: 48px;
+  font-size: 16px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.copy-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.invitation-rewards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.reward-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.reward-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.reward-icon {
+  font-size: 32px;
+}
+
+.reward-content {
+  flex: 1;
+}
+
+.reward-title {
+  font-size: 14px;
+  color: #595959;
+  margin-bottom: 4px;
+}
+
+.reward-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #667eea;
+}
+
+.invitation-steps {
+  margin-bottom: 24px;
+}
+
+.step-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 16px;
+}
+
+.step-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.step-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #fafafa;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.step-item:hover {
+  background: #f0f0f0;
+}
+
+.step-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  border-radius: 50%;
+  font-size: 14px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.step-text {
+  font-size: 14px;
+  color: #595959;
+}
+
+.invitation-link-section {
+  margin-bottom: 16px;
+}
+
+.link-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #595959;
+  margin-bottom: 8px;
+}
+
+.link-display {
+  padding: 12px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  word-break: break-all;
+}
+
+.link-text {
+  font-size: 12px;
+  color: #8c8c8c;
+  font-family: 'Courier New', monospace;
+}
+
+/* 响应式设计 */
 @media (max-width: 768px) {
-  .profile-card {
-    padding: 24px;
+  .user-profile-page {
+    padding: 16px;
   }
 
-  .profile-info {
+  .avatar-section {
     flex-direction: column;
-    gap: 24px;
-  }
-
-  .user-actions {
-    width: 100%;
-    flex-direction: row;
-    flex-wrap: wrap;
-  }
-
-  .action-btn {
-    flex: 1;
-    min-width: 120px;
+    align-items: center;
+    text-align: center;
   }
 
   .user-stats {
-    gap: 16px;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .stat-item-invitation {
+    grid-column: span 2;
+  }
+
+  .action-buttons {
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .apps-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
+    grid-template-columns: 1fr;
   }
 
-  .apps-empty {
-    padding: 40px 20px;
+  .invitation-header {
+    padding: 32px 24px 24px;
   }
 
-  .empty-icon {
-    font-size: 48px;
+  .invitation-content {
+    padding: 24px;
   }
 
-  .button-group {
-    flex-direction: column;
+  .invitation-rewards {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .user-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-item-invitation {
+    grid-column: span 1;
+  }
+
+  .action-buttons {
+    grid-template-columns: 1fr;
   }
 }
 </style>
