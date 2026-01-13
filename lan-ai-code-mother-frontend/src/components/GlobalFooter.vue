@@ -21,16 +21,10 @@
           <h3 class="section-title">帮助支持</h3>
           <ul class="footer-links">
             <li>
-              <router-link to="/user/login">用户登录</router-link>
-            </li>
-            <li>
-              <router-link to="/user/register">用户注册</router-link>
+              <router-link to="/help/docs#introduction">使用帮助</router-link>
             </li>
             <li>
               <router-link to="/help/docs#faq">常见问题</router-link>
-            </li>
-            <li>
-              <router-link to="/help/docs#introduction">使用帮助</router-link>
             </li>
           </ul>
         </div>

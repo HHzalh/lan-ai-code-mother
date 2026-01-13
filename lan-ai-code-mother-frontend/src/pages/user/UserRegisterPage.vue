@@ -158,9 +158,7 @@
         <!-- 协议同意提示 -->
         <div class="agreement-tip">
           注册即表示您同意我们的
-          <a class="link" href="#">服务条款</a>
-          和
-          <a class="link" href="#">隐私政策</a>
+          <a class="link" href="/help/docs#terms">服务条款</a>
         </div>
       </a-form>
 
