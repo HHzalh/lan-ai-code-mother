@@ -98,13 +98,13 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script lang="ts" setup>
 import { useRouter } from 'vue-router'
+import type { FormInstance } from 'ant-design-vue'
 import { message } from 'ant-design-vue'
 import { reactive, ref } from 'vue'
 import { userLogin } from '@/api/userController.ts'
 import { useLoginUserStore } from '@/stores/loginUser.ts'
-import type { FormInstance } from 'ant-design-vue'
 import { CodeOutlined, LockOutlined, LoginOutlined, UserOutlined } from '@ant-design/icons-vue'
 
 const router = useRouter()
@@ -147,7 +147,7 @@ const handleSubmit = async (values: API.UserLoginRequest) => {
 }
 </script>
 
-<style scoped lang="less">
+<style lang="less" scoped>
 .login-container {
   min-height: 100vh;
   display: flex;

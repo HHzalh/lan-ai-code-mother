@@ -4,18 +4,22 @@ import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import {
   AppstoreOutlined,
-  CheckCircleOutlined,
   CopyOutlined,
   EditOutlined,
   GiftOutlined,
   HistoryOutlined,
-  LockOutlined,
-  ShoppingOutlined,
   ShareAltOutlined,
+  ShoppingOutlined,
 } from '@ant-design/icons-vue'
 import { useLoginUserStore } from '@/stores/loginUser'
 import { changePassword } from '@/api/userController'
-import { getMyAccount, getMyInvitationCode, getSignStatus, signIn } from '@/api/pointController'
+import {
+  getAllRules,
+  getMyAccount,
+  getMyInvitationCode,
+  getSignStatus,
+  signIn,
+} from '@/api/pointController'
 import { listMyAppVoByPage } from '@/api/appController'
 import AppCard from '@/components/AppCard.vue'
 import { getDeployUrl } from '@/config/env'
@@ -31,6 +35,8 @@ const accountInfo = ref<API.UserAccountVO | null>(null)
 const todaySigned = ref(false)
 const signing = ref(false)
 const invitationCode = ref<string>('')
+const inviteeReward = ref<number>(50) // 被邀请人奖励
+const inviterReward = ref<number>(30) // 邀请人奖励
 
 const myApps = ref<API.AppVO[]>([])
 const appsPage = reactive({
@@ -143,6 +149,7 @@ onMounted(() => {
   loadAccountInfo()
   loadSignStatus()
   loadInvitationCode()
+  loadInvitationRules()
   loadMyApps()
 })
 
@@ -168,6 +175,29 @@ const loadInvitationCode = async () => {
   }
 }
 
+const loadInvitationRules = async () => {
+  try {
+    const res = await getAllRules()
+    if (res.data.code === 0 && res.data.data) {
+      const rules = res.data.data
+      // 查找被邀请人奖励和邀请人奖励
+      const inviteeRule = rules.find((r: API.PointRuleVO) => r.ruleKey === 'INVITE_NEW')
+      const inviterRule = rules.find((r: API.PointRuleVO) => r.ruleKey === 'INVITE_REWARD')
+      if (inviteeRule) {
+        inviteeReward.value = inviteeRule.ruleValue
+      }
+      if (inviterRule) {
+        inviterReward.value = inviterRule.ruleValue
+      }
+    }
+  } catch (error) {
+    console.error('加载邀请规则失败：', error)
+    // 使用默认值
+    inviteeReward.value = 50
+    inviterReward.value = 30
+  }
+}
+
 const loadSignStatus = async () => {
   try {
     const res = await getSignStatus()
@@ -189,7 +219,9 @@ const handleSignIn = async () => {
     const res = await signIn()
     if (res.data.code === 0 && res.data.data) {
       const data = res.data.data
-      message.success(`🎁 签到成功！获得 ${data.points} 积分，连续签到 ${data.continuousDays} 天${data.isBonus ? '，获得额外奖励！' : ''}`)
+      message.success(
+        `🎁 签到成功！获得 ${data.points} 积分，连续签到 ${data.continuousDays} 天${data.isBonus ? '，获得额外奖励！' : ''}`,
+      )
       todaySigned.value = true
       await loadAccountInfo()
     } else {
@@ -295,7 +327,7 @@ const handlePasswordSubmit = async () => {
 <template>
   <div class="user-profile-page">
     <!-- 用户信息卡片 -->
-    <a-card class="profile-card" :bordered="false">
+    <a-card :bordered="false" class="profile-card">
       <div class="profile-header">
         <div class="avatar-section">
           <a-avatar :size="100" :src="displayAvatar">
@@ -323,11 +355,18 @@ const handlePasswordSubmit = async () => {
         </div>
         <div class="stat-item">
           <span class="stat-label">📧 邮箱</span>
-          <span class="stat-value stat-email">{{ loginUserStore.loginUser.userEmail || '未绑定' }}</span>
+          <span class="stat-value stat-email">{{
+            loginUserStore.loginUser.userEmail || '未绑定'
+          }}</span>
         </div>
         <div class="stat-item stat-item-invitation">
           <span class="stat-label">🎁 邀请码</span>
-          <a-button class="invitation-code-btn" size="small" type="primary" @click="openInvitationCard">
+          <a-button
+            class="invitation-code-btn"
+            size="small"
+            type="primary"
+            @click="openInvitationCard"
+          >
             {{ invitationCode || '加载中...' }}
             <ShareAltOutlined />
           </a-button>
@@ -336,7 +375,12 @@ const handlePasswordSubmit = async () => {
 
       <!-- 操作按钮 -->
       <div class="action-buttons">
-        <a-button class="action-btn action-btn-gift" size="large" @click="handleSignIn" :loading="signing">
+        <a-button
+          :loading="signing"
+          class="action-btn action-btn-gift"
+          size="large"
+          @click="handleSignIn"
+        >
           <GiftOutlined />
           {{ todaySigned ? '今日已签到' : '每日签到' }}
         </a-button>
@@ -356,7 +400,7 @@ const handlePasswordSubmit = async () => {
     </a-card>
 
     <!-- 我的应用 -->
-    <a-card class="apps-card" :bordered="false">
+    <a-card :bordered="false" class="apps-card">
       <template #title>
         <div class="card-title">
           <AppstoreOutlined />
@@ -384,9 +428,9 @@ const handlePasswordSubmit = async () => {
         <a-pagination
           v-model:current="appsPage.current"
           v-model:page-size="appsPage.pageSize"
-          :total="appsPage.total"
           :show-size-changer="true"
           :show-total="(total) => `共 ${total} 个应用`"
+          :total="appsPage.total"
           @change="handleAppsPageChange"
         />
       </div>
@@ -423,14 +467,14 @@ const handlePasswordSubmit = async () => {
               <div class="reward-icon">🎁</div>
               <div class="reward-content">
                 <div class="reward-title">被邀请人奖励</div>
-                <div class="reward-value">+50 积分</div>
+                <div class="reward-value">+{{ inviteeReward }} 积分</div>
               </div>
             </div>
             <div class="reward-item">
               <div class="reward-icon">💰</div>
               <div class="reward-content">
                 <div class="reward-title">邀请人奖励</div>
-                <div class="reward-value">+30 积分</div>
+                <div class="reward-value">+{{ inviterReward }} 积分</div>
               </div>
             </div>
           </div>
@@ -464,31 +508,41 @@ const handlePasswordSubmit = async () => {
     <!-- 修改密码弹窗 -->
     <a-modal
       v-model:open="showPasswordModal"
-      title="修改密码"
       :confirm-loading="passwordSubmitting"
-      @ok="handlePasswordSubmit"
+      title="修改密码"
       @cancel="closePasswordModal"
+      @ok="handlePasswordSubmit"
     >
-      <a-form
-        :model="passwordForm"
-        :label-col="{ span: 6 }"
-        :wrapper-col="{ span: 16 }"
-      >
-        <a-form-item label="原密码" name="oldPassword" :rules="[{ required: true, message: '请输入原密码' }]">
+      <a-form :label-col="{ span: 6 }" :model="passwordForm" :wrapper-col="{ span: 16 }">
+        <a-form-item
+          :rules="[{ required: true, message: '请输入原密码' }]"
+          label="原密码"
+          name="oldPassword"
+        >
           <a-input-password v-model:value="passwordForm.oldPassword" placeholder="请输入原密码" />
         </a-form-item>
-        <a-form-item label="新密码" name="newPassword" :rules="[{ required: true, message: '请输入新密码' }]">
-          <a-input-password v-model:value="passwordForm.newPassword" placeholder="请输入新密码（6-16位）" />
+        <a-form-item
+          :rules="[{ required: true, message: '请输入新密码' }]"
+          label="新密码"
+          name="newPassword"
+        >
+          <a-input-password
+            v-model:value="passwordForm.newPassword"
+            placeholder="请输入新密码（6-16位）"
+          />
         </a-form-item>
         <a-form-item
-          label="确认密码"
-          name="checkPassword"
           :rules="[
             { required: true, message: '请再次输入新密码' },
-            { validator: validateCheckPassword }
+            { validator: validateCheckPassword },
           ]"
+          label="确认密码"
+          name="checkPassword"
         >
-          <a-input-password v-model:value="passwordForm.checkPassword" placeholder="请再次输入新密码" />
+          <a-input-password
+            v-model:value="passwordForm.checkPassword"
+            placeholder="请再次输入新密码"
+          />
         </a-form-item>
       </a-form>
     </a-modal>
@@ -717,7 +771,8 @@ const handlePasswordSubmit = async () => {
 }
 
 @keyframes bounce {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
   50% {

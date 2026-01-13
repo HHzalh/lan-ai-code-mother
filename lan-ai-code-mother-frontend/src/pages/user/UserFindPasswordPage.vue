@@ -111,8 +111,8 @@
             description="验证码已发送到您的邮箱，请查收（有效期5分钟）"
             message="验证码已发送"
             show-icon
-            type="success"
             style="margin-bottom: 20px"
+            type="success"
           />
 
           <!-- 验证码输入 -->
@@ -218,12 +218,12 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script lang="ts" setup>
 import { useRouter } from 'vue-router'
+import type { FormInstance } from 'ant-design-vue'
 import { message } from 'ant-design-vue'
 import { reactive, ref } from 'vue'
 import { findPassword, resetPassword } from '@/api/userController'
-import type { FormInstance } from 'ant-design-vue'
 import {
   ArrowLeftOutlined,
   KeyOutlined,
@@ -257,7 +257,11 @@ const resetPasswordForm = reactive<API.ResetPasswordRequest>({
 /**
  * 验证确认密码
  */
-const validateCheckPassword = (_rule: unknown, value: string, callback: (error?: Error) => void) => {
+const validateCheckPassword = (
+  _rule: unknown,
+  value: string,
+  callback: (error?: Error) => void,
+) => {
   if (value && value !== resetPasswordForm.newPassword) {
     callback(new Error('两次输入密码不一致'))
   } else {
@@ -335,7 +339,7 @@ const handleBack = () => {
 }
 </script>
 
-<style scoped lang="less">
+<style lang="less" scoped>
 .find-password-container {
   min-height: 100vh;
   display: flex;

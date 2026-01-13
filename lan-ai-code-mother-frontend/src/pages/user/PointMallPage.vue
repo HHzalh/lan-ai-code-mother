@@ -217,7 +217,7 @@ const INCOME_RULE_KEYS = [
 ]
 
 // 消耗积分的规则键
-const EXPENSE_RULE_KEYS = ['GENERATE_COST', 'DEPLOY_COST', 'DOWNLOAD_COST']
+const EXPENSE_RULE_KEYS = ['GENERATE_COST', 'AI_MESSAGE_COST', 'DEPLOY_COST', 'DOWNLOAD_COST']
 
 // 计算获得的积分规则（只显示启用的）
 const incomeRules = computed(() => {
@@ -241,6 +241,7 @@ const getRuleTitle = (ruleKey?: string) => {
     SIGN_IN_CONTINUOUS_3: '连续签到3天',
     SIGN_IN_CONTINUOUS_7: '连续签到7天',
     GENERATE_COST: '生成应用',
+    AI_MESSAGE_COST: 'AI对话',
     DEPLOY_COST: '部署应用',
     DOWNLOAD_COST: '下载代码',
   }

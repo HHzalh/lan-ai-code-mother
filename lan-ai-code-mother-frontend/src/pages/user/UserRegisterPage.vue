@@ -171,12 +171,12 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import { useRouter } from 'vue-router'
+<script lang="ts" setup>
+import { useRoute, useRouter } from 'vue-router'
 import { userRegister } from '@/api/userController.ts'
 import type { FormInstance } from 'ant-design-vue'
 import { message } from 'ant-design-vue'
-import { computed, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import CaptchaInput from '@/components/CaptchaInput.vue'
 import {
   CodeOutlined,
@@ -189,6 +189,7 @@ import {
 } from '@ant-design/icons-vue'
 
 const router = useRouter()
+const route = useRoute()
 const formRef = ref<FormInstance>()
 const loading = ref(false)
 const captchaRef = ref<InstanceType<typeof CaptchaInput>>()
@@ -301,9 +302,17 @@ const handleSubmit = async (values: API.UserRegisterRequest & { captcha: string 
     loading.value = false
   }
 }
+
+// 解析 URL 参数，自动填入邀请码
+onMounted(() => {
+  const invitationCodeParam = route.query.invitationCode as string
+  if (invitationCodeParam) {
+    formState.invitationCode = invitationCodeParam
+  }
+})
 </script>
 
-<style scoped lang="less">
+<style lang="less" scoped>
 .register-container {
   min-height: 100vh;
   display: flex;

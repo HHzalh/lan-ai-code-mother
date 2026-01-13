@@ -21,9 +21,10 @@
           <a-select-option value="REGISTER_REWARD">注册奖励</a-select-option>
           <a-select-option value="INVITEE_BONUS">被邀请人奖励</a-select-option>
           <a-select-option value="INVITER_BONUS">邀请人奖励</a-select-option>
-          <a-select-option value="GENERATE">生成消耗</a-select-option>
+          <a-select-option value="GENERATE">创建应用</a-select-option>
+          <a-select-option value="MESSAGE">AI对话</a-select-option>
+          <a-select-option value="DEPLOY">部署</a-select-option>
           <a-select-option value="DOWNLOAD">下载代码</a-select-option>
-          <a-select-option value="DEPLOY">部署消耗</a-select-option>
           <a-select-option value="SYSTEM_GRANT">系统发放</a-select-option>
         </a-select>
       </a-form-item>
