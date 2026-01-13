@@ -44,14 +44,19 @@ public enum PointRuleKeyEnum {
     INVITE_REWARD("INVITE_REWARD", 30L, "邀请人奖励"),
 
     /**
+     * 生成应用消耗积分
+     */
+    GENERATE_COST("GENERATE_COST", 20L, "生成应用消耗积分"),
+
+    /**
      * 部署应用消耗积分
      */
     DEPLOY_COST("DEPLOY_COST", 30L, "部署应用消耗积分"),
 
     /**
-     * 生成应用消耗积分
+     * AI对话消耗积分
      */
-    GENERATE_COST("GENERATE_COST", 20L, "生成应用消耗积分"),
+    AI_MESSAGE_COST("AI_MESSAGE_COST", 2L, "AI对话消耗积分"),
 
     /**
      * 下载代码消耗积分

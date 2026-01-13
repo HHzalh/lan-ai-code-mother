@@ -72,6 +72,12 @@ public class AppController {
      * @return 应用 id
      */
     @PostMapping("/add")
+    @ConsumePoints(
+            businessType = PointBusinessTypeEnum.GENERATE,
+            ruleKey = PointRuleKeyEnum.GENERATE_COST,
+            once = false,
+            businessIdFromReturnValue = true
+    )
     public BaseResponse<Long> addApp(@RequestBody AppAddRequest appAddRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(appAddRequest == null, ErrorCode.PARAMS_ERROR);
         // 获取当前登录用户
@@ -301,10 +307,9 @@ public class AppController {
      */
     @GetMapping(value = "/chat/gen/code", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     @RateLimit(limitType = RateLimitType.USER, rate = 3, rateInterval = 60, message = "AI 对话请求过于频繁，请稍后再试")
-    //    TODO 如果限流已经扣减的积分不会回退，待优化
     @ConsumePoints(
-            businessType = PointBusinessTypeEnum.GENERATE,
-            ruleKey = PointRuleKeyEnum.GENERATE_COST,
+            businessType = PointBusinessTypeEnum.MESSAGE,
+            ruleKey = PointRuleKeyEnum.AI_MESSAGE_COST,
             once = false,
             businessIdParam = "appId"
     )

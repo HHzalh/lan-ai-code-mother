@@ -48,6 +48,11 @@ public enum PointBusinessTypeEnum {
     DOWNLOAD("DOWNLOAD", "下载代码"),
 
     /**
+     * AI对话
+     */
+    MESSAGE("MESSAGE", "AI对话"),
+
+    /**
      * 兑换
      */
     EXCHANGE("EXCHANGE", "兑换"),

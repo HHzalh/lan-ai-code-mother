@@ -4,6 +4,7 @@ import com.lanhai.lanaicodemother.annotation.ConsumePoints;
 import com.lanhai.lanaicodemother.exception.BusinessException;
 import com.lanhai.lanaicodemother.exception.ErrorCode;
 import com.lanhai.lanaicodemother.mapper.PointLogMapper;
+import com.lanhai.lanaicodemother.model.entity.PointLog;
 import com.lanhai.lanaicodemother.model.entity.User;
 import com.lanhai.lanaicodemother.service.PointRuleService;
 import com.lanhai.lanaicodemother.service.UserAccountService;
@@ -16,10 +17,10 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.util.UUID;
 
 /**
  * 积分消耗切面
@@ -45,25 +46,40 @@ public class ConsumePointsAspect {
     private UserService userService;
 
     @Around("@annotation(com.lanhai.lanaicodemother.annotation.ConsumePoints)")
-    @Transactional(rollbackFor = Exception.class)
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
         // 1. 获取方法信息和注解
         Method method = getMethod(joinPoint);
         ConsumePoints annotation = method.getAnnotation(ConsumePoints.class);
 
-        // 2. 从方法参数中提取用户ID和业务ID
+        // 2. 从方法参数中提取用户ID
         Long userId = extractUserId(joinPoint, method, annotation.userIdParam());
         if (userId == null) {
             throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "无法获取用户ID，请确保已登录或方法参数中包含userId或HttpServletRequest");
         }
-        
-        String businessId = extractBusinessId(joinPoint, method, annotation.businessIdParam());
-        if (businessId == null) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "无法获取业务ID，请确保方法参数中包含" + annotation.businessIdParam());
+
+        // 3. 判断业务ID是从参数获取还是从返回值获取
+        String businessId;
+        String tempBusinessId = null; // 用于记录临时ID，以便后续更新
+        boolean needUpdateBusinessId = false;
+
+        if (annotation.businessIdFromReturnValue()) {
+            // 3.1 从返回值获取业务ID
+            // 生成临时 businessId
+            tempBusinessId = "TEMP_" + UUID.randomUUID().toString().replace("-", "");
+            businessId = tempBusinessId;
+            needUpdateBusinessId = true;
+            log.info("使用临时业务ID进行积分扣减，临时ID：{}，用户ID：{}", businessId, userId);
+        } else {
+            // 3.2 从参数获取业务ID（默认行为）
+            businessId = extractBusinessId(joinPoint, method, annotation.businessIdParam());
+            if (businessId == null) {
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "无法获取业务ID，请确保方法参数中包含" + annotation.businessIdParam());
+            }
         }
 
-        // 3. 检查是否首次操作（如果配置了 once）
-        if (annotation.once()) {
+        // 4. 检查是否首次操作（如果配置了 once）
+        if (annotation.once() && !needUpdateBusinessId) {
+            // 仅当不需要更新 businessId 时才检查是否已消费
             if (hasConsumedBefore(userId, annotation.businessType().getValue(), businessId)) {
                 log.info("该业务已扣费过，不再扣减，用户ID：{}，业务类型：{}，业务ID：{}",
                         userId, annotation.businessType().getText(), businessId);
@@ -71,16 +87,16 @@ public class ConsumePointsAspect {
             }
         }
 
-        // 4. 获取需要扣减的积分数
+        // 5. 获取需要扣减的积分数
         Long points = pointRuleService.getRuleValue(annotation.ruleKey());
 
-        // 5. 检查积分是否足够
+        // 6. 检查积分是否足够
         boolean enough = checkPointsEnough(userId, points);
         if (!enough) {
             throw new BusinessException(ErrorCode.OPERATION_ERROR, "积分不足");
         }
 
-        // 6. 扣减积分
+        // 7. 扣减积分
         try {
             userAccountService.deductPoints(
                     userId,
@@ -97,8 +113,23 @@ public class ConsumePointsAspect {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "积分扣减失败");
         }
 
-        // 7. 执行原方法
-        return joinPoint.proceed();
+        // 8. 执行原方法
+        Object result = joinPoint.proceed();
+
+        // 9. 如果需要更新业务ID（从返回值中提取真实ID）
+        if (needUpdateBusinessId && tempBusinessId != null) {
+            String realBusinessId = extractBusinessIdFromReturnValue(result);
+            if (realBusinessId != null) {
+                updateBusinessIdInPointLog(userId, annotation.businessType().getValue(),
+                        tempBusinessId, realBusinessId);
+                log.info("业务ID更新成功，用户ID：{}，临时ID：{}，真实ID：{}", userId, tempBusinessId, realBusinessId);
+            } else {
+                log.warn("无法从返回值中提取业务ID，保留临时ID：{}，返回值类型：{}",
+                        tempBusinessId, result != null ? result.getClass().getName() : "null");
+            }
+        }
+
+        return result;
     }
 
     /**
@@ -263,6 +294,63 @@ public class ConsumePointsAspect {
      */
     private boolean checkPointsEnough(Long userId, Long requiredPoints) {
         return userAccountService.getByUserId(userId).getAvailablePoints() >= requiredPoints;
+    }
+
+    /**
+     * 从返回值中提取业务ID
+     * 支持 Long、String、BaseResponse 等多种返回类型
+     */
+    private String extractBusinessIdFromReturnValue(Object returnValue) {
+        if (returnValue == null) {
+            return null;
+        }
+
+        // 1. 如果返回值是 Long 或 Integer，直接转换
+        if (returnValue instanceof Long || returnValue instanceof Integer) {
+            return String.valueOf(returnValue);
+        }
+
+        // 2. 如果返回值是 String，直接返回
+        if (returnValue instanceof String) {
+            return (String) returnValue;
+        }
+
+        try {
+            java.lang.reflect.Method getDataMethod = returnValue.getClass().getMethod("getData");
+            Object data = getDataMethod.invoke(returnValue);
+            if (data != null) {
+                return extractBusinessIdFromReturnValue(data); // 递归处理
+            }
+        } catch (Exception e) {
+            log.debug("无法从 BaseResponse 中提取 data：{}", e.getMessage());
+        }
+
+        log.warn("无法从返回值中提取业务ID，返回值类型：{}", returnValue.getClass().getName());
+        return null;
+    }
+
+    /**
+     * 更新积分流水中的业务ID
+     * 将临时 businessId 更新为真实的 businessId
+     */
+    private void updateBusinessIdInPointLog(Long userId, String businessType,
+                                             String tempBusinessId, String realBusinessId) {
+        QueryWrapper queryWrapper = new QueryWrapper();
+        queryWrapper.eq("user_id", userId);
+        queryWrapper.eq("business_type", businessType);
+        queryWrapper.eq("business_id", tempBusinessId);
+
+        // 查询使用临时 businessId 的积分流水记录
+        PointLog pointLog = pointLogMapper.selectOneByQuery(queryWrapper);
+        if (pointLog != null) {
+            pointLog.setBusinessId(realBusinessId);
+            pointLogMapper.update(pointLog);
+            log.info("积分流水业务ID更新成功，流水ID：{}，原临时ID：{}，新真实ID：{}",
+                    pointLog.getId(), tempBusinessId, realBusinessId);
+        } else {
+            log.error("未找到使用临时 businessId 的积分流水记录，用户ID：{}，业务类型：{}，临时ID：{}",
+                    userId, businessType, tempBusinessId);
+        }
     }
 }
 

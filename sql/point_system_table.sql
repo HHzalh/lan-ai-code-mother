@@ -73,7 +73,7 @@ create table if not exists point_sign_in_record
 create table if not exists point_rule
 (
     id         bigint auto_increment comment 'id' primary key,
-    rule_key   varchar(64)                        not null comment '规则键:SIGN_IN_BASE/SIGN_IN_CONTINUOUS_3/SIGN_IN_CONTINUOUS_7/REGISTER_REWARD/INVITE_NEW/INVITE_REWARD/DEPLOY_COST/GENERATE_COST',
+    rule_key   varchar(64)                        not null comment '规则键:SIGN_IN_BASE/SIGN_IN_CONTINUOUS_3/SIGN_IN_CONTINUOUS_7/REGISTER_REWARD/INVITE_NEW/INVITE_REWARD/DEPLOY_COST/AI_MESSAGE_COST/GENERATE_COST',
     rule_value bigint                             not null comment '规则值(积分数)',
     rule_desc  varchar(512)                       null comment '规则描述',
     status     tinyint  default 1                 not null comment '状态:0-禁用 1-启用',
@@ -103,9 +103,10 @@ VALUES ('INVITE_NEW', 50, '被邀请人注册奖励'),
 
 -- 消耗积分规则
 INSERT INTO point_rule (rule_key, rule_value, rule_desc)
-VALUES ('DEPLOY_COST', 30, '部署应用消耗积分'),
-       ('GENERATE_COST', 20, '生成应用消耗积分'),
-       ('DOWNLOAD_COST', 30, '下载代码消耗积分');
+VALUES ('DEPLOY_COST', 20, '部署应用消耗积分'),
+       ('GENERATE_COST', 10, '生成应用消耗积分'),
+       ('AI_MESSAGE_COST', 2, 'AI对话消耗积分'),
+       ('DOWNLOAD_COST', 10, '下载代码消耗积分');
 
 -- ============================================
 -- 为已有用户创建积分账户并生成邀请码

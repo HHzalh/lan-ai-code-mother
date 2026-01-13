@@ -34,7 +34,14 @@ target/
 build/
 !**/src/main/**/build/
 !**/src/test/**/build/
+/docs/
+/.spec-workflow/
+/.spec-workflow/.*/
+
 
 ### VS Code ###
 .vscode/
 /.cursor/
+/.claude/
+/.playwright-mcp/
+/.spec-workflow/templates/

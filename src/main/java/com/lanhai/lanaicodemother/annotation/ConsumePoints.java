@@ -38,6 +38,7 @@ public @interface ConsumePoints {
     /**
      * 业务ID参数名
      * 用于从方法参数中获取业务ID（如appId）
+     * 如果设置为空字符串""，表示业务ID在方法执行后才生成，使用临时ID
      */
     String businessIdParam() default "appId";
 
@@ -46,5 +47,12 @@ public @interface ConsumePoints {
      * 用于从方法参数中获取用户ID
      */
     String userIdParam() default "userId";
+
+    /**
+     * 是否从返回值中获取业务ID
+     * true: 方法执行后从返回值中提取业务ID（适用于创建类操作）
+     * false: 方法执行前从参数中提取业务ID（默认行为）
+     */
+    boolean businessIdFromReturnValue() default false;
 }
 
