@@ -41,17 +41,20 @@ public class PointLogServiceImpl extends ServiceImpl<PointLogMapper, PointLog> i
     @Transactional(rollbackFor = Exception.class)
     public boolean recordLog(Long userId, String businessType, String businessId, String pointType,
                              Long pointChange, Long beforePoints, Long afterPoints, String remark) {
-        PointLog log = new PointLog();
-        log.setUserId(userId);
-        log.setBusinessType(businessType);
-        log.setBusinessId(businessId);
-        log.setPointType(pointType);
-        log.setPointChange(pointChange);
-        log.setBeforePoints(beforePoints);
-        log.setAfterPoints(afterPoints);
-        log.setRemark(remark);
-        log.setCreateTime(java.time.LocalDateTime.now());
-        boolean saved = this.save(log);
+        // 使用 Builder 模式构建对象（遵循单一职责原则，防止遗漏字段初始化）
+        PointLog pointLog = PointLog.builder()
+                .userId(userId)
+                .businessType(businessType)
+                .businessId(businessId)
+                .pointType(pointType)
+                .pointChange(pointChange)
+                .beforePoints(beforePoints)
+                .afterPoints(afterPoints)
+                .remark(remark)
+                .createTime(java.time.LocalDateTime.now())
+                .build();
+
+        boolean saved = this.save(pointLog);
         if (saved) {
             // 清除用户流水缓存
             clearLogCache(userId);

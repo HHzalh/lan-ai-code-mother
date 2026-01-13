@@ -2,6 +2,7 @@ package com.lanhai.lanaicodemother.service.impl;
 
 
 import cn.hutool.core.util.StrUtil;
+import com.lanhai.lanaicodemother.constant.PointConstants;
 import com.lanhai.lanaicodemother.exception.ErrorCode;
 import com.lanhai.lanaicodemother.exception.ThrowUtils;
 import com.lanhai.lanaicodemother.mapper.PointLogMapper;
@@ -60,7 +61,8 @@ public class PointServiceImpl implements PointService {
 
         // 2. 使用分布式锁处理邀请逻辑
         String lockKey = INVITE_LOCK_PREFIX + invitationCode + ":" + userId;
-        redisDistributedLock.executeWithLock(lockKey, 3, 10, () -> doHandleInvitation(userId, inviterAccount, invitationCode));
+        redisDistributedLock.executeWithLock(lockKey, PointConstants.LOCK_WAIT_SECONDS,
+                PointConstants.INVITE_LOCK_EXPIRE_SECONDS, () -> doHandleInvitation(userId, inviterAccount, invitationCode));
     }
 
     /**
@@ -110,10 +112,10 @@ public class PointServiceImpl implements PointService {
 
         // 3. 计算连续奖励（固定规则，只可修改不可新增）
         Long bonusPoints = 0L;
-        if (continuousDays >= 3) {
+        if (continuousDays >= PointConstants.SIGN_IN_BONUS_DAY_3) {
             bonusPoints += pointRuleService.getRuleValue(PointRuleKeyEnum.SIGN_IN_CONTINUOUS_3);
         }
-        if (continuousDays >= 7) {
+        if (continuousDays >= PointConstants.SIGN_IN_BONUS_DAY_7) {
             bonusPoints += pointRuleService.getRuleValue(PointRuleKeyEnum.SIGN_IN_CONTINUOUS_7);
         }
 
@@ -134,18 +136,18 @@ public class PointServiceImpl implements PointService {
         Long basePoints = pointRuleService.getRuleValue(PointRuleKeyEnum.SIGN_IN_BASE);
 
         // 2. 计算在7天周期中的天数（支持循环奖励）
-        int daysInCycle = continuousDays % 7;
+        int daysInCycle = continuousDays % PointConstants.SIGN_IN_CYCLE_DAYS;
         if (daysInCycle == 0) {
-            daysInCycle = 7; // 如果是7的倍数，说明是周期第7天
+            daysInCycle = PointConstants.SIGN_IN_CYCLE_DAYS; // 如果是7的倍数，说明是周期第7天
         }
 
         // 3. 计算连续奖励（只在周期第3天和第7天发放额外奖励）
         Long bonusPoints = 0L;
-        if (daysInCycle == 3) {
+        if (daysInCycle == PointConstants.SIGN_IN_BONUS_DAY_3) {
             // 周期第3天，发放3天额外奖励
             bonusPoints = pointRuleService.getRuleValue(PointRuleKeyEnum.SIGN_IN_CONTINUOUS_3);
             log.info("触发连续签到{}天（周期第3天）额外奖励，额外积分：{}", continuousDays, bonusPoints);
-        } else if (daysInCycle == 7) {
+        } else if (daysInCycle == PointConstants.SIGN_IN_BONUS_DAY_7) {
             // 周期第7天，发放7天额外奖励
             bonusPoints = pointRuleService.getRuleValue(PointRuleKeyEnum.SIGN_IN_CONTINUOUS_7);
             log.info("触发连续签到{}天（周期第7天）额外奖励，额外积分：{}", continuousDays, bonusPoints);

@@ -1,0 +1,47 @@
+package com.lanhai.lanaicodemother.constant;
+
+/**
+ * 积分系统常量
+ * <p>
+ * 集中管理积分模块的所有常量，避免魔法数字
+ * </p>
+ *
+ * @author 积分系统
+ * @since 2026-01-14
+ */
+public interface PointConstants {
+
+    /**
+     * 签到奖励相关常量
+     */
+    /** 连续签到 3 天额外奖励 */
+    public static final int SIGN_IN_BONUS_DAY_3 = 3;
+    /** 连续签到 7 天额外奖励 */
+    public static final int SIGN_IN_BONUS_DAY_7 = 7;
+    /** 签到周期天数（每 7 天一个循环） */
+    public static final int SIGN_IN_CYCLE_DAYS = 7;
+
+    /**
+     * 邀请码相关常量
+     */
+    /** 邀请码生成最大重试次数 */
+    public static final int INVITE_CODE_MAX_RETRIES = 10;
+
+    /**
+     * 缓存相关常量
+     */
+    /** 规则缓存过期时间（秒）：1 小时 */
+    public static final long RULE_CACHE_EXPIRE_SECONDS = 3600L;
+
+    /**
+     * 分布式锁相关常量
+     */
+    /** 签到锁过期时间（秒） */
+    public static final int SIGN_IN_LOCK_EXPIRE_SECONDS = 10;
+    /** 邀请锁过期时间（秒） */
+    public static final int INVITE_LOCK_EXPIRE_SECONDS = 10;
+    /** 锁等待时间（秒） */
+    public static final int LOCK_WAIT_SECONDS = 3;
+
+
+}

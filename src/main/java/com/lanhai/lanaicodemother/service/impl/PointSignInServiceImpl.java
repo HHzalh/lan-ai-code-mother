@@ -23,6 +23,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import static com.lanhai.lanaicodemother.constant.PointConstants.LOCK_WAIT_SECONDS;
+import static com.lanhai.lanaicodemother.constant.PointConstants.SIGN_IN_LOCK_EXPIRE_SECONDS;
+
 /**
  * 签到 服务层实现。
  *
@@ -54,7 +57,7 @@ public class PointSignInServiceImpl implements PointSignInService {
     public PointSignInResponse signIn(Long userId) {
         // 使用分布式锁防止重复签到
         String lockKey = SIGN_IN_LOCK_PREFIX + userId;
-        return redisDistributedLock.executeWithLock(lockKey, 3, 10, () -> doSignIn(userId));
+        return redisDistributedLock.executeWithLock(lockKey, LOCK_WAIT_SECONDS, SIGN_IN_LOCK_EXPIRE_SECONDS, () -> doSignIn(userId));
     }
 
     /**
@@ -95,13 +98,14 @@ public class PointSignInServiceImpl implements PointSignInService {
         int updated = userAccountMapper.updateSignInStatusWithVersion(updateAccount, continuousDays);
         ThrowUtils.throwIf(updated == 0, ErrorCode.OPERATION_ERROR, "签到失败，请重试");
 
-        // 6. 增加积分
+        // 6. 增加积分（一次性获取规则值，避免重复查询）
+        Long basePoints = pointRuleServiceImpl.getRuleValue(PointRuleKeyEnum.SIGN_IN_BASE);
+
         // 6.1 发放基础签到积分（每天都有）
-        userAccountService.addPoints(userId, pointRuleServiceImpl.getRuleValue(PointRuleKeyEnum.SIGN_IN_BASE),
+        userAccountService.addPoints(userId, basePoints,
                 PointBusinessTypeEnum.SIGN_IN.getValue(), null, "签到获得积分");
 
         // 6.2 发放连续签到额外奖励（只在第3天和第7天）
-        Long basePoints = pointRuleServiceImpl.getRuleValue(PointRuleKeyEnum.SIGN_IN_BASE);
         if (points > basePoints) {
             Long bonusPoints = points - basePoints;
             String bonusDesc = "连续签到" + continuousDays + "天额外获得积分";
@@ -110,13 +114,15 @@ public class PointSignInServiceImpl implements PointSignInService {
         }
 
         // 7. 记录签到记录
-        PointSignInRecord record = new PointSignInRecord();
-        record.setUserId(userId);
-        record.setSignDate(today);
-        record.setDaysCount(continuousDays);
-        record.setPoints(points);
-        record.setIsBonus(0);
-        record.setCreateTime(LocalDateTime.now());
+        PointSignInRecord record = PointSignInRecord.builder()
+                .userId(userId)
+                .signDate(today)
+                .daysCount(continuousDays)
+                .points(points)
+                .isBonus(0)
+                .createTime(LocalDateTime.now())
+                .build();
+
         int saved = signInRecordMapper.insert(record);
         ThrowUtils.throwIf(saved <= 0, ErrorCode.SYSTEM_ERROR, "记录签到失败");
 

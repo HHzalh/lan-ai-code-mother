@@ -1,6 +1,7 @@
 package com.lanhai.lanaicodemother.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import com.lanhai.lanaicodemother.constant.PointConstants;
 import com.lanhai.lanaicodemother.exception.ErrorCode;
 import com.lanhai.lanaicodemother.exception.ThrowUtils;
 import com.lanhai.lanaicodemother.mapper.PointLogMapper;
@@ -118,20 +119,22 @@ public class UserAccountServiceImpl extends ServiceImpl<UserAccountMapper, UserA
             return account;
         }
 
-        // 创建新账户
-        account = new UserAccount();
-        account.setUserId(userId);
-        account.setInvitationCode(generateUniqueInvitationCode());
-        account.setTotalPoints(0L);
-        account.setAvailablePoints(0L);
-        account.setFreezePoints(0L);
-        account.setTotalConsume(0L);
-        account.setContinuousDays(0);
-        account.setInvitationCount(0);
-        account.setTotalInvitePoints(0L);
-        account.setVersion(0);
-        account.setCreateTime(java.time.LocalDateTime.now());
-        account.setIsDelete(0);
+        // 使用 Builder 模式创建新账户（防止遗漏字段初始化）
+        account = UserAccount.builder()
+                .userId(userId)
+                .invitationCode(generateUniqueInvitationCode())
+                .totalPoints(0L)
+                .availablePoints(0L)
+                .freezePoints(0L)
+                .totalConsume(0L)
+                .continuousDays(0)
+                .invitationCount(0)
+                .totalInvitePoints(0L)
+                .version(0)
+                .createTime(java.time.LocalDateTime.now())
+                .isDelete(0)
+                .build();
+
         boolean saved = this.save(account);
         ThrowUtils.throwIf(!saved, ErrorCode.SYSTEM_ERROR, "创建积分账户失败");
         log.info("创建积分账户成功，用户ID：{}，邀请码：{}", userId, account.getInvitationCode());
@@ -147,65 +150,64 @@ public class UserAccountServiceImpl extends ServiceImpl<UserAccountMapper, UserA
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean addPoints(Long userId, Long points, String businessType, String businessId, String remark) {
-        // 1. 查询当前账户
-        UserAccount account = getByUserId(userId);
-        ThrowUtils.throwIf(account == null, ErrorCode.NOT_FOUND_ERROR, "积分账户不存在");
-
-        // 2. 乐观锁增加积分
-        UserAccount updateAccount = new UserAccount();
-        updateAccount.setId(account.getId());
-        updateAccount.setVersion(account.getVersion());
-
-        int updated = this.mapper.addPointsWithVersion(updateAccount, points);
-        ThrowUtils.throwIf(updated == 0, ErrorCode.TOO_MANY_REQUEST, "操作过于频繁，请重试");
-
-        // 3. 查询更新后的账户
-        UserAccount updatedAccount = this.getById(account.getId());
-
-        // 4. 记录流水
-        pointLogService.recordLog(
-                userId,
-                businessType,
-                businessId,
-                PointTypeEnum.INCOME.getValue(),
-                points,
-                account.getAvailablePoints(),
-                updatedAccount.getAvailablePoints(),
-                remark
-        );
-
-        return true;
+        return changePoints(userId, points, businessType, businessId, remark, false);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean deductPoints(Long userId, Long points, String businessType, String businessId, String remark) {
+        return changePoints(userId, points, businessType, businessId, remark, true);
+    }
+
+    /**
+     * 通用积分变更方法（内部私有方法）
+     * 遵循 DRY 原则，减少代码重复
+     *
+     * @param userId 用户ID
+     * @param points 积分数
+     * @param businessType 业务类型
+     * @param businessId 业务ID
+     * @param remark 备注
+     * @param isDeduct 是否扣减（true=扣减，false=增加）
+     * @return 是否成功
+     */
+    @Transactional(rollbackFor = Exception.class)
+    private boolean changePoints(Long userId, Long points, String businessType,
+                                 String businessId, String remark, boolean isDeduct) {
         // 1. 查询当前账户
         UserAccount account = getByUserId(userId);
         ThrowUtils.throwIf(account == null, ErrorCode.NOT_FOUND_ERROR, "积分账户不存在");
-        ThrowUtils.throwIf(account.getAvailablePoints() < points, ErrorCode.OPERATION_ERROR, "积分不足");
 
-        // 2. 乐观锁扣减积分
+        // 2. 校验积分（仅扣减时）
+        if (isDeduct) {
+            ThrowUtils.throwIf(account.getAvailablePoints() < points,
+                ErrorCode.OPERATION_ERROR, "积分不足");
+        }
+
+        // 3. 构建更新对象
         UserAccount updateAccount = new UserAccount();
         updateAccount.setId(account.getId());
         updateAccount.setVersion(account.getVersion());
 
-        int updated = this.mapper.deductPointsWithVersion(updateAccount, points);
+        // 4. 执行数据库更新
+        int updated = isDeduct
+            ? this.mapper.deductPointsWithVersion(updateAccount, points)
+            : this.mapper.addPointsWithVersion(updateAccount, points);
         ThrowUtils.throwIf(updated == 0, ErrorCode.TOO_MANY_REQUEST, "操作过于频繁，请重试");
 
-        // 3. 查询更新后的账户
+        // 5. 查询更新后的账户
         UserAccount updatedAccount = this.getById(account.getId());
 
-        // 4. 记录流水
+        // 6. 记录流水
         pointLogService.recordLog(
-                userId,
-                businessType,
-                businessId,
-                PointTypeEnum.EXPENSE.getValue(),
-                -points,
-                account.getAvailablePoints(),
-                updatedAccount.getAvailablePoints(),
-                remark
+            userId,
+            businessType,
+            businessId,
+            isDeduct ? PointTypeEnum.EXPENSE.getValue() : PointTypeEnum.INCOME.getValue(),
+            isDeduct ? -points : points,
+            account.getAvailablePoints(),
+            updatedAccount.getAvailablePoints(),
+            remark
         );
 
         return true;
@@ -213,20 +215,23 @@ public class UserAccountServiceImpl extends ServiceImpl<UserAccountMapper, UserA
 
     /**
      * 生成唯一邀请码
+     * 使用 Stream 限制重试次数
      */
     private String generateUniqueInvitationCode() {
-        int maxRetries = 10;
-        for (int i = 0; i < maxRetries; i++) {
-            String code = InvitationCodeUtils.generateCode();
-            QueryWrapper queryWrapper = new QueryWrapper();
-            queryWrapper.eq("invitation_code", code);
-            long count = this.mapper.selectCountByQuery(queryWrapper);
-            if (count == 0) {
-                return code;
-            }
-        }
-        ThrowUtils.throwIf(true, ErrorCode.SYSTEM_ERROR, "生成邀请码失败，请重试");
-        return null;
+        return java.util.stream.IntStream.range(0, PointConstants.INVITE_CODE_MAX_RETRIES)
+                .mapToObj(i -> {
+                    String code = InvitationCodeUtils.generateCode();
+                    QueryWrapper queryWrapper = new QueryWrapper();
+                    queryWrapper.eq("invitation_code", code);
+                    long count = this.mapper.selectCountByQuery(queryWrapper);
+                    return count == 0 ? code : null;
+                })
+                .filter(code -> code != null)
+                .findFirst()
+                .orElseThrow(() -> {
+                    ThrowUtils.throwIf(true, ErrorCode.SYSTEM_ERROR, "生成邀请码失败，请重试");
+                    return new RuntimeException("生成邀请码失败");
+                });
     }
 
 }

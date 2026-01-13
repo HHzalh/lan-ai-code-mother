@@ -195,15 +195,14 @@ public class ConsumePointsAspect {
             request = extractParameter(joinPoint, method, "httpServletRequest", HttpServletRequest.class);
         }
         if (request == null) {
-            // 尝试从所有参数中查找HttpServletRequest类型
-            Parameter[] parameters = method.getParameters();
+            // 使用 Stream 从所有参数中查找 HttpServletRequest
             Object[] args = joinPoint.getArgs();
-            for (int i = 0; i < parameters.length; i++) {
-                if (args[i] instanceof HttpServletRequest) {
-                    request = (HttpServletRequest) args[i];
-                    break;
-                }
-            }
+
+            request = java.util.Arrays.stream(args)
+                    .filter(arg -> arg instanceof HttpServletRequest)
+                    .map(arg -> (HttpServletRequest) arg)
+                    .findFirst()
+                    .orElse(null);
         }
 
         // 4. 如果找到了HttpServletRequest，从中获取用户ID
@@ -222,15 +221,19 @@ public class ConsumePointsAspect {
 
     /**
      * 从方法参数中提取指定类型的值
+     * 使用 for-each 遍历（纯遍历操作，无复杂逻辑）
      */
     private <T> T extractParameter(ProceedingJoinPoint joinPoint, Method method, String paramName, Class<T> type) {
         Parameter[] parameters = method.getParameters();
         Object[] args = joinPoint.getArgs();
 
-        for (int i = 0; i < parameters.length; i++) {
-            if (parameters[i].getName().equals(paramName) && type.isInstance(args[i])) {
-                return type.cast(args[i]);
+        // 使用 for-each 优化纯遍历操作
+        int index = 0;
+        for (Parameter parameter : parameters) {
+            if (parameter.getName().equals(paramName) && type.isInstance(args[index])) {
+                return type.cast(args[index]);
             }
+            index++;
         }
         return null;
     }
@@ -274,19 +277,20 @@ public class ConsumePointsAspect {
             }
         }
 
-        // 3. 尝试从所有参数中查找路径变量或请求参数
+        // 3. 尝试从所有参数中查找路径变量或请求参数（使用 for-each 优化纯遍历）
         Parameter[] parameters = method.getParameters();
         Object[] args = joinPoint.getArgs();
-        for (int i = 0; i < parameters.length; i++) {
-            Parameter param = parameters[i];
+
+        int index = 0;
+        for (Parameter param : parameters) {
             // 检查是否是 @PathVariable 或 @RequestParam 标注的参数
-            if (param.getName().equals(businessIdParam) || 
-                param.getName().equals("appId")) {
-                Object arg = args[i];
+            if (param.getName().equals(businessIdParam) || param.getName().equals("appId")) {
+                Object arg = args[index];
                 if (arg != null) {
                     return String.valueOf(arg);
                 }
             }
+            index++;
         }
 
         return null;
@@ -294,15 +298,19 @@ public class ConsumePointsAspect {
 
     /**
      * 从方法参数中提取原始值
+     * 使用 for-each 遍历（纯遍历操作，无复杂逻辑）
      */
     private Object extractParameterRaw(ProceedingJoinPoint joinPoint, Method method, String paramName) {
         Parameter[] parameters = method.getParameters();
         Object[] args = joinPoint.getArgs();
 
-        for (int i = 0; i < parameters.length; i++) {
-            if (parameters[i].getName().equals(paramName)) {
-                return args[i];
+        // 使用 for-each 优化纯遍历操作
+        int index = 0;
+        for (Parameter parameter : parameters) {
+            if (parameter.getName().equals(paramName)) {
+                return args[index];
             }
+            index++;
         }
         return null;
     }

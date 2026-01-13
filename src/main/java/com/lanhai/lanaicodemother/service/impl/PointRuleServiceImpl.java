@@ -2,6 +2,7 @@ package com.lanhai.lanaicodemother.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
+import com.lanhai.lanaicodemother.constant.PointConstants;
 import com.lanhai.lanaicodemother.exception.ErrorCode;
 import com.lanhai.lanaicodemother.exception.ThrowUtils;
 import com.lanhai.lanaicodemother.mapper.PointRuleMapper;
@@ -35,10 +36,6 @@ public class PointRuleServiceImpl extends ServiceImpl<PointRuleMapper, PointRule
      * 规则缓存Key前缀
      */
     private static final String RULE_CACHE_PREFIX = "point:rule:";
-    /**
-     * 规则缓存过期时间（小时）
-     */
-    private static final long RULE_CACHE_EXPIRE_HOURS = 1;
     @Resource
     private StringRedisTemplate stringRedisTemplate;
 
@@ -65,8 +62,9 @@ public class PointRuleServiceImpl extends ServiceImpl<PointRuleMapper, PointRule
 
         Long ruleValue = rule.getRuleValue();
 
-        // 3. 写入缓存
-        stringRedisTemplate.opsForValue().set(cacheKey, ruleValue.toString(), RULE_CACHE_EXPIRE_HOURS, TimeUnit.HOURS);
+        // 3. 写入缓存（使用常量配置过期时间）
+        stringRedisTemplate.opsForValue().set(cacheKey, ruleValue.toString(),
+                PointConstants.RULE_CACHE_EXPIRE_SECONDS, TimeUnit.SECONDS);
 
         return ruleValue;
     }
@@ -88,23 +86,23 @@ public class PointRuleServiceImpl extends ServiceImpl<PointRuleMapper, PointRule
         PointRule rule = this.getById(updateRequest.getId());
         ThrowUtils.throwIf(rule == null, ErrorCode.NOT_FOUND_ERROR, "规则不存在");
 
-        // 2. 更新规则
-        PointRule updateRule = new PointRule();
-        updateRule.setId(updateRequest.getId());
+        // 2. 使用 Builder 模式构建更新对象（遵循单一职责原则，只更新非空字段）
+        PointRule.PointRuleBuilder builder = PointRule.builder().id(updateRequest.getId());
+
         if (StrUtil.isNotBlank(updateRequest.getRuleKey())) {
-            updateRule.setRuleKey(updateRequest.getRuleKey());
+            builder.ruleKey(updateRequest.getRuleKey());
         }
         if (updateRequest.getRuleValue() != null) {
-            updateRule.setRuleValue(updateRequest.getRuleValue());
+            builder.ruleValue(updateRequest.getRuleValue());
         }
         if (StrUtil.isNotBlank(updateRequest.getRuleDesc())) {
-            updateRule.setRuleDesc(updateRequest.getRuleDesc());
+            builder.ruleDesc(updateRequest.getRuleDesc());
         }
         if (updateRequest.getStatus() != null) {
-            updateRule.setStatus(updateRequest.getStatus());
+            builder.status(updateRequest.getStatus());
         }
 
-        boolean updated = this.updateById(updateRule);
+        boolean updated = this.updateById(builder.build());
         ThrowUtils.throwIf(!updated, ErrorCode.OPERATION_ERROR, "更新规则失败");
 
         // 3. 清除缓存
