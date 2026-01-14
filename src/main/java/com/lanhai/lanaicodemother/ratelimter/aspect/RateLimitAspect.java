@@ -10,13 +10,15 @@ import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.redisson.api.RRateLimiter;
 import org.redisson.api.RateIntervalUnit;
 import org.redisson.api.RateType;
 import org.redisson.api.RedissonClient;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -30,6 +32,7 @@ import java.time.Duration;
 @Aspect
 @Component
 @Slf4j
+@Order(1)
 public class RateLimitAspect {
 
     @Resource
@@ -38,8 +41,12 @@ public class RateLimitAspect {
     @Resource
     private UserService userService;
 
-    @Before("@annotation(rateLimit)")
-    public void doBefore(JoinPoint point, RateLimit rateLimit) {
+    /**
+     * 限流检查（使用 @Around 保证优先级）
+     * 优先级：@Order(1) - 最高优先级，确保最先执行
+     */
+    @Around("@annotation(rateLimit)")
+    public Object doAround(ProceedingJoinPoint point, RateLimit rateLimit) throws Throwable {
         String key = generateRateLimitKey(point, rateLimit);
         // 使用 Redisson 的分布式限流器
         RRateLimiter rateLimiter = redissonClient.getRateLimiter(key);
@@ -50,6 +57,7 @@ public class RateLimitAspect {
         if (!rateLimiter.tryAcquire(1)) {
             throw new BusinessException(ErrorCode.TOO_MANY_REQUEST, rateLimit.message());
         }
+        return point.proceed();
     }
 
     /**

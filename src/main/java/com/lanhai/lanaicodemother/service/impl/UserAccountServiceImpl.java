@@ -172,7 +172,7 @@ public class UserAccountServiceImpl extends ServiceImpl<UserAccountMapper, UserA
      * @return 是否成功
      */
     @Transactional(rollbackFor = Exception.class)
-    private boolean changePoints(Long userId, Long points, String businessType,
+    protected boolean changePoints(Long userId, Long points, String businessType,
                                  String businessId, String remark, boolean isDeduct) {
         // 1. 查询当前账户
         UserAccount account = getByUserId(userId);

@@ -22,7 +22,6 @@ import com.lanhai.lanaicodemother.model.vo.AppVO;
 import com.lanhai.lanaicodemother.ratelimter.annotation.RateLimit;
 import com.lanhai.lanaicodemother.ratelimter.enums.RateLimitType;
 import com.lanhai.lanaicodemother.service.AppService;
-import com.lanhai.lanaicodemother.service.PointService;
 import com.lanhai.lanaicodemother.service.ProjectDownloadService;
 import com.lanhai.lanaicodemother.service.UserService;
 import com.lanhai.lanaicodemother.utils.StaticResourceChecker;
@@ -60,9 +59,6 @@ public class AppController {
 
     @Resource
     private ProjectDownloadService projectDownloadService;
-
-    @Resource
-    private PointService pointService;
 
     /**
      * 创建应用
