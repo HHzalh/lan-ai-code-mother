@@ -143,3 +143,5 @@ WHERE isDelete = 0
   AND NOT EXISTS (SELECT 1
                   FROM user_account
                   WHERE user_account.user_id = `user`.id);
+
+ALTER TABLE point_log ADD COLUMN is_delete tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否删除 0-未删除 1-已删除';
