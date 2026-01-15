@@ -159,7 +159,7 @@ public class PointController {
     }
 
     /**
-     * 获取积分规则（管理员）
+     * 获取积分规则
      *
      * @return 规则列表
      */

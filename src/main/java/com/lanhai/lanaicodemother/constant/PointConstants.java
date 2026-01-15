@@ -30,7 +30,12 @@ public interface PointConstants {
     /**
      * 缓存相关常量
      */
-    /** 规则缓存过期时间（秒）：1 小时 */
+    /** 所有规则列表缓存Key（统一数据源） */
+    public static final String ALL_RULES_CACHE_KEY = "point:rules:all";
+    /** 签到状态缓存Key前缀 */
+    public static final String SIGN_IN_STATUS_CACHE_PREFIX = "point:sign:status:";
+    /** 规则缓存过期时间（秒）：1 小时（已废弃，保留用于兼容） */
+    @Deprecated
     public static final long RULE_CACHE_EXPIRE_SECONDS = 3600L;
 
     /**

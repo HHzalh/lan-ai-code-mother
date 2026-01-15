@@ -17,14 +17,14 @@ import com.mybatisflex.core.query.QueryWrapper;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-import static com.lanhai.lanaicodemother.constant.PointConstants.LOCK_WAIT_SECONDS;
-import static com.lanhai.lanaicodemother.constant.PointConstants.SIGN_IN_LOCK_EXPIRE_SECONDS;
+import static com.lanhai.lanaicodemother.constant.PointConstants.*;
 
 /**
  * 签到 服务层实现。
@@ -49,6 +49,8 @@ public class PointSignInServiceImpl implements PointSignInService {
     private PointService pointService;
     @Resource
     private RedisDistributedLock redisDistributedLock;
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
     @Autowired
     private PointRuleServiceImpl pointRuleServiceImpl;
 
@@ -126,9 +128,27 @@ public class PointSignInServiceImpl implements PointSignInService {
         int saved = signInRecordMapper.insert(record);
         ThrowUtils.throwIf(saved <= 0, ErrorCode.SYSTEM_ERROR, "记录签到失败");
 
+        // 8. 写入签到状态缓存
+        String cacheKey = SIGN_IN_STATUS_CACHE_PREFIX + userId + ":" + today;
+        LocalDateTime endOfDay = today.atTime(23, 59, 59);
+        long ttlSeconds = java.time.Duration.between(
+                LocalDateTime.now(),
+                endOfDay
+        ).getSeconds();
+
+        if (ttlSeconds > 0) {
+            stringRedisTemplate.opsForValue().set(
+                    cacheKey,
+                    "true",
+                    ttlSeconds,
+                    java.util.concurrent.TimeUnit.SECONDS
+            );
+            log.debug("写入签到状态缓存，userId：{}，过期时间：{}秒", userId, ttlSeconds);
+        }
+
         log.info("用户签到成功，用户ID：{}，连续天数：{}，获得积分：{}", userId, continuousDays, points);
 
-        // 8. 构建响应
+        // 9. 构建响应
         return PointSignInResponse.builder()
                 .points(points)
                 .continuousDays(continuousDays)
@@ -139,11 +159,41 @@ public class PointSignInServiceImpl implements PointSignInService {
 
     @Override
     public Boolean getTodaySignInStatus(Long userId) {
+        // 1. 计算缓存Key和过期时间
         LocalDate today = LocalDate.now();
+        String cacheKey = SIGN_IN_STATUS_CACHE_PREFIX + userId + ":" + today;
+        LocalDateTime endOfDay = today.atTime(23, 59, 59);
+        long ttlSeconds = java.time.Duration.between(
+                LocalDateTime.now(),
+                endOfDay
+        ).getSeconds();
+
+        // 2. 尝试从Redis获取
+        String cached = stringRedisTemplate.opsForValue().get(cacheKey);
+        if (cached != null) {
+            boolean hasSigned = Boolean.parseBoolean(cached);
+            log.debug("从缓存获取签到状态，userId：{}，已签到：{}", userId, hasSigned);
+            return hasSigned;
+        }
+
+        // 3. 从数据库查询
         QueryWrapper queryWrapper = new QueryWrapper();
         queryWrapper.eq("user_id", userId);
         queryWrapper.eq("sign_date", today);
-        return signInRecordMapper.selectCountByQuery(queryWrapper) > 0;
+        boolean hasSigned = signInRecordMapper.selectCountByQuery(queryWrapper) > 0;
+
+        // 4. 写入Redis缓存（过期到今天23:59:59）
+        if (ttlSeconds > 0) {
+            stringRedisTemplate.opsForValue().set(
+                    cacheKey,
+                    String.valueOf(hasSigned),
+                    ttlSeconds,
+                    java.util.concurrent.TimeUnit.SECONDS
+            );
+            log.debug("写入签到状态缓存，userId：{}，已签到：{}，过期时间：{}秒", userId, hasSigned, ttlSeconds);
+        }
+
+        return hasSigned;
     }
 
 }
