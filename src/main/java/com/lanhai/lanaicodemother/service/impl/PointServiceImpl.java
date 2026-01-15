@@ -7,9 +7,11 @@ import com.lanhai.lanaicodemother.exception.ErrorCode;
 import com.lanhai.lanaicodemother.exception.ThrowUtils;
 import com.lanhai.lanaicodemother.mapper.PointLogMapper;
 import com.lanhai.lanaicodemother.mapper.UserAccountMapper;
+import com.lanhai.lanaicodemother.model.entity.PointLog;
 import com.lanhai.lanaicodemother.model.entity.UserAccount;
 import com.lanhai.lanaicodemother.model.enums.PointBusinessTypeEnum;
 import com.lanhai.lanaicodemother.model.enums.PointRuleKeyEnum;
+import com.lanhai.lanaicodemother.model.enums.PointTypeEnum;
 import com.lanhai.lanaicodemother.service.PointService;
 import com.lanhai.lanaicodemother.service.UserAccountService;
 import com.lanhai.lanaicodemother.utils.RedisDistributedLock;
@@ -19,7 +21,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 积分系统综合服务层实现。
@@ -184,26 +189,80 @@ public class PointServiceImpl implements PointService {
         ThrowUtils.throwIf(points == null || points <= 0, ErrorCode.PARAMS_ERROR, "积分数必须大于0");
         ThrowUtils.throwIf(StrUtil.isBlank(remark), ErrorCode.PARAMS_ERROR, "备注不能为空");
 
-        // 查询所有有效的用户账户
+        // 1. 查询所有有效的用户账户
         QueryWrapper queryWrapper = new QueryWrapper();
         queryWrapper.eq("isDelete", 0);
         List<UserAccount> accounts = userAccountService.list(queryWrapper);
-
         ThrowUtils.throwIf(accounts.isEmpty(), ErrorCode.NOT_FOUND_ERROR, "没有找到用户账户");
 
+        // 2. 分批次处理（每批500条，避免SQL超长）
+        int batchSize = 500;
+        int totalAccounts = accounts.size();
         int successCount = 0;
-        for (UserAccount account : accounts) {
+
+        for (int i = 0; i < totalAccounts; i += batchSize) {
+            int end = Math.min(i + batchSize, totalAccounts);
+            List<UserAccount> batch = accounts.subList(i, end);
+
+            // 2.1 提取账户ID和用户ID
+            List<Long> accountIds = batch.stream()
+                    .map(UserAccount::getId)
+                    .collect(Collectors.toList());
+            List<Long> userIds = batch.stream()
+                    .map(UserAccount::getUserId)
+                    .collect(Collectors.toList());
+
             try {
-                userAccountService.addPoints(account.getUserId(), points,
-                        PointBusinessTypeEnum.SYSTEM_GRANT.getValue(), null, remark);
-                successCount++;
+                // 2.2 批量更新积分
+                int updated = userAccountMapper.batchAddPoints(accountIds, points);
+                if (updated == 0) {
+                    log.error("批量更新积分失败，批次：{}-{}", i, end);
+                    continue;
+                }
+
+                // 2.3 查询更新后的余额
+                QueryWrapper wrapper = new QueryWrapper();
+                wrapper.in("user_id", userIds);
+                List<UserAccount> updatedAccounts = userAccountService.list(wrapper);
+                Map<Long, Long> userIdToBalance = updatedAccounts.stream()
+                        .collect(Collectors.toMap(UserAccount::getUserId, UserAccount::getAvailablePoints));
+
+                // 2.4 构建流水记录
+                List<PointLog> logs = batch.stream().map(account -> {
+                    Long userId = account.getUserId();
+                    Long beforePoints = userIdToBalance.get(userId) - points;
+                    Long afterPoints = userIdToBalance.get(userId);
+
+                    return PointLog.builder()
+                            .userId(userId)
+                            .businessType(PointBusinessTypeEnum.SYSTEM_GRANT.getValue())
+                            .businessId(null)
+                            .pointType(PointTypeEnum.INCOME.getValue())
+                            .pointChange(points)
+                            .beforePoints(beforePoints)
+                            .afterPoints(afterPoints)
+                            .remark(remark)
+                            .createTime(LocalDateTime.now())
+                            .build();
+                }).collect(Collectors.toList());
+
+                // 2.5 批量插入流水
+                int inserted = pointLogMapper.batchInsert(logs);
+
+                if (inserted > 0) {
+                    successCount += inserted;
+                }
+
+                log.info("批次 {}-{}/{} 处理成功，更新{}条账户，插入{}条流水",
+                        i, end, totalAccounts, updated, inserted);
+
             } catch (Exception e) {
-                log.error("给用户发放积分失败，用户ID：{}，错误：{}", account.getUserId(), e.getMessage());
+                log.error("批次 {}-{} 处理失败：{}", i, end, e.getMessage(), e);
             }
         }
 
         log.info("管理员批量发放积分完成，总用户数：{}，成功数：{}，积分：{}，备注：{}",
-                accounts.size(), successCount, points, remark);
+                totalAccounts, successCount, points, remark);
         return successCount;
     }
 
