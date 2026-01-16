@@ -37,7 +37,7 @@ public class ScreenshotScheduledTask {
      * Cron表达式：秒 分 时 日 月 周
      *
      */
-    @Scheduled(cron = "* 0 0 2 * * ?")
+    @Scheduled(cron = "0 0 2 * * ?")
     public void generateMissingScreenshots() {
         long startTime = System.currentTimeMillis();
         log.info("========== 开始执行应用截图定时任务 ==========");
