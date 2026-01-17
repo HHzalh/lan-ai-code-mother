@@ -163,6 +163,14 @@ public class WebScreenshotUtils {
     }
 
     /**
+     * 清理临时文件
+     */
+    public static void cleanupTempFiles() {
+        String rootPath = System.getProperty("user.dir") + File.separator + "tmp" + File.separator + "screenshots";
+        FileUtil.del(rootPath);
+    }
+
+    /**
      * 退出时销毁
      */
     @PreDestroy

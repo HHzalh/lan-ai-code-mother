@@ -3,6 +3,7 @@ package com.lanhai.lanaicodemother.task;
 import com.lanhai.lanaicodemother.model.entity.App;
 import com.lanhai.lanaicodemother.service.AppService;
 import com.lanhai.lanaicodemother.service.ScreenshotService;
+import com.lanhai.lanaicodemother.utils.WebScreenshotUtils;
 import com.mybatisflex.core.query.QueryWrapper;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -33,8 +34,9 @@ public class ScreenshotScheduledTask {
 
 
     /**
-     *  * 0 0 2 * * ? 表示每天凌晨2点0分0秒执行
-     * Cron表达式：秒 分 时 日 月 周
+     * 每天凌晨2点执行，为已部署但封面为空的应用自动生成封面截图
+     *  0 0 2 * * ? 表示每天凌晨2点0分0秒执行
+     *  Cron表达式：秒 分 时 日 月 周
      *
      */
     @Scheduled(cron = "0 0 2 * * ?")
@@ -79,6 +81,22 @@ public class ScreenshotScheduledTask {
         } catch (Exception e) {
             long duration = System.currentTimeMillis() - startTime;
             log.error("应用截图定时任务执行异常，耗时：{}ms", duration, e);
+        }
+    }
+
+    /**
+     * 每天凌晨2点执行，清理过期的临时截图文件
+     *  0 0 2 * * ? 表示每天凌晨2点0分0秒执行
+     *  Cron表达式：秒 分 时 日 月 周
+     */
+    @Scheduled(cron = "0 0 2 * * ?")
+    public void cleanupTempScreenshots() {
+        log.info("开始定时清理过期的临时截图文件");
+        try {
+            WebScreenshotUtils.cleanupTempFiles();
+            log.info("定时清理临时截图文件完成");
+        } catch (Exception e) {
+            log.error("定时清理临时截图文件失败", e);
         }
     }
 

@@ -16,7 +16,7 @@ import java.time.Duration;
  * @author <a href="https://gitee.com/hhzalh">致爱蓝海</a>
  */
 @Slf4j
-public class StaticResourceChecker {
+public class StaticResourceCheckerUtils {
 
     /**
      * 默认超时时间（秒）

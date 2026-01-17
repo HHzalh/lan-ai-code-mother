@@ -24,7 +24,7 @@ import com.lanhai.lanaicodemother.ratelimter.enums.RateLimitType;
 import com.lanhai.lanaicodemother.service.AppService;
 import com.lanhai.lanaicodemother.service.ProjectDownloadService;
 import com.lanhai.lanaicodemother.service.UserService;
-import com.lanhai.lanaicodemother.utils.StaticResourceChecker;
+import com.lanhai.lanaicodemother.utils.StaticResourceCheckerUtils;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryWrapper;
 import jakarta.annotation.Resource;
@@ -430,7 +430,7 @@ public class AppController {
         }
         // 4. 检查静态资源是否存在
         String baseUrl = buildBaseUrl(request);
-        boolean staticResourceExists = StaticResourceChecker.checkStaticResourceExists(
+        boolean staticResourceExists = StaticResourceCheckerUtils.checkStaticResourceExists(
                 baseUrl, app.getCodeGenType(), appId);
         // 5. 检查代码目录是否存在
         String codeGenType = app.getCodeGenType();
