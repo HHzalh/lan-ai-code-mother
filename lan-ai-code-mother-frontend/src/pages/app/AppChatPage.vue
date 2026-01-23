@@ -20,16 +20,6 @@
           </a-tag>
         </div>
       </div>
-      <div v-if="appInfo" class="header-center">
-        <a-space :size="16">
-          <a-tooltip title="对话轮次">
-            <span class="stat-badge">
-              <MessageOutlined />
-              {{ messages.length / 2 }} 轮
-            </span>
-          </a-tooltip>
-        </a-space>
-      </div>
       <div class="header-right">
         <a-button @click="showAppDetail">
           <template #icon>

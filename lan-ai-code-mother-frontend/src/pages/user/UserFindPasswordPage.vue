@@ -45,7 +45,6 @@
               { required: true, message: '请输入账号' },
               { min: 4, message: '账号长度不能少于 4 位' },
             ]"
-            label="账号"
             name="userAccount"
           >
             <a-input
@@ -66,13 +65,12 @@
               { required: true, message: '请输入邮箱地址' },
               { type: 'email', message: '请输入正确的邮箱格式' },
             ]"
-            label="邮箱地址"
             name="email"
           >
             <a-input
               v-model:value="findPasswordForm.email"
               class="find-password-input"
-              placeholder="请输入注册时使用的邮箱"
+              placeholder="请输入邮箱"
               size="large"
             >
               <template #prefix>
@@ -382,7 +380,7 @@ const handleBack = () => {
 
 /* Hero 背景 */
 .hero-background {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   width: 100%;
@@ -569,15 +567,9 @@ const handleBack = () => {
   margin-bottom: 0;
 }
 
-.find-password-form :deep(.ant-form-item-label > label) {
-  font-weight: 600;
-  color: var(--color-text);
-  font-size: 14px;
-}
-
 .find-password-input {
   border-radius: 12px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s ease;
 }
 
 .find-password-input :deep(.ant-input),
@@ -586,43 +578,43 @@ const handleBack = () => {
   height: 50px;
   font-size: 13px;
   padding-left: 44px;
-  border: 2px solid var(--color-border);
-  background: var(--color-bg-hover);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid #e5e7eb;
+  background: #f9fafb;
+  transition: all 0.3s ease;
 }
 
 .find-password-input :deep(.ant-input:hover),
 .find-password-input :deep(.ant-input-password:hover) {
-  border-color: var(--color-primary);
+  border-color: #f97316;
   background: #ffffff;
 }
 
 .find-password-input :deep(.ant-input:focus),
 .find-password-input :deep(.ant-input-focused),
 .find-password-input :deep(.ant-input-password:focus) {
-  border-color: var(--color-primary);
+  border-color: #f97316;
   background: #ffffff;
   box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.1);
 }
 
 .input-icon {
-  color: var(--color-text-secondary);
+  color: #9ca3af;
   font-size: 16px;
   transition: color 0.3s ease;
 }
 
 .find-password-input:focus-within .input-icon {
-  color: var(--color-primary);
+  color: #f97316;
 }
 
 .find-password-input :deep(.ant-input-password-icon) {
-  color: var(--color-text-secondary);
+  color: #9ca3af;
   font-size: 16px;
   transition: color 0.3s ease;
 }
 
 .find-password-input :deep(.ant-input-password-icon:hover) {
-  color: var(--color-primary);
+  color: #f97316;
 }
 
 /* 找回密码按钮 */
@@ -889,5 +881,61 @@ const handleBack = () => {
 :deep(.ant-descriptions-item-content) {
   color: #0f172a !important;
   font-weight: 600 !important;
+}
+
+/* ========== 超强力表单元素优化 ========== */
+
+/* 表单标签 - 纯黑色 + 超粗体 */
+.find-password-container :deep(.ant-form-item-label > label) {
+  color: #000000 !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.5px;
+}
+
+/* 输入框 - 纯黑色文字 + 白色背景 */
+.find-password-container :deep(.ant-input),
+.find-password-container :deep(.ant-input-password) {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #000000 !important;
+  font-weight: 700 !important;
+  font-size: 14px !important;
+}
+
+.find-password-container :deep(.ant-input::placeholder),
+.find-password-container :deep(.ant-input-password::placeholder) {
+  color: #475569 !important;
+  font-weight: 500 !important;
+}
+
+.find-password-container :deep(.ant-input:hover),
+.find-password-container :deep(.ant-input-password:hover) {
+  border-color: #3b82f6 !important;
+}
+
+.find-password-container :deep(.ant-input:focus),
+.find-password-container :deep(.ant-input-password:focus),
+.find-password-container :deep(.ant-input-focused) {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1) !important;
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+
+/* Modal 增强 */
+.find-password-container :deep(.ant-modal-title) {
+  color: #000000 !important;
+  font-weight: 700 !important;
+}
+
+.find-password-container :deep(.ant-modal-body) {
+  color: #000000 !important;
+}
+
+/* Tag 标签增强 */
+.find-password-container :deep(.ant-tag) {
+  font-weight: 700 !important;
+  color: #000000 !important;
 }
 </style>

@@ -1,5 +1,10 @@
 <template>
   <div class="register-container">
+    <!-- Hero 图片背景 -->
+    <div class="hero-background">
+      <div class="hero-overlay"></div>
+    </div>
+
     <!-- 背景装饰元素 -->
     <div class="bg-decoration">
       <div class="circle circle-1"></div>
@@ -319,10 +324,38 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
   padding: 40px 20px;
   position: relative;
   overflow: hidden;
+}
+
+/* Hero 背景 */
+.hero-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=1920&q=80');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  z-index: 0;
+}
+
+.hero-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    135deg,
+    rgba(249, 115, 22, 0.92) 0%,
+    rgba(234, 88, 12, 0.88) 50%,
+    rgba(251, 191, 36, 0.85) 100%
+  );
+  backdrop-filter: blur(2px);
 }
 
 /* 背景装饰 */
@@ -333,7 +366,8 @@ onMounted(() => {
   top: 0;
   left: 0;
   overflow: hidden;
-  z-index: 0;
+  z-index: 1;
+  pointer-events: none;
 }
 
 .circle {
@@ -387,7 +421,7 @@ onMounted(() => {
   max-width: 480px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   position: relative;
-  z-index: 1;
+  z-index: 2;
   animation: slideUp 0.6s ease-out;
 }
 

@@ -139,7 +139,7 @@
 
                 <a-form-item>
                   <a-space :size="12">
-                    <a-button :loading="submitting" html-type="submit" size="large" type="primary">
+                    <a-button :loading="submitting" html-type="submit" size="large">
                       <template #icon>
                         <SaveOutlined />
                       </template>
@@ -247,7 +247,6 @@
                 v-if="appInfo?.deployKey"
                 block
                 size="large"
-                type="primary"
                 @click="openPreview"
               >
                 <template #icon>

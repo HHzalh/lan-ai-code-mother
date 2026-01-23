@@ -129,12 +129,6 @@ const originItems = [
     label: '积分管理',
     title: '积分管理',
   },
-  {
-    key: 'others',
-    icon: () => h(ContactsOutlined),
-    label: h('a', { href: 'https://www.gitee.com/hhzalh', target: '_blank' }, '联系作者'),
-    title: '联系作者',
-  },
 ]
 
 // 过滤菜单项
