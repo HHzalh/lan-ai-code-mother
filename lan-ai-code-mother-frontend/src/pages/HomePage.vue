@@ -6,6 +6,12 @@ import { useLoginUserStore } from '@/stores/loginUser'
 import { addApp, listGoodAppVoByPage, listMyAppVoByPage } from '@/api/appController'
 import { getDeployUrl } from '@/config/env'
 import AppCard from '@/components/AppCard.vue'
+import {
+  BuildOutlined,
+  FileTextOutlined,
+  PictureOutlined,
+  ShoppingOutlined,
+} from '@ant-design/icons-vue'
 
 const router = useRouter()
 const loginUserStore = useLoginUserStore()
@@ -208,7 +214,9 @@ onMounted(() => {
                 )
               "
             >
-              <span class="btn-icon">📝</span>
+              <template #icon>
+                <FileTextOutlined />
+              </template>
               个人博客网站
             </a-button>
             <a-button
@@ -220,7 +228,9 @@ onMounted(() => {
                 )
               "
             >
-              <span class="btn-icon">🏢</span>
+              <template #icon>
+                <BuildOutlined />
+              </template>
               企业官网
             </a-button>
             <a-button
@@ -232,7 +242,9 @@ onMounted(() => {
                 )
               "
             >
-              <span class="btn-icon">🛒</span>
+              <template #icon>
+                <ShoppingOutlined />
+              </template>
               在线商城
             </a-button>
             <a-button
@@ -244,7 +256,9 @@ onMounted(() => {
                 )
               "
             >
-              <span class="btn-icon">🎨</span>
+              <template #icon>
+                <PictureOutlined />
+              </template>
               作品展示网站
             </a-button>
           </div>
@@ -310,10 +324,10 @@ onMounted(() => {
   padding: 0;
   min-height: 100vh;
   background:
-    linear-gradient(180deg, #f8fafc 0%, #f1f5f9 8%, #e2e8f0 20%, #cbd5e1 100%),
-    radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.12) 0%, transparent 50%),
-    radial-gradient(circle at 40% 40%, rgba(16, 185, 129, 0.08) 0%, transparent 50%);
+    linear-gradient(180deg, #fff7ed 0%, #ffedd5 8%, #fed7aa 20%, #fdba74 100%),
+    radial-gradient(circle at 20% 80%, rgba(249, 115, 22, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(234, 88, 12, 0.12) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(251, 191, 36, 0.08) 0%, transparent 50%);
   position: relative;
   overflow: hidden;
 }
@@ -327,10 +341,10 @@ onMounted(() => {
   right: 0;
   bottom: 0;
   background-image:
-    linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px),
-    linear-gradient(rgba(139, 92, 246, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(139, 92, 246, 0.04) 1px, transparent 1px);
+    linear-gradient(rgba(249, 115, 22, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(249, 115, 22, 0.05) 1px, transparent 1px),
+    linear-gradient(rgba(234, 88, 12, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(234, 88, 12, 0.04) 1px, transparent 1px);
   background-size:
     100px 100px,
     100px 100px,
@@ -351,12 +365,12 @@ onMounted(() => {
   background:
     radial-gradient(
       600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-      rgba(59, 130, 246, 0.08) 0%,
-      rgba(139, 92, 246, 0.06) 40%,
+      rgba(249, 115, 22, 0.08) 0%,
+      rgba(234, 88, 12, 0.06) 40%,
       transparent 80%
     ),
-    linear-gradient(45deg, transparent 30%, rgba(59, 130, 246, 0.04) 50%, transparent 70%),
-    linear-gradient(-45deg, transparent 30%, rgba(139, 92, 246, 0.04) 50%, transparent 70%);
+    linear-gradient(45deg, transparent 30%, rgba(249, 115, 22, 0.04) 50%, transparent 70%),
+    linear-gradient(-45deg, transparent 30%, rgba(251, 191, 36, 0.04) 50%, transparent 70%);
   pointer-events: none;
   animation: lightPulse 8s ease-in-out infinite alternate;
 }
@@ -390,14 +404,30 @@ onMounted(() => {
   box-sizing: border-box;
 }
 
-/* 英雄区域 */
+/* 英雄区域 - 铺满容器 */
 .hero-section {
   text-align: center;
-  padding: 100px 0 80px;
-  margin-bottom: 48px;
+  padding: 60px 0;
+  margin: 0 -24px 40px -24px;
   color: #1e293b;
   position: relative;
   overflow: hidden;
+  background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=80');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  width: calc(100% + 48px);
+}
+
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(2px);
 }
 
 .hero-content {
@@ -405,38 +435,12 @@ onMounted(() => {
   z-index: 2;
 }
 
-.hero-section::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 1000px;
-  height: 500px;
-  background:
-    radial-gradient(ellipse 1000px 500px at center, rgba(59, 130, 246, 0.15) 0%, transparent 70%),
-    linear-gradient(45deg, transparent 30%, rgba(139, 92, 246, 0.08) 50%, transparent 70%);
-  animation: heroGlow 12s ease-in-out infinite alternate;
-  pointer-events: none;
-}
-
-@keyframes heroGlow {
-  0% {
-    opacity: 0.5;
-    transform: translate(-50%, -50%) scale(0.95);
-  }
-  100% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1.05);
-  }
-}
-
 .hero-title {
   font-size: 64px;
   font-weight: 800;
   margin: 0 0 24px;
   line-height: 1.1;
-  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #10b981 100%);
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 50%, #fbbf24 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -461,7 +465,7 @@ onMounted(() => {
   font-size: 22px;
   margin: 0;
   opacity: 0.85;
-  color: #64748b;
+  color: #475569;
   position: relative;
   z-index: 2;
   font-weight: 400;
@@ -476,7 +480,7 @@ onMounted(() => {
   padding: 40px;
   margin-bottom: 60px;
   box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.08),
+    0 20px 60px rgba(249, 115, 22, 0.08),
     0 0 0 1px rgba(255, 255, 255, 0.5) inset;
   border: 1px solid rgba(255, 255, 255, 0.8);
   transition: all 0.3s ease;
@@ -484,7 +488,7 @@ onMounted(() => {
 
 .main-input-card:hover {
   box-shadow:
-    0 25px 70px rgba(0, 0, 0, 0.12),
+    0 25px 70px rgba(249, 115, 22, 0.12),
     0 0 0 1px rgba(255, 255, 255, 0.6) inset;
   transform: translateY(-2px);
 }
@@ -497,7 +501,7 @@ onMounted(() => {
 
 .prompt-input {
   border-radius: 16px;
-  border: 2px solid rgba(59, 130, 246, 0.1);
+  border: 2px solid rgba(249, 115, 22, 0.1);
   font-size: 16px;
   padding: 24px 140px 24px 24px;
   background: rgba(255, 255, 255, 1);
@@ -508,8 +512,8 @@ onMounted(() => {
 
 .prompt-input:focus,
 .prompt-input:hover {
-  border-color: rgba(59, 130, 246, 0.3);
-  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.15);
+  border-color: rgba(249, 115, 22, 0.3);
+  box-shadow: 0 8px 24px rgba(249, 115, 22, 0.15);
   background: rgba(255, 255, 255, 1);
 }
 
@@ -532,13 +536,13 @@ onMounted(() => {
   font-size: 16px;
   font-weight: 600;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
   transition: all 0.3s ease;
 }
 
 .create-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 6px 20px rgba(249, 115, 22, 0.4);
 }
 
 .send-icon {
@@ -555,7 +559,7 @@ onMounted(() => {
 /* 快捷按钮区域 */
 .quick-actions {
   padding-top: 32px;
-  border-top: 1px solid rgba(59, 130, 246, 0.1);
+  border-top: 1px solid rgba(249, 115, 22, 0.1);
 }
 
 .quick-actions-label {
@@ -578,7 +582,7 @@ onMounted(() => {
   padding: 10px 20px;
   height: auto;
   background: rgba(255, 255, 255, 0.9);
-  border: 1.5px solid rgba(59, 130, 246, 0.15);
+  border: 1.5px solid rgba(249, 115, 22, 0.15);
   color: #475569;
   transition: all 0.3s ease;
   position: relative;
@@ -596,7 +600,7 @@ onMounted(() => {
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.08), transparent);
+  background: linear-gradient(90deg, transparent, rgba(249, 115, 22, 0.08), transparent);
   transition: left 0.5s ease;
 }
 
@@ -606,10 +610,10 @@ onMounted(() => {
 
 .quick-btn:hover {
   background: rgba(255, 255, 255, 1);
-  border-color: rgba(59, 130, 246, 0.4);
-  color: #3b82f6;
+  border-color: rgba(249, 115, 22, 0.4);
+  color: #f97316;
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 6px 20px rgba(249, 115, 22, 0.2);
 }
 
 .btn-icon {
@@ -645,7 +649,7 @@ onMounted(() => {
   left: 0;
   width: 60px;
   height: 4px;
-  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  background: linear-gradient(90deg, #f97316, #ea580c);
   border-radius: 2px;
 }
 
@@ -671,7 +675,7 @@ onMounted(() => {
   justify-content: center;
   margin-top: 40px;
   padding-top: 32px;
-  border-top: 1px solid rgba(59, 130, 246, 0.1);
+  border-top: 1px solid rgba(249, 115, 22, 0.1);
 }
 
 /* 响应式设计 */
@@ -681,7 +685,7 @@ onMounted(() => {
   }
 
   .hero-section {
-    padding: 80px 0 60px;
+    padding: 50px 0;
   }
 
   .hero-title {
@@ -705,8 +709,8 @@ onMounted(() => {
   }
 
   .hero-section {
-    padding: 60px 0 40px;
-    margin-bottom: 32px;
+    padding: 40px 0;
+    margin: 0 -20px 32px -20px;
   }
 
   .hero-title {

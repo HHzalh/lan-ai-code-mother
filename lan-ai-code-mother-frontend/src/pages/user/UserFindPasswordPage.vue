@@ -1,5 +1,10 @@
 <template>
   <div class="find-password-container">
+    <!-- Hero 图片背景 -->
+    <div class="hero-background">
+      <div class="hero-overlay"></div>
+    </div>
+
     <!-- 背景装饰元素 -->
     <div class="bg-decoration">
       <div class="circle circle-1"></div>
@@ -7,16 +12,17 @@
       <div class="circle circle-3"></div>
     </div>
 
-    <div class="find-password-card">
+    <div class="find-password-card info-card">
       <!-- Logo 和标题 -->
       <div class="card-header">
         <div class="logo-wrapper">
           <div class="logo-icon">
-            <KeyOutlined />
+            <SafetyOutlined />
           </div>
         </div>
         <h1 class="find-password-title">找回密码</h1>
         <p class="welcome-text">
+          <KeyOutlined />
           忘记密码？别担心，<br />
           我们会通过邮箱帮您安全找回密码
         </p>
@@ -113,7 +119,11 @@
             show-icon
             style="margin-bottom: 20px"
             type="success"
-          />
+          >
+            <template #icon>
+              <CheckCircleOutlined />
+            </template>
+          </a-alert>
 
           <!-- 验证码输入 -->
           <a-form-item
@@ -212,7 +222,10 @@
       <!-- 返回登录链接 -->
       <div class="login-link">
         想起密码了？
-        <RouterLink class="link-text" to="/user/login">返回登录</RouterLink>
+        <RouterLink class="link-text" to="/user/login">
+          <LoginOutlined />
+          返回登录
+        </RouterLink>
       </div>
     </div>
   </div>
@@ -226,8 +239,10 @@ import { reactive, ref } from 'vue'
 import { findPassword, resetPassword } from '@/api/userController'
 import {
   ArrowLeftOutlined,
+  CheckCircleOutlined,
   KeyOutlined,
   LockOutlined,
+  LoginOutlined,
   MailOutlined,
   SafetyOutlined,
   SendOutlined,
@@ -339,17 +354,59 @@ const handleBack = () => {
 }
 </script>
 
-<style lang="less" scoped>
+<style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --color-primary: #f97316;
+  --color-primary-dark: #ea580c;
+  --color-primary-light: #fbbf24;
+  --color-text: #1e293b;
+  --color-text-secondary: #64748b;
+  --color-border: #e2e8f0;
+  --color-bg-hover: #f8fafc;
+  --font-serif: 'Noto Serif SC', serif;
+  --font-sans: 'Noto Sans SC', sans-serif;
+}
+
 .find-password-container {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 40px 20px;
   position: relative;
   overflow: hidden;
+}
+
+/* Hero 背景 */
+.hero-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=1920&q=80');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  z-index: 0;
+}
+
+.hero-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    135deg,
+    rgba(249, 115, 22, 0.92) 0%,
+    rgba(234, 88, 12, 0.88) 50%,
+    rgba(251, 191, 36, 0.85) 100%
+  );
+  backdrop-filter: blur(2px);
 }
 
 /* 背景装饰 */
@@ -360,7 +417,8 @@ const handleBack = () => {
   top: 0;
   left: 0;
   overflow: hidden;
-  z-index: 0;
+  z-index: 1;
+  pointer-events: none;
 }
 
 .circle {
@@ -414,7 +472,7 @@ const handleBack = () => {
   max-width: 480px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   position: relative;
-  z-index: 1;
+  z-index: 2;
   animation: slideUp 0.6s ease-out;
 }
 
@@ -440,16 +498,16 @@ const handleBack = () => {
 }
 
 .logo-icon {
-  width: 64px;
-  height: 64px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 16px;
+  width: 72px;
+  height: 72px;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  border-radius: 20px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 32px;
-  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+  font-size: 36px;
+  box-shadow: 0 8px 24px rgba(249, 115, 22, 0.4);
   animation: pulse 2s infinite;
 }
 
@@ -464,24 +522,34 @@ const handleBack = () => {
 }
 
 .find-password-title {
-  font-size: 28px;
+  font-family: var(--font-serif);
+  font-size: 32px;
   font-weight: 700;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   text-align: center;
-  margin: 0 0 12px 0;
+  margin: 0 0 16px 0;
   letter-spacing: -0.5px;
 }
 
 .welcome-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
   text-align: center;
-  color: #6b7280;
-  font-size: 15px;
+  color: var(--color-text-secondary);
+  font-size: 13px;
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.6;
   font-weight: 400;
+}
+
+.welcome-text .anticon {
+  font-size: 18px;
+  color: var(--color-primary);
 }
 
 /* 表单样式 */
@@ -502,58 +570,59 @@ const handleBack = () => {
 }
 
 .find-password-form :deep(.ant-form-item-label > label) {
-  font-weight: 500;
-  color: #374151;
+  font-weight: 600;
+  color: var(--color-text);
+  font-size: 14px;
 }
 
 .find-password-input {
   border-radius: 12px;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .find-password-input :deep(.ant-input),
 .find-password-input :deep(.ant-input-password) {
   border-radius: 12px;
   height: 50px;
-  font-size: 15px;
+  font-size: 13px;
   padding-left: 44px;
-  border: 2px solid #e5e7eb;
-  background: #f9fafb;
-  transition: all 0.3s ease;
+  border: 2px solid var(--color-border);
+  background: var(--color-bg-hover);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .find-password-input :deep(.ant-input:hover),
 .find-password-input :deep(.ant-input-password:hover) {
-  border-color: #667eea;
+  border-color: var(--color-primary);
   background: #ffffff;
 }
 
 .find-password-input :deep(.ant-input:focus),
 .find-password-input :deep(.ant-input-focused),
 .find-password-input :deep(.ant-input-password:focus) {
-  border-color: #667eea;
+  border-color: var(--color-primary);
   background: #ffffff;
-  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.1);
 }
 
 .input-icon {
-  color: #9ca3af;
+  color: var(--color-text-secondary);
   font-size: 16px;
   transition: color 0.3s ease;
 }
 
 .find-password-input:focus-within .input-icon {
-  color: #667eea;
+  color: var(--color-primary);
 }
 
 .find-password-input :deep(.ant-input-password-icon) {
-  color: #9ca3af;
+  color: var(--color-text-secondary);
   font-size: 16px;
   transition: color 0.3s ease;
 }
 
 .find-password-input :deep(.ant-input-password-icon:hover) {
-  color: #667eea;
+  color: var(--color-primary);
 }
 
 /* 找回密码按钮 */
@@ -562,17 +631,17 @@ const handleBack = () => {
   border-radius: 12px;
   font-size: 16px;
   font-weight: 600;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
   border: none;
   margin-top: 8px;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .find-password-button:hover {
-  background: linear-gradient(135deg, #5568d3 0%, #6a3d91 100%);
+  background: linear-gradient(135deg, var(--color-primary-dark) 0%, #dc2626 100%);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 8px 24px rgba(249, 115, 22, 0.4);
 }
 
 .find-password-button:active {
@@ -586,18 +655,18 @@ const handleBack = () => {
   font-size: 16px;
   font-weight: 600;
   background: #ffffff;
-  border: 2px solid #e5e7eb;
-  color: #6b7280;
+  border: 2px solid var(--color-border);
+  color: var(--color-text-secondary);
   margin-top: 8px;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .back-button:hover {
-  border-color: #667eea;
-  color: #667eea;
-  background: #f9fafb;
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: var(--color-bg-hover);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.2);
 }
 
 .back-button:active {
@@ -607,24 +676,39 @@ const handleBack = () => {
 /* 登录链接 */
 .login-link {
   text-align: center;
-  color: #6b7280;
+  color: var(--color-text-secondary);
   font-size: 14px;
   margin-top: 24px;
   padding-top: 24px;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--color-border);
 }
 
 .link-text {
-  color: #667eea;
+  color: var(--color-primary);
   text-decoration: none;
   font-weight: 600;
   margin-left: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   transition: all 0.3s ease;
 }
 
 .link-text:hover {
-  color: #764ba2;
+  color: var(--color-primary-dark);
   text-decoration: underline;
+}
+
+/* Alert 样式 */
+:deep(.ant-alert-success) {
+  background: linear-gradient(135deg, #dcfce7 0%, #d1fae5 100%);
+  border: 1px solid #86efac;
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+:deep(.ant-alert-success .anticon) {
+  color: #22c55e;
 }
 
 /* 响应式设计 */
@@ -635,15 +719,175 @@ const handleBack = () => {
   }
 
   .find-password-title {
-    font-size: 24px;
+    font-size: 28px;
   }
 
   .welcome-text {
     font-size: 14px;
   }
 
+  .logo-icon {
+    width: 64px;
+    height: 64px;
+    font-size: 32px;
+  }
+
   .circle {
     display: none;
   }
+}
+
+/* ========== 超强全局字体优化 ========== */
+
+/* 强制所有文字清晰可读 */
+* {
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+}
+
+/* Ant Design 按钮优化 */
+:deep(.ant-btn-primary) {
+  background: #3b82f6 !important;
+  border-color: #3b82f6 !important;
+  color: white !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  letter-spacing: 0.3px;
+  height: 32px !important;
+  padding: 0 16px !important;
+}
+
+:deep(.ant-btn-primary:hover) {
+  background: #2563eb !important;
+  border-color: #2563eb !important;
+}
+
+:deep(.ant-btn-default) {
+  color: #0f172a !important;
+  border-color: #e2e8f0 !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  background: white !important;
+}
+
+:deep(.ant-btn-default:hover) {
+  color: #3b82f6 !important;
+  border-color: #3b82f6 !important;
+}
+
+/* 表单标签优化 */
+:deep(.ant-form-item-label > label) {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  font-size: 14px !important;
+}
+
+/* 输入框文字优化 */
+:deep(.ant-input) {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+}
+
+:deep(.ant-input::placeholder) {
+  color: #64748b !important;
+  font-weight: 400 !important;
+}
+
+:deep(.ant-select-selection-item) {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+}
+
+/* Textarea 文字 */
+:deep(.ant-input-textarea) {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+}
+
+/* 表格内容文字优化 */
+:deep(.ant-table-tbody) {
+  color: #0f172a !important;
+}
+
+:deep(.ant-table-thead > tr > th) {
+  color: white !important;
+  font-weight: 700 !important;
+}
+
+/* Modal 标题优化 */
+:deep(.ant-modal-title) {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  font-size: 18px !important;
+}
+
+:deep(.ant-modal-body) {
+  color: #0f172a !important;
+}
+
+:deep(.ant-modal-content) {
+  color: #0f172a !important;
+}
+
+/* Tag 标签文字优化 */
+:deep(.ant-tag) {
+  font-weight: 700 !important;
+  color: #0f172a !important;
+}
+
+/* Card 标题 */
+:deep(.ant-card-head-title) {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  font-size: 18px !important;
+}
+
+/* Card 内容 */
+:deep(.ant-card-body) {
+  color: #0f172a !important;
+}
+
+/* 所有文本元素 */
+:deep(.ant-typography),
+:deep(.ant-text),
+:deep(label),
+:deep(span),
+:deep(p),
+:deep(div) {
+  color: #0f172a !important;
+}
+
+/* 链接文字 */
+:deep(a) {
+  color: #3b82f6 !important;
+  font-weight: 600 !important;
+}
+
+:deep(a:hover) {
+  color: #2563eb !important;
+}
+
+/* 下拉菜单 */
+:deep(.ant-dropdown-menu-item) {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+}
+
+/* 分页 */
+:deep(.ant-pagination-item) {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+}
+
+/* 描述列表 */
+:deep(.ant-descriptions-item-label) {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+
+:deep(.ant-descriptions-item-content) {
+  color: #0f172a !important;
+  font-weight: 600 !important;
 }
 </style>

@@ -3,7 +3,10 @@
     <a-avatar :size="size" :src="user?.userAvatar">
       {{ user?.userName?.charAt(0) || 'U' }}
     </a-avatar>
-    <span v-if="showName" class="user-name">{{ user?.userName || '未知用户' }}</span>
+    <a-tooltip v-if="showName && user?.userName" :title="user.userName">
+      <span class="user-name">{{ truncateText(user.userName, 12) }}</span>
+    </a-tooltip>
+    <span v-else-if="showName" class="user-name">未知用户</span>
   </div>
 </template>
 
@@ -18,6 +21,13 @@ withDefaults(defineProps<Props>(), {
   size: 'default',
   showName: true,
 })
+
+// 截取文本
+const truncateText = (text: string, maxLength: number) => {
+  if (!text) return ''
+  if (text.length <= maxLength) return text
+  return text.substring(0, maxLength) + '...'
+}
 </script>
 
 <style scoped>

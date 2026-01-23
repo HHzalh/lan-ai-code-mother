@@ -3,13 +3,31 @@
     <!-- 顶部栏 -->
     <div class="header-bar">
       <div class="header-left">
-        <h1 class="app-name">{{ appInfo?.appName || '网站生成器' }}</h1>
-        <a-tag v-if="appInfo?.codeGenType" class="code-gen-type-tag" color="blue">
-          {{ formatCodeGenType(appInfo.codeGenType) }}
-        </a-tag>
+        <div class="app-icon">
+          <CodeOutlined />
+        </div>
+        <div class="app-info">
+          <h1 class="app-name">{{ appInfo?.appName || '网站生成器' }}</h1>
+          <a-tag v-if="appInfo?.codeGenType" class="code-gen-type-tag">
+            <template #icon>
+              <FileTextOutlined />
+            </template>
+            {{ formatCodeGenType(appInfo.codeGenType) }}
+          </a-tag>
+        </div>
+      </div>
+      <div v-if="appInfo" class="header-center">
+        <a-space :size="16">
+          <a-tooltip title="对话轮次">
+            <span class="stat-badge">
+              <MessageOutlined />
+              {{ messages.length / 2 }} 轮
+            </span>
+          </a-tooltip>
+        </a-space>
       </div>
       <div class="header-right">
-        <a-button type="default" @click="showAppDetail">
+        <a-button @click="showAppDetail">
           <template #icon>
             <InfoCircleOutlined />
           </template>
@@ -23,7 +41,6 @@
           <a-button
             :disabled="!isOwner || !canDownload"
             :loading="downloading"
-            ghost
             type="primary"
             @click="downloadCode"
           >
@@ -33,9 +50,10 @@
             下载代码
           </a-button>
         </a-tooltip>
+
         <a-button :loading="deploying" type="primary" @click="deployApp">
           <template #icon>
-            <CloudUploadOutlined />
+            <RocketOutlined />
           </template>
           部署
         </a-button>
@@ -46,17 +64,42 @@
     <div class="main-content">
       <!-- 左侧对话区域 -->
       <div class="chat-section">
+        <!-- 对话头部 -->
+        <div class="chat-header">
+          <div class="header-title">
+            <MessageOutlined />
+            <span>AI 对话</span>
+          </div>
+          <div class="header-status">
+            <span v-if="isGenerating" class="status-generating">
+              <LoadingOutlined />
+              生成中...
+            </span>
+            <span v-else class="status-ready">
+              <CheckCircleOutlined />
+              就绪
+            </span>
+          </div>
+        </div>
+
         <!-- 消息区域 -->
         <div ref="messagesContainer" class="messages-container">
           <!-- 加载更多按钮 -->
           <div v-if="hasMoreHistory" class="load-more-container">
             <a-button :loading="loadingHistory" size="small" type="link" @click="loadMoreHistory">
+              <template #icon>
+                <UpOutlined />
+              </template>
               加载更多历史消息
             </a-button>
           </div>
+
           <div v-for="(message, index) in messages" :key="index" class="message-item">
             <div v-if="message.type === 'user'" class="user-message">
-              <div class="message-content">{{ message.content }}</div>
+              <div class="message-content">
+                <div class="message-text">{{ message.content }}</div>
+                <div class="message-time">{{ formatTime(message.createTime) }}</div>
+              </div>
               <div class="message-avatar">
                 <a-avatar :src="loginUserStore.loginUser.userAvatar" />
               </div>
@@ -88,6 +131,7 @@
             <div class="selected-element-info">
               <div class="element-header">
                 <span class="element-tag">
+                  <CodeOutlined />
                   选中元素：{{ selectedElementInfo.tagName.toLowerCase() }}
                 </span>
                 <span v-if="selectedElementInfo.id" class="element-id">
@@ -99,13 +143,16 @@
               </div>
               <div class="element-details">
                 <div v-if="selectedElementInfo.textContent" class="element-item">
+                  <FileTextOutlined />
                   内容: {{ selectedElementInfo.textContent.substring(0, 50) }}
                   {{ selectedElementInfo.textContent.length > 50 ? '...' : '' }}
                 </div>
                 <div v-if="selectedElementInfo.pagePath" class="element-item">
+                  <FolderOpenOutlined />
                   页面路径: {{ selectedElementInfo.pagePath }}
                 </div>
                 <div class="element-item">
+                  <CodeOutlined />
                   选择器:
                   <code class="element-selector-code">{{ selectedElementInfo.selector }}</code>
                 </div>
@@ -117,6 +164,13 @@
         <!-- 用户消息输入框 -->
         <div class="input-container">
           <div class="input-wrapper">
+            <div class="input-header">
+              <span class="input-label">
+                <EditOutlined />
+                {{ isOwner ? '描述您的需求' : '仅查看模式' }}
+              </span>
+              <span class="input-count">{{ userInput.length }}/1000</span>
+            </div>
             <a-tooltip v-if="!isOwner" placement="top" title="无法在别人的作品下对话哦~">
               <a-textarea
                 v-model:value="userInput"
@@ -124,7 +178,6 @@
                 :maxlength="1000"
                 :placeholder="getInputPlaceholder()"
                 :rows="4"
-                placeholder="请描述你想生成的网站，越详细效果越好哦"
                 @keydown.enter.prevent="sendMessage"
               />
             </a-tooltip>
@@ -135,12 +188,11 @@
               :maxlength="1000"
               :placeholder="getInputPlaceholder()"
               :rows="4"
-              placeholder="请描述你想生成的网站，越详细效果越好哦"
               @keydown.enter.prevent="sendMessage"
             />
             <div class="input-actions">
               <a-button
-                :disabled="!isOwner"
+                :disabled="!isOwner || !userInput.trim()"
                 :loading="isGenerating"
                 type="primary"
                 @click="sendMessage"
@@ -148,21 +200,26 @@
                 <template #icon>
                   <SendOutlined />
                 </template>
+                发送
               </a-button>
             </div>
           </div>
         </div>
       </div>
+
       <!-- 右侧网页展示区域 -->
       <div class="preview-section">
         <div class="preview-header">
-          <h3>生成后的网页展示</h3>
+          <div class="header-title">
+            <DesktopOutlined />
+            <span>实时预览</span>
+          </div>
           <div class="preview-actions">
             <a-button
               v-if="isOwner && previewUrl"
               :class="{ 'edit-mode-active': isEditMode }"
               :danger="isEditMode"
-              style="padding: 0; height: auto; margin-right: 12px"
+              size="small"
               type="link"
               @click="toggleEditMode"
             >
@@ -171,7 +228,7 @@
               </template>
               {{ isEditMode ? '退出编辑' : '编辑模式' }}
             </a-button>
-            <a-button v-if="previewUrl" type="link" @click="openInNewTab">
+            <a-button v-if="previewUrl" size="small" type="link" @click="openInNewTab">
               <template #icon>
                 <ExportOutlined />
               </template>
@@ -181,7 +238,10 @@
         </div>
         <div class="preview-content">
           <div v-if="!previewUrl && !isGenerating" class="preview-placeholder">
-            <div class="placeholder-icon">🌐</div>
+            <div class="placeholder-icon">
+              <GlobalOutlined />
+            </div>
+            <h3>等待生成</h3>
             <p>网站文件生成完成后将在这里展示</p>
           </div>
           <div v-else-if="isGenerating" class="preview-loading">
@@ -240,12 +300,21 @@ import { API_BASE_URL, getStaticPreviewUrl } from '@/config/env'
 import { type ElementInfo, VisualEditor } from '@/utils/visualEditor'
 
 import {
-  CloudUploadOutlined,
+  CheckCircleOutlined,
+  CodeOutlined,
+  DesktopOutlined,
   DownloadOutlined,
   EditOutlined,
   ExportOutlined,
+  FileTextOutlined,
+  FolderOpenOutlined,
+  GlobalOutlined,
   InfoCircleOutlined,
+  LoadingOutlined,
+  MessageOutlined,
+  RocketOutlined,
   SendOutlined,
+  UpOutlined,
 } from '@ant-design/icons-vue'
 
 const route = useRoute()
@@ -304,6 +373,22 @@ const isAdmin = computed(() => {
 
 // 应用详情相关
 const appDetailVisible = ref(false)
+
+// 格式化时间
+const formatTime = (time?: string) => {
+  if (!time) return ''
+  const date = new Date(time)
+  const now = new Date()
+  const diff = now.getTime() - date.getTime()
+  const minutes = Math.floor(diff / 60000)
+  const hours = Math.floor(diff / 3600000)
+  const days = Math.floor(diff / 86400000)
+
+  if (minutes < 1) return '刚刚'
+  if (minutes < 60) return `${minutes}分钟前`
+  if (hours < 24) return `${hours}小时前`
+  return `${days}天前`
+}
 
 // 显示应用详情
 const showAppDetail = () => {
@@ -478,6 +563,7 @@ const sendMessage = async () => {
   messages.value.push({
     type: 'user',
     content: message,
+    createTime: new Date().toISOString(),
   })
 
   // 发送消息后，清除选中元素并退出编辑模式
@@ -577,7 +663,7 @@ const generateCode = async (userMessage: string, aiMessageIndex: number) => {
 
         // 显示具体的错误信息
         const errorMessage = errorData.message || '生成过程中出现错误'
-        messages.value[aiMessageIndex].content = `❌ ${errorMessage}`
+        messages.value[aiMessageIndex].content = `生成失败：${errorMessage}`
         messages.value[aiMessageIndex].loading = false
         message.error(errorMessage)
 
@@ -640,6 +726,7 @@ const scrollToBottom = () => {
     messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
   }
 }
+
 // 部署应用
 const deployApp = async () => {
   if (!appId.value) {
@@ -691,6 +778,7 @@ const onIframeLoad = () => {
     visualEditor.onIframeLoad()
   }
 }
+
 // 下载相关
 const downloading = ref(false)
 const canDownload = ref(false)
@@ -805,12 +893,28 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;600;700&display=swap');
+
+:root {
+  --color-primary: #f97316;
+  --color-primary-dark: #ea580c;
+  --color-primary-light: #fbbf24;
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-text: #1e293b;
+  --color-text-secondary: #64748b;
+  --color-border: #e2e8f0;
+  --color-bg-hover: #f8fafc;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-sans: 'Noto Sans SC', sans-serif;
+}
+
 #appChatPage {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  padding: 16px;
-  background: #fdfdfd;
+  background: #f8fafc;
 }
 
 /* 顶部栏 */
@@ -818,7 +922,10 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
+  padding: 12px 20px;
+  background: white;
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .header-left {
@@ -827,24 +934,72 @@ onUnmounted(() => {
   gap: 12px;
 }
 
+.app-icon {
+  width: 40px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  border-radius: 10px;
+  color: white;
+  font-size: 20px;
+}
+
+.app-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .app-name {
   margin: 0;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--color-text);
+  line-height: 1.2;
+}
+
+.code-gen-type-tag {
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(249, 115, 22, 0.1);
+  color: var(--color-primary);
+  border-color: rgba(249, 115, 22, 0.2);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.header-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.stat-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #f1f5f9;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
 }
 
 .header-right {
   display: flex;
-  gap: 12px;
+  gap: 8px;
 }
 
 /* 主要内容区域 */
 .main-content {
   flex: 1;
   display: flex;
-  gap: 16px;
-  padding: 8px;
+  gap: 0;
   overflow: hidden;
 }
 
@@ -854,9 +1009,44 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-right: 1px solid var(--color-border);
   overflow: hidden;
+}
+
+.chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border);
+  background: #fafbfc;
+}
+
+.header-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.header-status {
+  font-size: 13px;
+}
+
+.status-generating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-warning);
+}
+
+.status-ready {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-success);
 }
 
 .messages-container {
@@ -867,7 +1057,19 @@ onUnmounted(() => {
 }
 
 .message-item {
-  margin-bottom: 12px;
+  margin-bottom: 16px;
+  animation: messageSlide 0.3s ease;
+}
+
+@keyframes messageSlide {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .user-message {
@@ -893,14 +1095,29 @@ onUnmounted(() => {
 }
 
 .user-message .message-content {
-  background: #1890ff;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
   color: white;
+  border-bottom-right-radius: 4px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.message-text {
+  white-space: pre-wrap;
+}
+
+.message-time {
+  font-size: 11px;
+  margin-top: 6px;
+  opacity: 0.7;
 }
 
 .ai-message .message-content {
-  background: #f5f5f5;
-  color: #1a1a1a;
-  padding: 8px 12px;
+  background: #ffffff;
+  color: var(--color-text);
+  border-bottom-left-radius: 4px;
+  border: 2px solid var(--color-border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .message-avatar {
@@ -911,38 +1128,132 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #666;
-}
-
-.code-gen-type-tag {
-  font-size: 12px;
+  color: var(--color-text-secondary);
 }
 
 /* 加载更多按钮 */
 .load-more-container {
   text-align: center;
   padding: 8px 0;
-  margin-bottom: 16px;
+  margin-bottom: 8px;
+}
+
+/* 选中元素信息 */
+.selected-element-alert {
+  margin: 0 16px 8px;
+  border-radius: 8px;
+  background: rgba(249, 115, 22, 0.05);
+  border-color: rgba(249, 115, 22, 0.2);
+}
+
+.selected-element-info {
+  line-height: 1.4;
+}
+
+.element-header {
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.element-details {
+  margin-top: 8px;
+}
+
+.element-item {
+  margin-bottom: 6px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-text-secondary);
+}
+
+.element-item:last-child {
+  margin-bottom: 0;
+}
+
+.element-tag {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.element-id {
+  color: var(--color-success);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.element-class {
+  color: var(--color-warning);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.element-selector-code {
+  font-family: var(--font-mono);
+  background: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--color-error);
+  border: 1px solid var(--color-border);
 }
 
 /* 输入区域 */
 .input-container {
-  padding: 16px;
+  padding: 12px 16px;
   background: white;
+  border-top: 1px solid var(--color-border);
 }
 
 .input-wrapper {
   position: relative;
 }
 
-.input-wrapper .ant-input {
-  padding-right: 50px;
+.input-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.input-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.input-count {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.input-wrapper :deep(.ant-input-textarea) {
+  border-radius: 12px;
+  border-color: var(--color-border);
+  transition: all 0.2s ease;
+}
+
+.input-wrapper :deep(.ant-input-textarea:focus) {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.1);
 }
 
 .input-actions {
   position: absolute;
-  bottom: 8px;
-  right: 8px;
+  bottom: 12px;
+  right: 12px;
 }
 
 /* 右侧预览区域 */
@@ -950,9 +1261,7 @@ onUnmounted(() => {
   flex: 3;
   display: flex;
   flex-direction: column;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: #fafbfc;
   overflow: hidden;
 }
 
@@ -960,19 +1269,14 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px;
-  border-bottom: 1px solid #e8e8e8;
-}
-
-.preview-header h3 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border);
+  background: white;
 }
 
 .preview-actions {
   display: flex;
-  gap: 8px;
+  gap: 4px;
 }
 
 .preview-content {
@@ -987,12 +1291,25 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: #666;
+  color: var(--color-text-secondary);
 }
 
 .placeholder-icon {
-  font-size: 48px;
+  font-size: 64px;
+  color: var(--color-border);
   margin-bottom: 16px;
+}
+
+.preview-placeholder h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.preview-placeholder p {
+  margin: 0;
+  font-size: 14px;
 }
 
 .preview-loading {
@@ -1001,7 +1318,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: #666;
+  color: var(--color-text-secondary);
 }
 
 .preview-loading p {
@@ -1012,10 +1329,18 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   border: none;
+  background: white;
 }
 
-.selected-element-alert {
-  margin: 0 16px;
+.edit-mode-active {
+  background-color: var(--color-success) !important;
+  border-color: var(--color-success) !important;
+  color: white !important;
+}
+
+.edit-mode-active:hover {
+  background-color: #16a34a !important;
+  border-color: #16a34a !important;
 }
 
 /* 响应式设计 */
@@ -1024,94 +1349,208 @@ onUnmounted(() => {
     flex-direction: column;
   }
 
-  .chat-section,
+  .chat-section {
+    flex: none;
+    height: 50vh;
+    border-right: none;
+    border-bottom: 1px solid var(--color-border);
+  }
+
   .preview-section {
     flex: none;
     height: 50vh;
+  }
+
+  .header-center {
+    display: none;
   }
 }
 
 @media (max-width: 768px) {
   .header-bar {
-    padding: 12px 16px;
+    padding: 10px 12px;
+  }
+
+  .app-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
   }
 
   .app-name {
-    font-size: 16px;
+    font-size: 14px;
   }
 
-  .main-content {
-    padding: 8px;
-    gap: 8px;
+  .header-right :deep(.ant-btn) {
+    padding: 4px 8px;
+    font-size: 13px;
+  }
+
+  .header-right :deep(.ant-btn span) {
+    display: none;
   }
 
   .message-content {
     max-width: 85%;
   }
 
-  /* 选中元素信息样式 */
-  .selected-element-alert {
-    margin: 0 16px;
-  }
-
-  .selected-element-info {
-    line-height: 1.4;
-  }
-
-  .element-header {
-    margin-bottom: 8px;
-  }
-
-  .element-details {
-    margin-top: 8px;
-  }
-
-  .element-item {
-    margin-bottom: 4px;
+  .input-actions :deep(.ant-btn) {
+    padding: 4px 12px;
     font-size: 13px;
   }
+}
 
-  .element-item:last-child {
-    margin-bottom: 0;
-  }
+/* ========== 超强全局字体优化 ========== */
 
-  .element-tag {
-    font-family: 'Monaco', 'Menlo', monospace;
-    font-size: 14px;
-    font-weight: 600;
-    color: #007bff;
-  }
+/* 强制所有文字清晰可读 */
+* {
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+}
 
-  .element-id {
-    color: #28a745;
-    margin-left: 4px;
-  }
+/* Ant Design 按钮优化 */
+:deep(.ant-btn-primary) {
+  background: #3b82f6 !important;
+  border-color: #3b82f6 !important;
+  color: white !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  letter-spacing: 0.3px;
+  height: 32px !important;
+  padding: 0 16px !important;
+}
 
-  .element-class {
-    color: #ffc107;
-    margin-left: 4px;
-  }
+:deep(.ant-btn-primary:hover) {
+  background: #2563eb !important;
+  border-color: #2563eb !important;
+}
 
-  .element-selector-code {
-    font-family: 'Monaco', 'Menlo', monospace;
-    background: #f6f8fa;
-    padding: 2px 4px;
-    border-radius: 3px;
-    font-size: 12px;
-    color: #d73a49;
-    border: 1px solid #e1e4e8;
-  }
+:deep(.ant-btn-default) {
+  color: #0f172a !important;
+  border-color: #e2e8f0 !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  background: white !important;
+}
 
-  /* 编辑模式按钮样式 */
-  .edit-mode-active {
-    background-color: #52c41a !important;
-    border-color: #52c41a !important;
-    color: white !important;
-  }
+:deep(.ant-btn-default:hover) {
+  color: #3b82f6 !important;
+  border-color: #3b82f6 !important;
+}
 
-  .edit-mode-active:hover {
-    background-color: #73d13d !important;
-    border-color: #73d13d !important;
-  }
+/* 表单标签优化 */
+:deep(.ant-form-item-label > label) {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  font-size: 14px !important;
+}
+
+/* 输入框文字优化 */
+:deep(.ant-input) {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+}
+
+:deep(.ant-input::placeholder) {
+  color: #64748b !important;
+  font-weight: 400 !important;
+}
+
+:deep(.ant-select-selection-item) {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+}
+
+/* Textarea 文字 */
+:deep(.ant-input-textarea) {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+}
+
+/* 表格内容文字优化 */
+:deep(.ant-table-tbody) {
+  color: #0f172a !important;
+}
+
+:deep(.ant-table-thead > tr > th) {
+  color: white !important;
+  font-weight: 700 !important;
+}
+
+/* Modal 标题优化 */
+:deep(.ant-modal-title) {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  font-size: 18px !important;
+}
+
+:deep(.ant-modal-body) {
+  color: #0f172a !important;
+}
+
+:deep(.ant-modal-content) {
+  color: #0f172a !important;
+}
+
+/* Tag 标签文字优化 */
+:deep(.ant-tag) {
+  font-weight: 700 !important;
+  color: #0f172a !important;
+}
+
+/* Card 标题 */
+:deep(.ant-card-head-title) {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  font-size: 18px !important;
+}
+
+/* Card 内容 */
+:deep(.ant-card-body) {
+  color: #0f172a !important;
+}
+
+/* 所有文本元素 */
+:deep(.ant-typography),
+:deep(.ant-text),
+:deep(label),
+:deep(span),
+:deep(p),
+:deep(div) {
+  color: #0f172a !important;
+}
+
+/* 链接文字 */
+:deep(a) {
+  color: #3b82f6 !important;
+  font-weight: 600 !important;
+}
+
+:deep(a:hover) {
+  color: #2563eb !important;
+}
+
+/* 下拉菜单 */
+:deep(.ant-dropdown-menu-item) {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+}
+
+/* 分页 */
+:deep(.ant-pagination-item) {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+}
+
+/* 描述列表 */
+:deep(.ant-descriptions-item-label) {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+
+:deep(.ant-descriptions-item-content) {
+  color: #0f172a !important;
+  font-weight: 600 !important;
 }
 </style>

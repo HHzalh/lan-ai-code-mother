@@ -1,10 +1,7 @@
 <template>
   <div class="captcha-row">
     <a-form-item
-      :rules="[
-        { required: true, message: '请输入验证码' },
-        { validator: validateCaptcha },
-      ]"
+      :rules="[{ required: true, message: '请输入验证码' }, { validator: validateCaptcha }]"
       :validateTrigger="['onBlur', 'submit']"
       name="captcha"
     >
@@ -21,18 +18,13 @@
     </a-form-item>
 
     <div class="captcha-canvas-wrapper" @click="refreshCaptcha">
-      <canvas
-        ref="canvasRef"
-        height="50"
-        width="120"
-        class="captcha-canvas"
-      ></canvas>
+      <canvas ref="canvasRef" class="captcha-canvas" height="50" width="120"></canvas>
       <div class="refresh-hint">点击刷新</div>
     </div>
   </div>
 </template>
 
-<script setup lang="ts">
+<script lang="ts" setup>
 import { onMounted, ref, watch } from 'vue'
 import { SafetyOutlined } from '@ant-design/icons-vue'
 
@@ -56,7 +48,7 @@ watch(
   () => props.modelValue,
   (newVal) => {
     inputValue.value = newVal || ''
-  }
+  },
 )
 
 // 监听内部值变化

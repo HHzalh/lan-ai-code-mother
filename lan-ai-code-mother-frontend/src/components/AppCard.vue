@@ -3,7 +3,7 @@
     <div class="app-preview">
       <img v-if="app.cover" :alt="app.appName" :src="app.cover" />
       <div v-else class="app-placeholder">
-        <span>🤖</span>
+        <RobotOutlined />
       </div>
       <div class="app-overlay">
         <a-space>
@@ -20,8 +20,13 @@
       </div>
       <div class="app-info-right">
         <h3 class="app-title">{{ app.appName || '未命名应用' }}</h3>
-        <p class="app-author">
-          {{ app.user?.userName || (featured ? '官方' : '未知用户') }}
+        <a-tooltip v-if="app.user?.userName" :title="app.user.userName">
+          <p class="app-author">
+            {{ truncateText(app.user.userName, 12) }}
+          </p>
+        </a-tooltip>
+        <p v-else class="app-author">
+          {{ featured ? '官方' : '未知用户' }}
         </p>
       </div>
     </div>
@@ -29,6 +34,8 @@
 </template>
 
 <script lang="ts" setup>
+import { RobotOutlined } from '@ant-design/icons-vue'
+
 interface Props {
   app: API.AppVO
   featured?: boolean
@@ -46,6 +53,13 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<Emits>()
 
+// 截取文本
+const truncateText = (text: string, maxLength: number) => {
+  if (!text) return ''
+  if (text.length <= maxLength) return text
+  return text.substring(0, maxLength) + '...'
+}
+
 const handleViewChat = () => {
   emit('view-chat', props.app.id)
 }
@@ -60,9 +74,9 @@ const handleViewWork = () => {
   background: rgba(255, 255, 255, 0.95);
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 32px rgba(249, 115, 22, 0.15);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(249, 115, 22, 0.1);
   transition:
     transform 0.3s,
     box-shadow 0.3s;
@@ -71,12 +85,12 @@ const handleViewWork = () => {
 
 .app-card:hover {
   transform: translateY(-8px);
-  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 15px 50px rgba(249, 115, 22, 0.25);
 }
 
 .app-preview {
   height: 180px;
-  background: #f5f5f5;
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -92,7 +106,10 @@ const handleViewWork = () => {
 
 .app-placeholder {
   font-size: 48px;
-  color: #d9d9d9;
+  color: #f97316;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .app-overlay {
@@ -101,7 +118,7 @@ const handleViewWork = () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(249, 115, 22, 0.9);
   display: flex;
   align-items: center;
   justify-content: center;

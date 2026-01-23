@@ -7,7 +7,7 @@
       <div class="circle circle-3"></div>
     </div>
 
-    <div class="login-card">
+    <div class="login-card cyan-card">
       <!-- Logo 和标题 -->
       <div class="card-header">
         <div class="logo-wrapper">
@@ -154,7 +154,7 @@ const handleSubmit = async (values: API.UserLoginRequest) => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
   padding: 40px 20px;
   position: relative;
   overflow: hidden;
@@ -250,14 +250,14 @@ const handleSubmit = async (values: API.UserLoginRequest) => {
 .logo-icon {
   width: 64px;
   height: 64px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
   border-radius: 16px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   color: white;
   font-size: 32px;
-  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 8px 24px rgba(249, 115, 22, 0.4);
   animation: pulse 2s infinite;
 }
 
@@ -274,7 +274,7 @@ const handleSubmit = async (values: API.UserLoginRequest) => {
 .login-title {
   font-size: 28px;
   font-weight: 700;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -286,7 +286,7 @@ const handleSubmit = async (values: API.UserLoginRequest) => {
 .welcome-text {
   text-align: center;
   color: #6b7280;
-  font-size: 15px;
+  font-size: 13px;
   margin: 0;
   line-height: 1.5;
   font-weight: 400;
@@ -314,7 +314,7 @@ const handleSubmit = async (values: API.UserLoginRequest) => {
 .login-input :deep(.ant-input-password) {
   border-radius: 12px;
   height: 50px;
-  font-size: 15px;
+  font-size: 13px;
   padding-left: 44px;
   border: 2px solid #e5e7eb;
   background: #f9fafb;
@@ -323,16 +323,16 @@ const handleSubmit = async (values: API.UserLoginRequest) => {
 
 .login-input :deep(.ant-input:hover),
 .login-input :deep(.ant-input-password:hover) {
-  border-color: #667eea;
+  border-color: #f97316;
   background: #ffffff;
 }
 
 .login-input :deep(.ant-input:focus),
 .login-input :deep(.ant-input-focused),
 .login-input :deep(.ant-input-password:focus) {
-  border-color: #667eea;
+  border-color: #f97316;
   background: #ffffff;
-  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.1);
 }
 
 .input-icon {
@@ -342,7 +342,7 @@ const handleSubmit = async (values: API.UserLoginRequest) => {
 }
 
 .login-input:focus-within .input-icon {
-  color: #667eea;
+  color: #f97316;
 }
 
 .login-input :deep(.ant-input-password-icon) {
@@ -352,7 +352,7 @@ const handleSubmit = async (values: API.UserLoginRequest) => {
 }
 
 .login-input :deep(.ant-input-password-icon:hover) {
-  color: #667eea;
+  color: #f97316;
 }
 
 /* 登录按钮 */
@@ -361,17 +361,17 @@ const handleSubmit = async (values: API.UserLoginRequest) => {
   border-radius: 12px;
   font-size: 16px;
   font-weight: 600;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
   border: none;
   margin-top: 8px;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
   transition: all 0.3s ease;
 }
 
 .login-button:hover {
-  background: linear-gradient(135deg, #5568d3 0%, #6a3d91 100%);
+  background: linear-gradient(135deg, #ea580c 0%, #3b82f6 100%);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 8px 24px rgba(249, 115, 22, 0.4);
 }
 
 .login-button:active {
@@ -389,7 +389,7 @@ const handleSubmit = async (values: API.UserLoginRequest) => {
 }
 
 .link-text {
-  color: #667eea;
+  color: #f97316;
   text-decoration: none;
   font-weight: 600;
   margin: 0 4px;
@@ -397,7 +397,7 @@ const handleSubmit = async (values: API.UserLoginRequest) => {
 }
 
 .link-text:hover {
-  color: #764ba2;
+  color: #ea580c;
   text-decoration: underline;
 }
 
@@ -424,5 +424,215 @@ const handleSubmit = async (values: API.UserLoginRequest) => {
   .circle {
     display: none;
   }
+}
+
+/* ========== 超强全局字体优化 ========== */
+
+/* 强制所有文字清晰可读 */
+* {
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+}
+
+/* Ant Design 按钮优化 */
+:deep(.ant-btn-primary) {
+  background: #3b82f6 !important;
+  border-color: #3b82f6 !important;
+  color: white !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  letter-spacing: 0.3px;
+  height: 32px !important;
+  padding: 0 16px !important;
+}
+
+:deep(.ant-btn-primary:hover) {
+  background: #2563eb !important;
+  border-color: #2563eb !important;
+}
+
+:deep(.ant-btn-default) {
+  color: #0f172a !important;
+  border-color: #e2e8f0 !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  background: white !important;
+}
+
+:deep(.ant-btn-default:hover) {
+  color: #3b82f6 !important;
+  border-color: #3b82f6 !important;
+}
+
+/* 表单标签优化 */
+:deep(.ant-form-item-label > label) {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  font-size: 14px !important;
+}
+
+/* 输入框文字优化 */
+:deep(.ant-input) {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+}
+
+:deep(.ant-input::placeholder) {
+  color: #64748b !important;
+  font-weight: 400 !important;
+}
+
+:deep(.ant-select-selection-item) {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+}
+
+/* Textarea 文字 */
+:deep(.ant-input-textarea) {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+}
+
+/* 表格内容文字优化 */
+:deep(.ant-table-tbody) {
+  color: #0f172a !important;
+}
+
+:deep(.ant-table-thead > tr > th) {
+  color: white !important;
+  font-weight: 700 !important;
+}
+
+/* Modal 标题优化 */
+:deep(.ant-modal-title) {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  font-size: 18px !important;
+}
+
+:deep(.ant-modal-body) {
+  color: #0f172a !important;
+}
+
+:deep(.ant-modal-content) {
+  color: #0f172a !important;
+}
+
+/* Tag 标签文字优化 */
+:deep(.ant-tag) {
+  font-weight: 700 !important;
+  color: #0f172a !important;
+}
+
+/* Card 标题 */
+:deep(.ant-card-head-title) {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  font-size: 18px !important;
+}
+
+/* Card 内容 */
+:deep(.ant-card-body) {
+  color: #0f172a !important;
+}
+
+/* 所有文本元素 */
+:deep(.ant-typography),
+:deep(.ant-text),
+:deep(label),
+:deep(span),
+:deep(p),
+:deep(div) {
+  color: #0f172a !important;
+}
+
+/* 链接文字 */
+:deep(a) {
+  color: #3b82f6 !important;
+  font-weight: 600 !important;
+}
+
+:deep(a:hover) {
+  color: #2563eb !important;
+}
+
+/* 下拉菜单 */
+:deep(.ant-dropdown-menu-item) {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+}
+
+/* 分页 */
+:deep(.ant-pagination-item) {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+}
+
+/* 描述列表 */
+:deep(.ant-descriptions-item-label) {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+
+:deep(.ant-descriptions-item-content) {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+}
+
+/* ========== 超强力表单元素优化 ========== */
+
+/* 表单标签 - 纯黑色 + 超粗体 */
+.login-container :deep(.ant-form-item-label > label) {
+  color: #000000 !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.5px;
+}
+
+/* 输入框 - 纯黑色文字 + 白色背景 */
+.login-container :deep(.ant-input),
+.login-container :deep(.ant-input-password) {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #000000 !important;
+  font-weight: 700 !important;
+  font-size: 14px !important;
+}
+
+.login-container :deep(.ant-input::placeholder),
+.login-container :deep(.ant-input-password::placeholder) {
+  color: #475569 !important;
+  font-weight: 500 !important;
+}
+
+.login-container :deep(.ant-input:hover),
+.login-container :deep(.ant-input-password:hover) {
+  border-color: #3b82f6 !important;
+}
+
+.login-container :deep(.ant-input:focus),
+.login-container :deep(.ant-input-password:focus),
+.login-container :deep(.ant-input-focused) {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1) !important;
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+
+/* Modal 增强 */
+.login-container :deep(.ant-modal-title) {
+  color: #000000 !important;
+  font-weight: 700 !important;
+}
+
+.login-container :deep(.ant-modal-body) {
+  color: #000000 !important;
+}
+
+/* Tag 标签增强 */
+.login-container :deep(.ant-tag) {
+  font-weight: 700 !important;
+  color: #000000 !important;
 }
 </style>

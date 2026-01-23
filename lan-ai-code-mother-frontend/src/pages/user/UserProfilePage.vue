@@ -1,15 +1,25 @@
-﻿<script lang="ts" setup>
+<script lang="ts" setup>
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import {
   AppstoreOutlined,
+  CalendarOutlined,
+  CheckCircleOutlined,
   CopyOutlined,
+  CrownOutlined,
   EditOutlined,
   GiftOutlined,
   HistoryOutlined,
+  LinkOutlined,
+  MailOutlined,
+  NumberOutlined,
   ShareAltOutlined,
   ShoppingOutlined,
+  ThunderboltOutlined,
+  TrophyOutlined,
+  UserOutlined,
+  WalletOutlined,
 } from '@ant-design/icons-vue'
 import { useLoginUserStore } from '@/stores/loginUser'
 import { changePassword } from '@/api/userController'
@@ -74,15 +84,15 @@ const invitationLink = computed(() => {
 })
 
 const generateInvitationText = () => {
-  return `欢迎加入 蓝海智造 智能AI应用生成平台! 🎉
+  return `欢迎加入 蓝海智造 智能AI应用生成平台!
 
 我的邀请码：${invitationCode.value}
 
-👉 使用此邀请码注册，即可获得专属福利！
+使用此邀请码注册，即可获得专属福利！
 
-👉 体验智能应用生成，快速构建AI应用！
+体验智能应用生成，快速构建AI应用！
 
-👉 加入我们的开发者社区，共同探索AI创新！
+加入我们的开发者社区，共同探索AI创新！
 
 访问链接：${invitationLink.value}`
 }
@@ -322,23 +332,39 @@ const handlePasswordSubmit = async () => {
     passwordSubmitting.value = false
   }
 }
+
+// 截取文本
+const truncateText = (text: string, maxLength: number) => {
+  if (!text) return ''
+  if (text.length <= maxLength) return text
+  return text.substring(0, maxLength) + '...'
+}
 </script>
 
 <template>
   <div class="user-profile-page">
     <!-- 用户信息卡片 -->
-    <a-card :bordered="false" class="profile-card">
+    <a-card :bordered="false" class="profile-card cyan-card">
       <div class="profile-header">
         <div class="avatar-section">
-          <a-avatar :size="100" :src="displayAvatar">
+          <a-avatar :size="120" :src="displayAvatar" class="user-avatar">
             <template #icon>
               <UserOutlined />
             </template>
           </a-avatar>
           <div class="user-info">
-            <h2 class="user-name">{{ formState.userName || '未设置昵称' }}</h2>
-            <p class="user-account">{{ formState.userAccount }}</p>
-            <p class="user-profile">{{ formState.userProfile || '这个人很懒，什么都没留下~' }}</p>
+            <a-tooltip v-if="formState.userName" :title="formState.userName">
+              <h2 class="user-name">{{ truncateText(formState.userName, 12) }}</h2>
+            </a-tooltip>
+            <h2 v-else class="user-name">未设置昵称</h2>
+            <p class="user-account">
+              <UserOutlined />
+              {{ formState.userAccount }}
+            </p>
+            <a-tooltip v-if="formState.userProfile" :title="formState.userProfile">
+              <p class="user-profile">{{ truncateText(formState.userProfile, 20) }}</p>
+            </a-tooltip>
+            <p v-else class="user-profile">这个人很懒，什么都没留下~</p>
           </div>
         </div>
       </div>
@@ -346,30 +372,50 @@ const handlePasswordSubmit = async () => {
       <!-- 用户统计 -->
       <div class="user-stats">
         <div class="stat-item">
-          <span class="stat-label">💎 积分</span>
-          <span class="stat-value">{{ accountInfo?.availablePoints ?? 0 }}</span>
+          <div class="stat-icon points-icon">
+            <WalletOutlined />
+          </div>
+          <div class="stat-content">
+            <span class="stat-label">当前积分</span>
+            <span class="stat-value">{{ accountInfo?.availablePoints ?? 0 }}</span>
+          </div>
         </div>
         <div class="stat-item">
-          <span class="stat-label">📅 已加入</span>
-          <span class="stat-value">{{ joinedDays }} 天</span>
+          <div class="stat-icon days-icon">
+            <CalendarOutlined />
+          </div>
+          <div class="stat-content">
+            <span class="stat-label">已加入</span>
+            <span class="stat-value">{{ joinedDays }} 天</span>
+          </div>
         </div>
         <div class="stat-item">
-          <span class="stat-label">📧 邮箱</span>
-          <span class="stat-value stat-email">{{
-            loginUserStore.loginUser.userEmail || '未绑定'
-          }}</span>
+          <div class="stat-icon email-icon">
+            <MailOutlined />
+          </div>
+          <div class="stat-content">
+            <span class="stat-label">邮箱</span>
+            <span class="stat-value stat-email">{{
+              loginUserStore.loginUser.userEmail || '未绑定'
+            }}</span>
+          </div>
         </div>
         <div class="stat-item stat-item-invitation">
-          <span class="stat-label">🎁 邀请码</span>
-          <a-button
-            class="invitation-code-btn"
-            size="small"
-            type="primary"
-            @click="openInvitationCard"
-          >
-            {{ invitationCode || '加载中...' }}
+          <div class="stat-icon invite-icon">
             <ShareAltOutlined />
-          </a-button>
+          </div>
+          <div class="stat-content">
+            <span class="stat-label">我的邀请码</span>
+            <a-button
+              class="invitation-code-btn ant-btn-purple"
+              size="small"
+              type="primary"
+              @click="openInvitationCard"
+            >
+              {{ invitationCode || '加载中...' }}
+              <ShareAltOutlined />
+            </a-button>
+          </div>
         </div>
       </div>
 
@@ -377,30 +423,50 @@ const handlePasswordSubmit = async () => {
       <div class="action-buttons">
         <a-button
           :loading="signing"
-          class="action-btn action-btn-gift"
+          class="action-btn action-btn-gift ant-btn-success"
           size="large"
           @click="handleSignIn"
         >
-          <GiftOutlined />
+          <template #icon>
+            <GiftOutlined />
+          </template>
           {{ todaySigned ? '今日已签到' : '每日签到' }}
         </a-button>
-        <a-button class="action-btn action-btn-primary" size="large" @click="goToPointMall">
-          <ShoppingOutlined />
+        <a-button
+          class="action-btn action-btn-mall ant-btn-warning"
+          size="large"
+          @click="goToPointMall"
+        >
+          <template #icon>
+            <ShoppingOutlined />
+          </template>
           积分商城
         </a-button>
-        <a-button class="action-btn action-btn-edit" size="large" @click="goToEditProfile">
-          <EditOutlined />
+        <a-button
+          class="action-btn action-btn-edit ant-btn-primary"
+          size="large"
+          @click="goToEditProfile"
+        >
+          <template #icon>
+            <EditOutlined />
+          </template>
           编辑资料
         </a-button>
-        <a-button class="action-btn" size="large" @click="goToPointLogs">
-          <HistoryOutlined />
+        <a-button
+          class="action-btn action-btn-logs ant-btn-info"
+          size="large"
+          @click="goToPointLogs"
+        >
+          <template #icon>
+            <HistoryOutlined />
+          </template>
           积分明细
         </a-button>
       </div>
     </a-card>
 
     <!-- 我的应用 -->
-    <a-card :bordered="false" class="apps-card">
+    <a-card :bordered="false" class="apps-card info-card">
       <template #title>
         <div class="card-title">
           <AppstoreOutlined />
@@ -408,7 +474,10 @@ const handlePasswordSubmit = async () => {
         </div>
       </template>
       <template #extra>
-        <a-button type="link" @click="() => router.push('/')">创建新应用</a-button>
+        <a-button type="link" @click="() => router.push('/')">
+          <ThunderboltOutlined />
+          创建新应用
+        </a-button>
       </template>
 
       <a-spin :spinning="appsLoading">
@@ -442,36 +511,47 @@ const handlePasswordSubmit = async () => {
       :footer="null"
       :title="null"
       class="invitation-modal"
-      width="500px"
+      width="520px"
       @cancel="showInvitationCard = false"
     >
       <div class="invitation-card">
         <div class="invitation-header">
-          <div class="invitation-icon">🎉</div>
+          <div class="invitation-icon">
+            <TrophyOutlined />
+          </div>
           <h3 class="invitation-title">邀请好友加入蓝海智造</h3>
           <p class="invitation-subtitle">分享邀请码，双方均可获得积分奖励</p>
         </div>
         <div class="invitation-content">
           <div class="invitation-code-section">
-            <div class="invitation-code-label">🎯 我的邀请码</div>
+            <div class="section-title">
+              <NumberOutlined />
+              我的邀请码
+            </div>
             <div class="invitation-code-display">
               <span class="invitation-code-text">{{ invitationCode }}</span>
               <a-button class="copy-btn" size="large" type="primary" @click="copyInvitation">
-                <CopyOutlined />
+                <template #icon>
+                  <CopyOutlined />
+                </template>
                 复制邀请信息
               </a-button>
             </div>
           </div>
           <div class="invitation-rewards">
             <div class="reward-item">
-              <div class="reward-icon">🎁</div>
+              <div class="reward-icon">
+                <CrownOutlined />
+              </div>
               <div class="reward-content">
                 <div class="reward-title">被邀请人奖励</div>
                 <div class="reward-value">+{{ inviteeReward }} 积分</div>
               </div>
             </div>
             <div class="reward-item">
-              <div class="reward-icon">💰</div>
+              <div class="reward-icon">
+                <GiftOutlined />
+              </div>
               <div class="reward-content">
                 <div class="reward-title">邀请人奖励</div>
                 <div class="reward-value">+{{ inviterReward }} 积分</div>
@@ -479,7 +559,10 @@ const handlePasswordSubmit = async () => {
             </div>
           </div>
           <div class="invitation-steps">
-            <div class="step-title">📋 邀请步骤</div>
+            <div class="section-title">
+              <CheckCircleOutlined />
+              邀请步骤
+            </div>
             <div class="step-list">
               <div class="step-item">
                 <span class="step-number">1</span>
@@ -496,7 +579,10 @@ const handlePasswordSubmit = async () => {
             </div>
           </div>
           <div class="invitation-link-section">
-            <div class="link-label">🔗 邀请链接</div>
+            <div class="section-title">
+              <LinkOutlined />
+              邀请链接
+            </div>
             <div class="link-display">
               <span class="link-text">{{ invitationLink }}</span>
             </div>
@@ -550,6 +636,20 @@ const handlePasswordSubmit = async () => {
 </template>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --color-primary: #f97316;
+  --color-primary-dark: #ea580c;
+  --color-primary-light: #fbbf24;
+  --color-text: #1e293b;
+  --color-text-secondary: #64748b;
+  --color-border: #4d82c8;
+  --color-bg-hover: #f8fafc;
+  --font-serif: 'Noto Serif SC', serif;
+  --font-sans: 'Noto Sans SC', sans-serif;
+}
+
 .user-profile-page {
   max-width: 1400px;
   margin: 0 auto;
@@ -559,89 +659,144 @@ const handlePasswordSubmit = async () => {
   gap: 24px;
 }
 
+/* 用户信息卡片 */
 .profile-card {
-  border-radius: 12px;
+  border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--color-border);
+  background: linear-gradient(135deg, #fff7ed 0%, #ffffff 100%);
 }
 
 .profile-header {
-  margin-bottom: 24px;
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .avatar-section {
   display: flex;
-  gap: 24px;
+  gap: 28px;
   align-items: flex-start;
+}
+
+.user-avatar {
+  border: 4px solid white;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.2);
 }
 
 .user-info {
   flex: 1;
-  padding-top: 8px;
+  padding-top: 12px;
 }
 
 .user-name {
-  font-size: 24px;
-  font-weight: 600;
-  margin: 0 0 8px 0;
-  color: #1a1a1a;
+  font-family: var(--font-serif);
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+  color: var(--color-text);
 }
 
 .user-account {
-  font-size: 14px;
-  color: #8c8c8c;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
   margin: 0 0 8px 0;
+  font-weight: 500;
 }
 
 .user-profile {
-  font-size: 14px;
-  color: #595959;
+  font-size: 13px;
+  color: var(--color-text-secondary);
   margin: 0;
   line-height: 1.6;
 }
 
+/* 用户统计 */
 .user-stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-  padding: 20px;
-  background: #fafafa;
-  border-radius: 8px;
-  margin-bottom: 24px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 12px;
+  margin-bottom: 32px;
+  border: 1px solid var(--color-border);
 }
 
 .stat-item {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  padding: 16px;
-  background: #fff;
-  border-radius: 8px;
-  border: 1px solid #f0f0f0;
-  transition: all 0.3s ease;
+  gap: 16px;
+  padding: 20px;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .stat-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(249, 115, 22, 0.15);
+  border-color: var(--color-primary);
+}
+
+.stat-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.points-icon {
+  background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-primary) 100%);
+  color: white;
+}
+
+.days-icon {
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+  color: white;
+}
+
+.email-icon {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  color: white;
+}
+
+.invite-icon {
+  background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
+  color: white;
+}
+
+.stat-content {
+  flex: 1;
 }
 
 .stat-label {
   font-size: 13px;
-  color: #8c8c8c;
-  margin-bottom: 8px;
+  color: var(--color-text-secondary);
+  margin-bottom: 6px;
+  font-weight: 500;
+  display: block;
 }
 
 .stat-value {
-  font-size: 20px;
-  font-weight: 600;
-  color: #1a1a1a;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text);
+  font-family: var(--font-serif);
 }
 
 .stat-email {
   font-size: 14px;
-  font-weight: 400;
+  font-weight: 500;
   word-break: break-all;
-  text-align: center;
 }
 
 .stat-item-invitation {
@@ -651,76 +806,113 @@ const handlePasswordSubmit = async () => {
 .invitation-code-btn {
   font-family: 'Courier New', monospace;
   font-weight: 600;
-  height: 32px;
-  display: flex;
+  height: 36px;
+  display: inline-flex;
   align-items: center;
-  gap: 4px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  gap: 6px;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
   border: none;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .invitation-code-btn:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
 }
 
+/* 操作按钮 */
 .action-buttons {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+/* 强制所有操作按钮使用统一大小 */
+.action-buttons :deep(.ant-btn) {
+  height: 48px !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  border-radius: 12px !important;
+  padding: 0 20px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+}
+
+.action-buttons :deep(.ant-btn:hover) {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12) !important;
+}
+
+.action-buttons :deep(.ant-btn > .anticon) {
+  font-size: 16px !important;
 }
 
 .action-btn {
   height: 48px;
-  font-size: 15px;
-  font-weight: 500;
-  border-radius: 8px;
-  transition: all 0.3s ease;
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  border: 2px solid transparent;
 }
 
 .action-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-}
-
-.action-btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
-  color: #fff;
-}
-
-.action-btn-primary:hover {
-  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
 }
 
 .action-btn-gift {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   border: none;
-  color: #fff;
+  color: white;
 }
 
 .action-btn-gift:hover {
-  background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+.action-btn-mall {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  border: none;
+  color: white;
+}
+
+.action-btn-mall:hover {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
 }
 
 .action-btn-edit {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   border: none;
-  color: #fff;
+  color: white;
 }
 
 .action-btn-edit:hover {
-  background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
 }
 
+.action-btn-logs {
+  background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+  border: none;
+  color: white;
+}
+
+.action-btn-logs:hover {
+  background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+}
+
+/* 我的应用卡片 */
 .apps-card {
-  border-radius: 12px;
+  border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--color-border);
 }
 
 .card-title {
@@ -729,6 +921,8 @@ const handlePasswordSubmit = async () => {
   gap: 8px;
   font-size: 18px;
   font-weight: 600;
+  font-family: var(--font-serif);
+  color: var(--color-text);
 }
 
 .apps-grid {
@@ -755,18 +949,26 @@ const handlePasswordSubmit = async () => {
 }
 
 .invitation-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
 }
 
 .invitation-header {
   padding: 40px 32px 32px;
   text-align: center;
-  color: #fff;
+  color: white;
 }
 
 .invitation-icon {
-  font-size: 64px;
-  margin-bottom: 16px;
+  width: 72px;
+  height: 72px;
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  margin-bottom: 20px;
   animation: bounce 2s infinite;
 }
 
@@ -781,51 +983,57 @@ const handlePasswordSubmit = async () => {
 }
 
 .invitation-title {
-  font-size: 24px;
-  font-weight: 600;
-  margin: 0 0 8px 0;
-  color: #fff;
+  font-family: var(--font-serif);
+  font-size: 26px;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+  color: #5798f1;
 }
 
 .invitation-subtitle {
-  font-size: 14px;
+  font-size: 13px;
   color: rgba(255, 255, 255, 0.9);
   margin: 0;
 }
 
 .invitation-content {
   padding: 32px;
-  background: #fff;
+  background: white;
   border-radius: 20px 20px 0 0;
 }
 
-.invitation-code-section {
-  margin-bottom: 24px;
-}
-
-.invitation-code-label {
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 16px;
   font-weight: 600;
-  color: #1a1a1a;
-  margin-bottom: 12px;
+  color: var(--color-text);
+  margin-bottom: 16px;
+}
+
+.invitation-code-section {
+  margin-bottom: 28px;
 }
 
 .invitation-code-display {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 20px;
-  background: #f5f5f5;
+  padding: 24px;
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
   border-radius: 12px;
+  border: 2px solid var(--color-primary-light);
 }
 
 .invitation-code-text {
   font-family: 'Courier New', monospace;
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 700;
-  color: #667eea;
+  color: var(--color-primary);
   text-align: center;
-  letter-spacing: 2px;
+  letter-spacing: 4px;
+  padding: 12px;
 }
 
 .copy-btn {
@@ -833,22 +1041,22 @@ const handlePasswordSubmit = async () => {
   height: 48px;
   font-size: 16px;
   font-weight: 600;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
   border: none;
-  border-radius: 8px;
-  transition: all 0.3s ease;
+  border-radius: 10px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .copy-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 8px 20px rgba(249, 115, 22, 0.4);
 }
 
 .invitation-rewards {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
 }
 
 .reward-item {
@@ -856,18 +1064,29 @@ const handlePasswordSubmit = async () => {
   align-items: center;
   gap: 16px;
   padding: 20px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
   border-radius: 12px;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid transparent;
 }
 
 .reward-item:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
+  border-color: #86efac;
 }
 
 .reward-icon {
-  font-size: 32px;
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: white;
+  flex-shrink: 0;
 }
 
 .reward-content {
@@ -876,25 +1095,20 @@ const handlePasswordSubmit = async () => {
 
 .reward-title {
   font-size: 14px;
-  color: #595959;
-  margin-bottom: 4px;
+  color: var(--color-text-secondary);
+  margin-bottom: 6px;
+  font-weight: 500;
 }
 
 .reward-value {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 700;
-  color: #667eea;
+  color: #16a34a;
+  font-family: var(--font-serif);
 }
 
 .invitation-steps {
   margin-bottom: 24px;
-}
-
-.step-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #1a1a1a;
-  margin-bottom: 16px;
 }
 
 .step-list {
@@ -907,60 +1121,69 @@ const handlePasswordSubmit = async () => {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 16px;
-  background: #fafafa;
-  border-radius: 8px;
-  transition: all 0.3s ease;
+  padding: 14px 18px;
+  background: var(--color-bg-hover);
+  border-radius: 10px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid transparent;
 }
 
 .step-item:hover {
-  background: #f0f0f0;
+  background: #fff7ed;
+  border-color: var(--color-primary-light);
 }
 
 .step-number {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #fff;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  color: white;
   border-radius: 50%;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
   flex-shrink: 0;
+  font-family: var(--font-serif);
 }
 
 .step-text {
   font-size: 14px;
-  color: #595959;
+  color: var(--color-text);
+  font-weight: 500;
 }
 
 .invitation-link-section {
   margin-bottom: 16px;
 }
 
-.link-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: #595959;
-  margin-bottom: 8px;
-}
-
 .link-display {
-  padding: 12px;
-  background: #f5f5f5;
-  border-radius: 8px;
+  padding: 14px;
+  background: var(--color-bg-hover);
+  border-radius: 10px;
   word-break: break-all;
+  border: 1px solid var(--color-border);
 }
 
 .link-text {
-  font-size: 12px;
-  color: #8c8c8c;
+  font-size: 13px;
+  color: var(--color-text-secondary);
   font-family: 'Courier New', monospace;
+  line-height: 1.6;
 }
 
 /* 响应式设计 */
+@media (max-width: 1200px) {
+  .user-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .action-buttons {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
   .user-profile-page {
     padding: 16px;
@@ -973,15 +1196,15 @@ const handlePasswordSubmit = async () => {
   }
 
   .user-stats {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
   }
 
   .stat-item-invitation {
-    grid-column: span 2;
+    grid-column: span 1;
   }
 
   .action-buttons {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
   }
 
   .apps-grid {
@@ -1001,17 +1224,308 @@ const handlePasswordSubmit = async () => {
   }
 }
 
-@media (max-width: 480px) {
-  .user-stats {
-    grid-template-columns: 1fr;
-  }
+/* ========== 全局字体和按钮优化 ========== */
 
-  .stat-item-invitation {
-    grid-column: span 1;
-  }
+/* Ant Design 按钮优化 */
+:deep(.ant-btn-primary) {
+  background: #3b82f6 !important;
+  border-color: #3b82f6 !important;
+  color: white !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  letter-spacing: 0.3px;
+  height: 32px !important;
+  padding: 0 16px !important;
+}
 
-  .action-buttons {
-    grid-template-columns: 1fr;
-  }
+:deep(.ant-btn-primary:hover) {
+  background: #2563eb !important;
+  border-color: #2563eb !important;
+}
+
+:deep(.ant-btn-default) {
+  color: #1e293b !important;
+  border-color: #e2e8f0 !important;
+  font-weight: 500 !important;
+  font-size: 13px !important;
+}
+
+:deep(.ant-btn-default:hover) {
+  color: #3b82f6 !important;
+  border-color: #3b82f6 !important;
+}
+
+/* 表单标签优化 */
+:deep(.ant-form-item-label > label) {
+  color: #1e293b !important;
+  font-weight: 600 !important;
+}
+
+/* 输入框文字优化 */
+:deep(.ant-input),
+:deep(.ant-select-selection-item) {
+  color: #1e293b !important;
+  font-weight: 500 !important;
+}
+
+/* 表格内容文字优化 */
+:deep(.ant-table-tbody) {
+  color: #1e293b !important;
+}
+
+/* Modal 标题优化 */
+:deep(.ant-modal-title) {
+  color: #1e293b !important;
+  font-weight: 700 !important;
+}
+
+/* Tag 标签文字优化 */
+:deep(.ant-tag) {
+  font-weight: 600 !important;
+}
+
+/* ========== 超强全局字体优化 ========== */
+
+/* 强制所有文字清晰可读 */
+* {
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+}
+
+/* Ant Design 按钮优化 */
+:deep(.ant-btn-primary) {
+  background: #3b82f6 !important;
+  border-color: #3b82f6 !important;
+  color: white !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  letter-spacing: 0.3px;
+  height: 32px !important;
+  padding: 0 16px !important;
+}
+
+:deep(.ant-btn-primary:hover) {
+  background: #2563eb !important;
+  border-color: #2563eb !important;
+}
+
+:deep(.ant-btn-default) {
+  color: #0f172a !important;
+  border-color: #e2e8f0 !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  background: white !important;
+}
+
+:deep(.ant-btn-default:hover) {
+  color: #3b82f6 !important;
+  border-color: #3b82f6 !important;
+}
+
+/* 表单标签优化 */
+:deep(.ant-form-item-label > label) {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  font-size: 14px !important;
+}
+
+/* 输入框文字优化 */
+:deep(.ant-input) {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+}
+
+:deep(.ant-input::placeholder) {
+  color: #64748b !important;
+  font-weight: 400 !important;
+}
+
+:deep(.ant-select-selection-item) {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+}
+
+/* Textarea 文字 */
+:deep(.ant-input-textarea) {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+}
+
+/* 表格内容文字优化 */
+:deep(.ant-table-tbody) {
+  color: #0f172a !important;
+}
+
+:deep(.ant-table-thead > tr > th) {
+  color: white !important;
+  font-weight: 700 !important;
+}
+
+/* Modal 标题优化 */
+:deep(.ant-modal-title) {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  font-size: 18px !important;
+}
+
+:deep(.ant-modal-body) {
+  color: #0f172a !important;
+}
+
+:deep(.ant-modal-content) {
+  color: #0f172a !important;
+}
+
+/* Tag 标签文字优化 */
+:deep(.ant-tag) {
+  font-weight: 700 !important;
+  color: #0f172a !important;
+}
+
+/* Card 标题 */
+:deep(.ant-card-head-title) {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  font-size: 18px !important;
+}
+
+/* Card 内容 */
+:deep(.ant-card-body) {
+  color: #0f172a !important;
+}
+
+/* 所有文本元素 */
+:deep(.ant-typography),
+:deep(.ant-text),
+:deep(label),
+:deep(span),
+:deep(p),
+:deep(div) {
+  color: #0f172a !important;
+}
+
+/* 链接文字 */
+:deep(a) {
+  color: #3b82f6 !important;
+  font-weight: 600 !important;
+}
+
+:deep(a:hover) {
+  color: #2563eb !important;
+}
+
+/* 下拉菜单 */
+:deep(.ant-dropdown-menu-item) {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+}
+
+/* 分页 */
+:deep(.ant-pagination-item) {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+}
+
+/* 描述列表 */
+:deep(.ant-descriptions-item-label) {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+
+:deep(.ant-descriptions-item-content) {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+}
+
+/* ========== 超强力表单元素优化 ========== */
+
+/* 表单标签 - 纯黑色 + 超粗体 */
+.user-profile-page :deep(.ant-form-item-label > label) {
+  color: #000000 !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.5px;
+}
+
+/* 输入框 - 纯黑色文字 + 白色背景 */
+.user-profile-page :deep(.ant-input),
+.user-profile-page :deep(.ant-input-number) {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #000000 !important;
+  font-weight: 700 !important;
+  font-size: 14px !important;
+}
+
+.user-profile-page :deep(.ant-input::placeholder),
+.user-profile-page :deep(.ant-input-number::placeholder) {
+  color: #475569 !important;
+  font-weight: 500 !important;
+}
+
+.user-profile-page :deep(.ant-input:hover),
+.user-profile-page :deep(.ant-input-number:hover) {
+  border-color: #3b82f6 !important;
+}
+
+.user-profile-page :deep(.ant-input:focus),
+.user-profile-page :deep(.ant-input-number:focus),
+.user-profile-page :deep(.ant-input-focused) {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1) !important;
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+
+/* Select 选择器 */
+.user-profile-page :deep(.ant-select-selector) {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #000000 !important;
+  font-weight: 700 !important;
+  font-size: 14px !important;
+}
+
+.user-profile-page :deep(.ant-select-selection-item) {
+  color: #000000 !important;
+  font-weight: 700 !important;
+}
+
+.user-profile-page :deep(.ant-select-selection-placeholder) {
+  color: #475569 !important;
+  font-weight: 500 !important;
+}
+
+.user-profile-page :deep(.ant-select:hover .ant-select-selector) {
+  border-color: #3b82f6 !important;
+}
+
+.user-profile-page :deep(.ant-select-focused .ant-select-selector) {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1) !important;
+  color: #000000 !important;
+}
+
+/* 表格内容增强 */
+.user-profile-page :deep(.ant-table-tbody > tr > td) {
+  color: #000000 !important;
+  font-weight: 600 !important;
+}
+
+/* Modal 增强 */
+.user-profile-page :deep(.ant-modal-title) {
+  color: #000000 !important;
+  font-weight: 700 !important;
+}
+
+.user-profile-page :deep(.ant-modal-body) {
+  color: #000000 !important;
+}
+
+/* Tag 标签增强 */
+.user-profile-page :deep(.ant-tag) {
+  font-weight: 700 !important;
+  color: #000000 !important;
 }
 </style>

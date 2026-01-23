@@ -26,7 +26,13 @@
             <a-dropdown>
               <a-space>
                 <a-avatar :src="loginUserStore.loginUser.userAvatar" />
-                {{ loginUserStore.loginUser.userName ?? '无名' }}
+                <a-tooltip
+                  v-if="loginUserStore.loginUser.userName"
+                  :title="loginUserStore.loginUser.userName"
+                >
+                  <span>{{ truncateText(loginUserStore.loginUser.userName, 12) }}</span>
+                </a-tooltip>
+                <span v-else>无名</span>
               </a-space>
               <template #overlay>
                 <a-menu>
@@ -77,6 +83,13 @@ import {
 
 const loginUserStore = useLoginUserStore()
 const router = useRouter()
+
+// 截取文本
+const truncateText = (text: string, maxLength: number) => {
+  if (!text) return ''
+  if (text.length <= maxLength) return text
+  return text.substring(0, maxLength) + '...'
+}
 // 当前选中菜单
 const selectedKeys = ref<string[]>(['/'])
 // 监听路由变化，更新当前选中菜单
@@ -168,14 +181,27 @@ const doLogout = async () => {
 
 <style scoped>
 .header {
-  background: #fff;
-  padding: 0 24px;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 0 32px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .header-left {
   display: flex;
   align-items: center;
   gap: 12px;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.header-left:hover {
+  transform: scale(1.02);
 }
 
 .logo {
@@ -185,11 +211,31 @@ const doLogout = async () => {
 
 .site-title {
   margin: 0;
-  font-size: 18px;
-  color: #1890ff;
+  font-size: 20px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.5px;
 }
 
 .ant-menu-horizontal {
   border-bottom: none !important;
+  background: transparent !important;
+}
+
+.ant-menu-horizontal :deep(.ant-menu-item) {
+  transition: all 0.3s ease;
+}
+
+.ant-menu-horizontal :deep(.ant-menu-item:hover) {
+  color: #f97316 !important;
+}
+
+.user-login-status {
+  display: flex;
+  align-items: center;
+  height: 64px;
 }
 </style>

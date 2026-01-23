@@ -189,6 +189,13 @@ const handlePasswordSubmit = async () => {
 const goBack = () => {
   router.push('/user/profile')
 }
+
+// 截取文本
+const truncateText = (text: string, maxLength: number) => {
+  if (!text) return ''
+  if (text.length <= maxLength) return text
+  return text.substring(0, maxLength) + '...'
+}
 </script>
 
 <template>
@@ -221,7 +228,10 @@ const goBack = () => {
           </div>
         </div>
         <div class="user-details">
-          <h3 class="user-name">{{ formState.userName || '未设置' }}</h3>
+          <a-tooltip v-if="formState.userName" :title="formState.userName">
+            <h3 class="user-name">{{ truncateText(formState.userName, 12) }}</h3>
+          </a-tooltip>
+          <h3 v-else class="user-name">未设置</h3>
           <p class="user-account">@{{ formState.userAccount }}</p>
           <div class="user-stats">
             <div class="stat-item">
@@ -416,6 +426,19 @@ const goBack = () => {
 </template>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&family=Noto+Serif+SC:wght@600;700&display=swap');
+
+:root {
+  --color-primary: #f97316;
+  --color-primary-dark: #ea580c;
+  --color-primary-light: #fbbf24;
+  --color-text: #1e293b;
+  --color-text-secondary: #64748b;
+  --color-border: #e2e8f0;
+  --font-sans: 'Noto Sans SC', sans-serif;
+  --font-serif: 'Noto Serif SC', serif;
+}
+
 .edit-profile-wrapper {
   max-width: 1200px;
   margin: 0 auto;
@@ -427,37 +450,40 @@ const goBack = () => {
 
 /* Hero 区域 */
 .edit-hero {
-  background: linear-gradient(120deg, #e0f2ff, #f5f7ff);
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.1) 0%, rgba(251, 191, 36, 0.05) 100%);
   border-radius: 18px;
   padding: 28px 32px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(24, 144, 255, 0.15);
+  box-shadow: 0 10px 30px rgba(249, 115, 22, 0.1);
+  border: 1px solid rgba(249, 115, 22, 0.2);
 }
 
 .eyebrow {
   letter-spacing: 0.4em;
   font-size: 12px;
-  color: #3c92ff;
+  color: var(--color-primary);
   margin-bottom: 8px;
+  font-weight: 600;
 }
 
 .edit-hero h2 {
   margin: 0;
   font-size: 28px;
-  color: #1f2d3d;
+  color: var(--color-text);
+  font-weight: 700;
+  font-family: var(--font-serif);
 }
 
 .subtitle {
   margin-top: 8px;
-  color: #5f6b7c;
+  color: var(--color-text-secondary);
 }
 
 /* 用户资料卡片 */
 .profile-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
   border-radius: 18px;
   padding: 32px 40px;
-  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 10px 30px rgba(249, 115, 22, 0.3);
   color: white;
 }
 
@@ -498,16 +524,29 @@ const goBack = () => {
 
 .user-name {
   margin: 0 0 8px 0;
-  font-size: 28px;
-  font-weight: 600;
-  color: white;
+  font-size: 32px;
+  font-weight: 700;
+  color: #ffffff !important;
+  text-shadow:
+    0 2px 12px rgba(0, 0, 0, 0.5),
+    0 1px 4px rgba(0, 0, 0, 0.4),
+    0 0 2px rgba(0, 0, 0, 0.3);
+  letter-spacing: 0.5px;
+  font-family: var(--font-serif);
+  line-height: 1.2;
 }
 
 .user-account {
   margin: 0 0 20px 0;
-  font-size: 16px;
-  opacity: 0.9;
-  color: white;
+  font-size: 18px;
+  opacity: 1;
+  color: #ffffff !important;
+  font-weight: 700;
+  text-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.4),
+    0 1px 3px rgba(0, 0, 0, 0.3);
+  letter-spacing: 0.3px;
+  font-family: var(--font-sans);
 }
 
 .user-stats {
@@ -520,7 +559,7 @@ const goBack = () => {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 15px;
+  font-size: 13px;
   opacity: 0.9;
 }
 
@@ -530,7 +569,7 @@ const goBack = () => {
   border-radius: 18px;
   padding: 32px 40px;
   box-shadow: 0 12px 35px rgba(15, 39, 80, 0.07);
-  border: 1px solid #f0f2f5;
+  border: 1px solid var(--color-border);
 }
 
 .card-header {
@@ -539,23 +578,34 @@ const goBack = () => {
   gap: 12px;
   margin-bottom: 24px;
   padding-bottom: 16px;
-  border-bottom: 1px solid #f0f2f5;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .card-icon {
   font-size: 24px;
-  color: #1890ff;
+  color: var(--color-primary);
 }
 
 .card-header h3 {
   margin: 0;
   font-size: 20px;
   font-weight: 600;
-  color: #1f2d3d;
+  color: var(--color-text);
 }
 
 .edit-form {
   padding: 0;
+}
+
+.edit-form :deep(.ant-input),
+.edit-form :deep(.ant-input-textarea) {
+  border-radius: 8px;
+}
+
+.edit-form :deep(.ant-input:focus),
+.edit-form :deep(.ant-input-textarea:focus) {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.1);
 }
 
 .form-actions {
@@ -567,7 +617,7 @@ const goBack = () => {
 
 .email-management {
   padding: 20px;
-  background: #fafafa;
+  background: #f8fafc;
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -578,8 +628,8 @@ const goBack = () => {
   display: flex;
   align-items: center;
   gap: 12px;
-  font-size: 15px;
-  color: #5f6b7c;
+  font-size: 13px;
+  color: var(--color-text-secondary);
 }
 
 .bind-email-btn {
@@ -588,7 +638,7 @@ const goBack = () => {
 
 .security-settings {
   padding: 20px;
-  background: #fafafa;
+  background: #f8fafc;
   border-radius: 12px;
 }
 
@@ -602,13 +652,13 @@ const goBack = () => {
   margin: 0 0 4px 0;
   font-size: 16px;
   font-weight: 600;
-  color: #1f2d3d;
+  color: var(--color-text);
 }
 
 .security-info p {
   margin: 0;
   font-size: 14px;
-  color: #5f6b7c;
+  color: var(--color-text-secondary);
 }
 
 .change-password-btn {
@@ -628,14 +678,14 @@ const goBack = () => {
   font-size: 16px;
   font-weight: 500;
   border-radius: 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
   border: none;
 }
 
 .back-button:hover {
-  background: linear-gradient(135deg, #5568d3 0%, #6a3d91 100%);
+  background: linear-gradient(135deg, var(--color-primary-dark) 0%, #3b82f6 100%);
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 8px 20px rgba(249, 115, 22, 0.4);
 }
 
 /* 修改密码弹窗 */
@@ -650,21 +700,21 @@ const goBack = () => {
 
 .modal-header {
   padding: 32px 32px 24px;
-  background: linear-gradient(120deg, #e0f2ff, #f5f7ff);
-  border-bottom: 1px solid #f0f2f5;
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.1) 0%, rgba(251, 191, 36, 0.05) 100%);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .modal-header h3 {
   margin: 0 0 8px 0;
   font-size: 24px;
   font-weight: 600;
-  color: #1f2d3d;
+  color: var(--color-text);
 }
 
 .modal-subtitle {
   margin: 0;
   font-size: 14px;
-  color: #5f6b7c;
+  color: var(--color-text-secondary);
 }
 
 .password-form {
@@ -675,7 +725,7 @@ const goBack = () => {
 .password-input :deep(.ant-input-password) {
   border-radius: 8px;
   height: 48px;
-  font-size: 15px;
+  font-size: 13px;
   padding-left: 40px;
   border-color: #d9d9d9;
   transition: all 0.3s;
@@ -683,19 +733,19 @@ const goBack = () => {
 
 .password-input :deep(.ant-input:hover),
 .password-input :deep(.ant-input-password:hover) {
-  border-color: #667eea;
+  border-color: var(--color-primary);
 }
 
 .password-input :deep(.ant-input:focus),
 .password-input :deep(.ant-input-focused),
 .password-input :deep(.ant-input-password:focus) {
-  border-color: #667eea;
-  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.1);
 }
 
 .password-input :deep(.ant-input-prefix) {
   left: 14px;
-  color: #667eea;
+  color: var(--color-primary);
   font-size: 16px;
 }
 
@@ -707,7 +757,7 @@ const goBack = () => {
 }
 
 .password-input :deep(.ant-input-password-icon:hover) {
-  color: #667eea;
+  color: var(--color-primary);
 }
 
 .password-form-actions {
@@ -734,9 +784,9 @@ const goBack = () => {
 }
 
 .cancel-button:hover {
-  border-color: #667eea;
-  color: #667eea;
-  background: #f5f5f5;
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: #f8fafc;
 }
 
 .submit-button {
@@ -745,15 +795,15 @@ const goBack = () => {
   border-radius: 8px;
   font-size: 16px;
   font-weight: 500;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
   border: none;
   transition: all 0.3s ease;
 }
 
 .submit-button:hover {
-  background: linear-gradient(135deg, #5568d3 0%, #6a3d91 100%);
+  background: linear-gradient(135deg, var(--color-primary-dark) 0%, #3b82f6 100%);
   transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 8px 20px rgba(249, 115, 22, 0.4);
 }
 
 .submit-button:active {
@@ -802,5 +852,169 @@ const goBack = () => {
   .form-actions {
     flex-direction: column;
   }
+}
+
+/* ========== 全局字体和按钮优化 ========== */
+
+/* 强制所有文字清晰可读 */
+* {
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+}
+
+/* 页面容器文字 */
+.edit-profile-wrapper {
+  color: #0f172a !important;
+}
+
+/* Ant Design 按钮优化 */
+:deep(.ant-btn-primary) {
+  background: #3b82f6 !important;
+  border-color: #3b82f6 !important;
+  color: white !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  letter-spacing: 0.3px;
+  height: 32px !important;
+  padding: 0 16px !important;
+}
+
+:deep(.ant-btn-primary:hover) {
+  background: #2563eb !important;
+  border-color: #2563eb !important;
+}
+
+:deep(.ant-btn-default) {
+  color: #0f172a !important;
+  border-color: #e2e8f0 !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  background: white !important;
+}
+
+:deep(.ant-btn-default:hover) {
+  color: #3b82f6 !important;
+  border-color: #3b82f6 !important;
+}
+
+/* 表单标签优化 */
+:deep(.ant-form-item-label > label) {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  font-size: 14px !important;
+}
+
+/* 输入框文字优化 */
+:deep(.ant-input) {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+}
+
+:deep(.ant-input::placeholder) {
+  color: #64748b !important;
+  font-weight: 400 !important;
+}
+
+:deep(.ant-select-selection-item) {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+}
+
+/* Textarea 文字 */
+:deep(.ant-input-textarea) {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+}
+
+/* 表格内容文字优化 */
+:deep(.ant-table-tbody) {
+  color: #0f172a !important;
+}
+
+:deep(.ant-table-thead > tr > th) {
+  color: white !important;
+  font-weight: 700 !important;
+}
+
+/* Modal 标题优化 */
+:deep(.ant-modal-title) {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  font-size: 18px !important;
+}
+
+:deep(.ant-modal-body) {
+  color: #0f172a !important;
+}
+
+/* Tag 标签文字优化 */
+:deep(.ant-tag) {
+  font-weight: 700 !important;
+  color: #0f172a !important;
+}
+
+/* Card 标题 */
+:deep(.ant-card-head-title) {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  font-size: 18px !important;
+}
+
+/* 所有文本和标签 */
+:deep(.ant-typography),
+:deep(.ant-text),
+:deep(label),
+:deep(span),
+:deep(div),
+:deep(p) {
+  color: #0f172a !important;
+}
+
+/* 特别优化：深黑色文字 */
+.edit-profile-wrapper :deep(.ant-form-item-label > label),
+.edit-profile-wrapper :deep(.ant-input),
+.edit-profile-wrapper :deep(.ant-input-textarea),
+.edit-profile-wrapper :deep(.ant-select),
+.edit-profile-wrapper :deep(.ant-select-selection-item) {
+  color: #000000 !important;
+  font-weight: 700 !important;
+}
+
+.edit-profile-wrapper :deep(.ant-form-item-label > label) {
+  color: #000000 !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.5px;
+}
+
+.edit-profile-wrapper :deep(.ant-input::placeholder),
+.edit-profile-wrapper :deep(.ant-input-textarea::placeholder) {
+  color: #475569 !important;
+  font-weight: 500 !important;
+}
+
+.edit-profile-wrapper :deep(.ant-input),
+.edit-profile-wrapper :deep(.ant-input-textarea) {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #000000 !important;
+  font-weight: 700 !important;
+  font-size: 14px !important;
+}
+
+.edit-profile-wrapper :deep(.ant-input:hover),
+.edit-profile-wrapper :deep(.ant-input-textarea:hover) {
+  border-color: #3b82f6 !important;
+}
+
+.edit-profile-wrapper :deep(.ant-input:focus),
+.edit-profile-wrapper :deep(.ant-input-textarea:focus),
+.edit-profile-wrapper :deep(.ant-input-focused),
+.edit-profile-wrapper :deep(.ant-input-textarea-focused) {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1) !important;
+  background: #ffffff !important;
+  color: #000000 !important;
 }
 </style>
