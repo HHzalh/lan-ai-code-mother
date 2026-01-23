@@ -171,7 +171,7 @@ const handleValueChange = async (record: API.PointRuleVO) => {
       message.error(res.data.message ?? '更新失败')
       await fetchData()
     }
-  } catch (error) {
+  } catch {
     message.error('更新失败，请重试')
     await fetchData()
   }
@@ -191,7 +191,7 @@ const handleDescChange = async (record: API.PointRuleVO) => {
       message.error(res.data.message ?? '更新失败')
       await fetchData()
     }
-  } catch (error) {
+  } catch {
     message.error('更新失败，请重试')
     await fetchData()
   }
@@ -216,7 +216,7 @@ const handleStatusChange = async (record: API.PointRuleVO) => {
       record.status = statusValue === 1 ? 0 : 1
       await fetchData()
     }
-  } catch (error) {
+  } catch {
     message.error('更新失败，请重试')
     record.status = statusValue === 1 ? 0 : 1
     await fetchData()

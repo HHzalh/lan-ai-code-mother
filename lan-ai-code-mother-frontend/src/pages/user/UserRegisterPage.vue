@@ -284,6 +284,7 @@ const handleSubmit = async (values: API.UserRegisterRequest & { captcha: string 
     }
 
     // 移除captcha字段，因为后端不需要
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { captcha, ...registerData } = values
     const res = await userRegister(registerData)
     if (res.data.code === 0) {
@@ -688,16 +689,6 @@ onMounted(() => {
   text-decoration: underline;
 }
 
-/* 页脚 */
-.page-footer {
-  position: absolute;
-  bottom: 20px;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 13px;
-  text-align: center;
-  z-index: 1;
-}
-
 /* 响应式设计 */
 @media (max-width: 640px) {
   .register-card {
@@ -716,165 +707,5 @@ onMounted(() => {
   .circle {
     display: none;
   }
-
-  .page-footer {
-    position: relative;
-    margin-top: 32px;
-    bottom: auto;
-  }
-}
-
-/* ========== 超强全局字体优化 ========== */
-
-/* 强制所有文字清晰可读 */
-* {
-  -webkit-font-smoothing: antialiased !important;
-  -moz-osx-font-smoothing: grayscale !important;
-}
-
-/* Ant Design 按钮优化 */
-:deep(.ant-btn-primary) {
-  background: #3b82f6 !important;
-  border-color: #3b82f6 !important;
-  color: white !important;
-  font-weight: 700 !important;
-  font-size: 13px !important;
-  letter-spacing: 0.3px;
-  height: 32px !important;
-  padding: 0 16px !important;
-}
-
-:deep(.ant-btn-primary:hover) {
-  background: #2563eb !important;
-  border-color: #2563eb !important;
-}
-
-:deep(.ant-btn-default) {
-  color: #0f172a !important;
-  border-color: #e2e8f0 !important;
-  font-weight: 600 !important;
-  font-size: 13px !important;
-  background: white !important;
-}
-
-:deep(.ant-btn-default:hover) {
-  color: #3b82f6 !important;
-  border-color: #3b82f6 !important;
-}
-
-/* 表单标签优化 */
-:deep(.ant-form-item-label > label) {
-  color: #0f172a !important;
-  font-weight: 700 !important;
-  font-size: 14px !important;
-}
-
-/* 输入框文字优化 */
-:deep(.ant-input) {
-  color: #0f172a !important;
-  font-weight: 600 !important;
-  font-size: 14px !important;
-}
-
-:deep(.ant-input::placeholder) {
-  color: #64748b !important;
-  font-weight: 400 !important;
-}
-
-:deep(.ant-select-selection-item) {
-  color: #0f172a !important;
-  font-weight: 600 !important;
-}
-
-/* Textarea 文字 */
-:deep(.ant-input-textarea) {
-  color: #0f172a !important;
-  font-weight: 600 !important;
-}
-
-/* 表格内容文字优化 */
-:deep(.ant-table-tbody) {
-  color: #0f172a !important;
-}
-
-:deep(.ant-table-thead > tr > th) {
-  color: white !important;
-  font-weight: 700 !important;
-}
-
-/* Modal 标题优化 */
-:deep(.ant-modal-title) {
-  color: #0f172a !important;
-  font-weight: 700 !important;
-  font-size: 18px !important;
-}
-
-:deep(.ant-modal-body) {
-  color: #0f172a !important;
-}
-
-:deep(.ant-modal-content) {
-  color: #0f172a !important;
-}
-
-/* Tag 标签文字优化 */
-:deep(.ant-tag) {
-  font-weight: 700 !important;
-  color: #0f172a !important;
-}
-
-/* Card 标题 */
-:deep(.ant-card-head-title) {
-  color: #0f172a !important;
-  font-weight: 700 !important;
-  font-size: 18px !important;
-}
-
-/* Card 内容 */
-:deep(.ant-card-body) {
-  color: #0f172a !important;
-}
-
-/* 所有文本元素 */
-:deep(.ant-typography),
-:deep(.ant-text),
-:deep(label),
-:deep(span),
-:deep(p),
-:deep(div) {
-  color: #0f172a !important;
-}
-
-/* 链接文字 */
-:deep(a) {
-  color: #3b82f6 !important;
-  font-weight: 600 !important;
-}
-
-:deep(a:hover) {
-  color: #2563eb !important;
-}
-
-/* 下拉菜单 */
-:deep(.ant-dropdown-menu-item) {
-  color: #0f172a !important;
-  font-weight: 600 !important;
-}
-
-/* 分页 */
-:deep(.ant-pagination-item) {
-  color: #0f172a !important;
-  font-weight: 600 !important;
-}
-
-/* 描述列表 */
-:deep(.ant-descriptions-item-label) {
-  color: #0f172a !important;
-  font-weight: 700 !important;
-}
-
-:deep(.ant-descriptions-item-content) {
-  color: #0f172a !important;
-  font-weight: 600 !important;
 }
 </style>

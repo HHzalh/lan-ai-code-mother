@@ -514,7 +514,7 @@ const fetchData = async () => {
       pagination.value.pageSize = res.data.data.pageSize || 10
       pagination.value.total = res.data.data.totalRow || 0
     }
-  } catch (error) {
+  } catch {
     message.error('获取数据失败')
   }
 }
@@ -594,7 +594,7 @@ const handleGrant = async () => {
     } else {
       message.error(res.data.message || '发放失败')
     }
-  } catch (error) {
+  } catch {
     message.error('发放失败，请重试')
   } finally {
     granting.value = false
@@ -646,7 +646,7 @@ const handleGrantAll = async () => {
     } else {
       message.error(res.data.message || '发放失败')
     }
-  } catch (error) {
+  } catch {
     message.error('发放失败，请重试')
   } finally {
     granting.value = false

@@ -266,7 +266,7 @@ const fetchData = async () => {
     } else {
       message.error('获取数据失败，' + res.data.message)
     }
-  } catch (error) {
+  } catch {
     message.error('获取数据失败，请检查网络连接')
   }
 }
@@ -311,7 +311,7 @@ const doDelete = async (id: string) => {
     } else {
       message.error(res.data.message || '删除失败')
     }
-  } catch (error) {
+  } catch {
     message.error('删除失败，请检查网络连接')
   }
 }

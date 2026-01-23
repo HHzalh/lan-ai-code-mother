@@ -290,24 +290,6 @@ const searchParams = reactive<API.PointLogQueryRequest>({
   pageSize: 10,
 })
 
-// 统计数据
-const totalIncome = computed(() => {
-  return data.value
-    .filter((item) => item.pointType === 'INCOME')
-    .reduce((sum, item) => sum + Math.abs(item.pointChange || 0), 0)
-})
-
-const totalExpense = computed(() => {
-  return data.value
-    .filter((item) => item.pointType === 'EXPENSE')
-    .reduce((sum, item) => sum + Math.abs(item.pointChange || 0), 0)
-})
-
-const currentBalance = computed(() => {
-  // 当前余额 = 总收入 - 总支出
-  return totalIncome.value - totalExpense.value
-})
-
 // 切换搜索展开状态
 const toggleSearch = () => {
   if (searchExpanded.value.length > 0) {

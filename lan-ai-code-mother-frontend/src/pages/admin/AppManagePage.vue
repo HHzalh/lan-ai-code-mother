@@ -151,8 +151,8 @@
               </template>
               <template v-else-if="column.dataIndex === 'codeGenType'">
                 <a-tag
-                  :style="{ background: getCodeGenTypeConfig(record.codeGenType)?.backgroundColor }"
                   :class="['type-tag', getCodeGenTypeConfig(record.codeGenType)?.className]"
+                  :style="{ background: getCodeGenTypeConfig(record.codeGenType)?.backgroundColor }"
                 >
                   <component :is="getCodeGenTypeConfig(record.codeGenType)?.icon" />
                   {{ formatCodeGenType(record.codeGenType) }}
@@ -246,7 +246,12 @@ import { computed, h, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { deleteAppByAdmin, listAppVoByPageByAdmin, updateAppByAdmin } from '@/api/appController'
-import { CodeGenTypeEnum, CODE_GEN_TYPE_CONFIG, CODE_GEN_TYPE_OPTIONS, formatCodeGenType } from '@/utils/codeGenTypes'
+import {
+  CODE_GEN_TYPE_CONFIG,
+  CODE_GEN_TYPE_OPTIONS,
+  CodeGenTypeEnum,
+  formatCodeGenType,
+} from '@/utils/codeGenTypes'
 import { formatTime } from '@/utils/time'
 import {
   AppstoreOutlined,

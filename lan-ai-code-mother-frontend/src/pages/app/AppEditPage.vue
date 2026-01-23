@@ -104,8 +104,8 @@
 
                 <a-form-item label="生成类型" name="codeGenType">
                   <a-input
-                    :value="formatCodeGenType(formData.codeGenType)"
                     :style="{ background: codeGenTypeConfig?.backgroundColor }"
+                    :value="formatCodeGenType(formData.codeGenType)"
                     disabled
                     placeholder="生成类型"
                     size="large"
@@ -243,12 +243,7 @@
                 </template>
                 进入对话
               </a-button>
-              <a-button
-                v-if="appInfo?.deployKey"
-                block
-                size="large"
-                @click="openPreview"
-              >
+              <a-button v-if="appInfo?.deployKey" block size="large" @click="openPreview">
                 <template #icon>
                   <ExportOutlined />
                 </template>
@@ -269,14 +264,13 @@ import type { FormInstance } from 'ant-design-vue'
 import { message } from 'ant-design-vue'
 import { useLoginUserStore } from '@/stores/loginUser'
 import { getAppVoById, updateApp, updateAppByAdmin } from '@/api/appController'
-import { CodeGenTypeEnum, CODE_GEN_TYPE_CONFIG, formatCodeGenType } from '@/utils/codeGenTypes'
+import { CODE_GEN_TYPE_CONFIG, CodeGenTypeEnum, formatCodeGenType } from '@/utils/codeGenTypes'
 import { formatTime } from '@/utils/time'
 import UserInfo from '@/components/UserInfo.vue'
 import { getStaticPreviewUrl } from '@/config/env'
 import {
   ArrowLeftOutlined,
   ClockCircleOutlined,
-  CodeOutlined,
   EditOutlined,
   ExportOutlined,
   IdcardOutlined,

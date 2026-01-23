@@ -10,8 +10,8 @@
           <h1 class="app-name">{{ appInfo?.appName || '网站生成器' }}</h1>
           <a-tag
             v-if="appInfo?.codeGenType"
-            :style="{ background: codeGenTypeConfig?.backgroundColor }"
             :class="['code-gen-type-tag', codeGenTypeConfig?.className]"
+            :style="{ background: codeGenTypeConfig?.backgroundColor }"
           >
             <template #icon>
               <component :is="codeGenTypeConfig?.icon" />
@@ -283,7 +283,7 @@ import {
   getAppVoById,
 } from '@/api/appController'
 import { listAppChatHistory } from '@/api/chatHistoryController'
-import { CodeGenTypeEnum, CODE_GEN_TYPE_CONFIG, formatCodeGenType } from '@/utils/codeGenTypes'
+import { CODE_GEN_TYPE_CONFIG, CodeGenTypeEnum, formatCodeGenType } from '@/utils/codeGenTypes'
 import request from '@/request'
 
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'

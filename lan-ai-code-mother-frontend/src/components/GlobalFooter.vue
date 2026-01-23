@@ -81,11 +81,6 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
-// 滚动到顶部
-const scrollToTop = () => {
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-}
-
 // 滚动到创建应用区域
 const scrollToCreate = () => {
   router.push('/').then(() => {

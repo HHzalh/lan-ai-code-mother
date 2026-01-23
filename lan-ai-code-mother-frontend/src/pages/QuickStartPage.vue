@@ -48,7 +48,7 @@
 
           <div class="timeline-grid">
             <!-- Step 1 -->
-            <div class="timeline-card step-1" @click="currentStep = 0">
+            <div class="timeline-card step-1">
               <div class="card-header">
                 <div class="step-number">01</div>
                 <UserOutlined class="step-icon" />
@@ -74,7 +74,7 @@
             </div>
 
             <!-- Step 2 -->
-            <div class="timeline-card step-2" @click="currentStep = 1">
+            <div class="timeline-card step-2">
               <div class="card-header">
                 <div class="step-number">02</div>
                 <MessageOutlined class="step-icon" />
@@ -103,7 +103,7 @@
             </div>
 
             <!-- Step 3 -->
-            <div class="timeline-card step-3" @click="currentStep = 2">
+            <div class="timeline-card step-3">
               <div class="card-header">
                 <div class="step-number">03</div>
                 <CommentOutlined class="step-icon" />
@@ -133,7 +133,7 @@
             </div>
 
             <!-- Step 4 -->
-            <div class="timeline-card step-4" @click="currentStep = 3">
+            <div class="timeline-card step-4">
               <div class="card-header">
                 <div class="step-number">04</div>
                 <RocketOutlined class="step-icon" />
@@ -310,7 +310,6 @@ import {
 } from '@ant-design/icons-vue'
 
 const router = useRouter()
-const currentStep = ref(0)
 const activeFaq = ref<string[]>(['1'])
 
 const goToHome = () => {

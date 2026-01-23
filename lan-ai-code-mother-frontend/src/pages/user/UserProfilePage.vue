@@ -117,12 +117,12 @@ const copyInvitation = async () => {
       try {
         document.execCommand('copy')
         message.success('✨ 邀请信息已复制到剪贴板，快去邀请小伙伴吧!')
-      } catch (err) {
+      } catch {
         message.error('复制失败，请手动复制')
       }
       document.body.removeChild(textArea)
     }
-  } catch (error) {
+  } catch {
     message.error('复制失败，请重试')
   }
 }
@@ -326,7 +326,7 @@ const handlePasswordSubmit = async () => {
     } else {
       message.error(res.data.message ?? '密码修改失败')
     }
-  } catch (error) {
+  } catch {
     message.error('密码修改失败，请检查网络连接')
   } finally {
     passwordSubmitting.value = false

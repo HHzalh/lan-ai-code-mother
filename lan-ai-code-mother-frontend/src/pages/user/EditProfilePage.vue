@@ -179,7 +179,7 @@ const handlePasswordSubmit = async () => {
     } else {
       message.error(res.data.message ?? '密码修改失败')
     }
-  } catch (error) {
+  } catch {
     message.error('密码修改失败，请检查网络连接')
   } finally {
     passwordSubmitting.value = false
@@ -220,7 +220,7 @@ const truncateText = (text: string, maxLength: number) => {
               :show-upload-list="false"
               accept="image/*"
             >
-              <a-button :loading="avatarUploading" size="large" >
+              <a-button :loading="avatarUploading" size="large">
                 <UploadOutlined />
                 更换头像
               </a-button>
@@ -279,9 +279,7 @@ const truncateText = (text: string, maxLength: number) => {
           />
         </a-form-item>
         <a-form-item class="form-actions">
-          <a-button :loading="submitting" html-type="submit" size="large" >
-            保存修改
-          </a-button>
+          <a-button :loading="submitting" html-type="submit" size="large"> 保存修改 </a-button>
           <a-button size="large" @click="goBack">取消</a-button>
         </a-form-item>
       </a-form>
@@ -299,7 +297,7 @@ const truncateText = (text: string, maxLength: number) => {
           <span>暂未绑定邮箱</span>
           <a-tag color="orange" size="small">未绑定</a-tag>
         </div>
-        <a-button class="bind-email-btn" size="large" >
+        <a-button class="bind-email-btn" size="large">
           <MailOutlined />
           绑定邮箱
         </a-button>
