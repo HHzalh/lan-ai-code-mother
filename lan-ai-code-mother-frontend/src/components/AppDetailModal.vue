@@ -13,7 +13,14 @@
         </div>
         <div class="info-item">
           <span class="info-label">生成类型：</span>
-          <a-tag v-if="app?.codeGenType" color="blue">
+          <a-tag
+            v-if="app?.codeGenType"
+            :style="{ background: codeGenTypeConfig?.backgroundColor }"
+            :class="codeGenTypeConfig?.className"
+          >
+            <template #icon>
+              <component :is="codeGenTypeConfig?.icon" />
+            </template>
             {{ formatCodeGenType(app.codeGenType) }}
           </a-tag>
           <span v-else>未知类型</span>
@@ -53,7 +60,7 @@ import { computed } from 'vue'
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons-vue'
 import UserInfo from './UserInfo.vue'
 import { formatTime } from '@/utils/time'
-import { formatCodeGenType } from '../utils/codeGenTypes.ts'
+import { CodeGenTypeEnum, CODE_GEN_TYPE_CONFIG, formatCodeGenType } from '../utils/codeGenTypes.ts'
 
 interface Props {
   open: boolean
@@ -78,6 +85,12 @@ const emit = defineEmits<Emits>()
 const visible = computed({
   get: () => props.open,
   set: (value) => emit('update:open', value),
+})
+
+// 获取当前 codeGenType 的配置
+const codeGenTypeConfig = computed(() => {
+  if (!props.app?.codeGenType) return null
+  return CODE_GEN_TYPE_CONFIG[props.app.codeGenType as CodeGenTypeEnum]
 })
 
 const handleEdit = () => {

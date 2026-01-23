@@ -105,12 +105,13 @@
                 <a-form-item label="生成类型" name="codeGenType">
                   <a-input
                     :value="formatCodeGenType(formData.codeGenType)"
+                    :style="{ background: codeGenTypeConfig?.backgroundColor }"
                     disabled
                     placeholder="生成类型"
                     size="large"
                   >
                     <template #prefix>
-                      <CodeOutlined />
+                      <component :is="codeGenTypeConfig?.icon" />
                     </template>
                   </a-input>
                   <div class="form-tip">
@@ -269,7 +270,7 @@ import type { FormInstance } from 'ant-design-vue'
 import { message } from 'ant-design-vue'
 import { useLoginUserStore } from '@/stores/loginUser'
 import { getAppVoById, updateApp, updateAppByAdmin } from '@/api/appController'
-import { formatCodeGenType } from '@/utils/codeGenTypes'
+import { CodeGenTypeEnum, CODE_GEN_TYPE_CONFIG, formatCodeGenType } from '@/utils/codeGenTypes'
 import { formatTime } from '@/utils/time'
 import UserInfo from '@/components/UserInfo.vue'
 import { getStaticPreviewUrl } from '@/config/env'
@@ -316,6 +317,12 @@ const formData = reactive({
 // 是否为管理员
 const isAdmin = computed(() => {
   return loginUserStore.loginUser.userRole === 'admin'
+})
+
+// 获取当前 codeGenType 的配置
+const codeGenTypeConfig = computed(() => {
+  if (!formData.codeGenType) return null
+  return CODE_GEN_TYPE_CONFIG[formData.codeGenType as CodeGenTypeEnum]
 })
 
 // 表单验证规则

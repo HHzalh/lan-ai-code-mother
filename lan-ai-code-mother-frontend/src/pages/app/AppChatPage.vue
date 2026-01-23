@@ -8,9 +8,13 @@
         </div>
         <div class="app-info">
           <h1 class="app-name">{{ appInfo?.appName || '网站生成器' }}</h1>
-          <a-tag v-if="appInfo?.codeGenType" class="code-gen-type-tag">
+          <a-tag
+            v-if="appInfo?.codeGenType"
+            :style="{ background: codeGenTypeConfig?.backgroundColor }"
+            :class="['code-gen-type-tag', codeGenTypeConfig?.className]"
+          >
             <template #icon>
-              <FileTextOutlined />
+              <component :is="codeGenTypeConfig?.icon" />
             </template>
             {{ formatCodeGenType(appInfo.codeGenType) }}
           </a-tag>
@@ -289,7 +293,7 @@ import {
   getAppVoById,
 } from '@/api/appController'
 import { listAppChatHistory } from '@/api/chatHistoryController'
-import { CodeGenTypeEnum, formatCodeGenType } from '@/utils/codeGenTypes'
+import { CodeGenTypeEnum, CODE_GEN_TYPE_CONFIG, formatCodeGenType } from '@/utils/codeGenTypes'
 import request from '@/request'
 
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
@@ -369,6 +373,12 @@ const isOwner = computed(() => {
 
 const isAdmin = computed(() => {
   return loginUserStore.loginUser.userRole === 'admin'
+})
+
+// 获取当前 codeGenType 的配置
+const codeGenTypeConfig = computed(() => {
+  if (!appInfo.value?.codeGenType) return null
+  return CODE_GEN_TYPE_CONFIG[appInfo.value.codeGenType as CodeGenTypeEnum]
 })
 
 // 应用详情相关

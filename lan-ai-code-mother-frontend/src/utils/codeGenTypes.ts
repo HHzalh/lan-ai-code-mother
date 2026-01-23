@@ -1,3 +1,5 @@
+import { CodeOutlined, FileTextOutlined, FolderOutlined } from '@ant-design/icons-vue'
+
 /**
  * 代码生成类型枚举
  */
@@ -14,14 +16,23 @@ export const CODE_GEN_TYPE_CONFIG = {
   [CodeGenTypeEnum.HTML]: {
     label: '原生 HTML 模式',
     value: CodeGenTypeEnum.HTML,
+    icon: FileTextOutlined,
+    backgroundColor: 'linear-gradient(135deg, #fff9e6 0%, #ffe6cc 100%)',
+    className: 'code-gen-type-html',
   },
   [CodeGenTypeEnum.MULTI_FILE]: {
     label: '原生多文件模式',
     value: CodeGenTypeEnum.MULTI_FILE,
+    icon: FolderOutlined,
+    backgroundColor: 'linear-gradient(135deg, #e6f7e6 0%, #ccf2cc 100%)',
+    className: 'code-gen-type-multi-file',
   },
   [CodeGenTypeEnum.VUE_PROJECT]: {
     label: 'Vue 项目模式',
     value: CodeGenTypeEnum.VUE_PROJECT,
+    icon: CodeOutlined,
+    backgroundColor: 'linear-gradient(135deg, #f0e6ff 0%, #e6ccff 100%)',
+    className: 'code-gen-type-vue-project',
   },
 } as const
 

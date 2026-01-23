@@ -150,8 +150,11 @@
                 </a-tooltip>
               </template>
               <template v-else-if="column.dataIndex === 'codeGenType'">
-                <a-tag class="type-tag">
-                  <CodeOutlined />
+                <a-tag
+                  :style="{ background: getCodeGenTypeConfig(record.codeGenType)?.backgroundColor }"
+                  :class="['type-tag', getCodeGenTypeConfig(record.codeGenType)?.className]"
+                >
+                  <component :is="getCodeGenTypeConfig(record.codeGenType)?.icon" />
                   {{ formatCodeGenType(record.codeGenType) }}
                 </a-tag>
               </template>
@@ -243,7 +246,7 @@ import { computed, h, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { deleteAppByAdmin, listAppVoByPageByAdmin, updateAppByAdmin } from '@/api/appController'
-import { CODE_GEN_TYPE_OPTIONS, formatCodeGenType } from '@/utils/codeGenTypes'
+import { CodeGenTypeEnum, CODE_GEN_TYPE_CONFIG, CODE_GEN_TYPE_OPTIONS, formatCodeGenType } from '@/utils/codeGenTypes'
 import { formatTime } from '@/utils/time'
 import {
   AppstoreOutlined,
@@ -332,6 +335,12 @@ const searchParams = reactive<API.AppQueryRequest>({
   pageSize: 10,
 })
 
+// 获取 codeGenType 配置
+const getCodeGenTypeConfig = (codeGenType?: string) => {
+  if (!codeGenType) return null
+  return CODE_GEN_TYPE_CONFIG[codeGenType as CodeGenTypeEnum]
+}
+
 // 获取数据
 const fetchData = async () => {
   try {
@@ -398,6 +407,13 @@ const toggleFeatured = async (app: API.AppVO) => {
   if (!app.id) return
 
   const newPriority = app.priority === 99 ? 0 : 99
+  const oldPriority = app.priority
+
+  // 立即更新本地数据，让按钮状态立即变化
+  const appIndex = data.value.findIndex((item) => item.id === app.id)
+  if (appIndex !== -1) {
+    data.value[appIndex].priority = newPriority
+  }
 
   try {
     const res = await updateAppByAdmin({
@@ -406,12 +422,21 @@ const toggleFeatured = async (app: API.AppVO) => {
     })
 
     if (res.data.code === 0) {
-      message.success(newPriority === 99 ? '✅ 已设为精选' : '✅ 已取消精选')
+      message.success(newPriority === 99 ? ' 已设为精选' : ' 已取消精选')
+      // 刷新数据以确保数据同步
       fetchData()
     } else {
+      // 如果失败，回滚本地数据
+      if (appIndex !== -1) {
+        data.value[appIndex].priority = oldPriority
+      }
       message.error('操作失败：' + res.data.message)
     }
   } catch (error) {
+    // 如果失败，回滚本地数据
+    if (appIndex !== -1) {
+      data.value[appIndex].priority = oldPriority
+    }
     console.error('操作失败：', error)
     message.error('操作失败')
   }
@@ -1012,24 +1037,28 @@ const deleteApp = async (id: number | undefined) => {
   padding: 0 16px;
   font-size: 11px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: white;
+  color: var(--color-text);
 }
 
 .app-table :deep(.ant-btn-default:hover) {
   border-color: var(--color-primary);
   color: var(--color-primary);
   transform: translateY(-2px);
+  background: white;
 }
 
-.featured-btn {
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  border-color: #fde68a;
-  color: #d97706;
+.app-table :deep(.ant-btn-default.featured-btn) {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%) !important;
+  border-color: #fde68a !important;
+  color: #d97706 !important;
 }
 
-.featured-btn:hover {
-  background: linear-gradient(135deg, #fde68a 0%, #fcd34d 100%);
-  border-color: #fcd34d;
-  color: #b45309;
+.app-table :deep(.ant-btn-default.featured-btn:hover) {
+  background: linear-gradient(135deg, #fde68a 0%, #fcd34d 100%) !important;
+  border-color: #fcd34d !important;
+  color: #b45309 !important;
+  transform: translateY(-2px);
 }
 
 .app-table :deep(.ant-btn-dangerous) {
