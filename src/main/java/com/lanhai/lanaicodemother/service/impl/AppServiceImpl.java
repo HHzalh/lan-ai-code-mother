@@ -23,6 +23,7 @@ import com.lanhai.lanaicodemother.model.enums.ChatHistoryMessageTypeEnum;
 import com.lanhai.lanaicodemother.model.enums.CodeGenTypeEnum;
 import com.lanhai.lanaicodemother.model.vo.AppVO;
 import com.lanhai.lanaicodemother.model.vo.UserVO;
+import com.lanhai.lanaicodemother.rabbitmq.producer.ScreenshotProducer;
 import com.lanhai.lanaicodemother.service.*;
 import com.lanhai.lanaicodemother.utils.GoodAppCacheUtils;
 import com.mybatisflex.core.query.QueryWrapper;
@@ -79,10 +80,7 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
     private GoodAppCacheUtils goodAppCacheUtils;
 
     @Resource
-    private PointService pointService;
-
-    @Resource
-    private PointRuleService pointRuleService;
+    private ScreenshotProducer screenshotProducer;
 
     @Override
     public AppVO getAppVO(App app) {
@@ -231,8 +229,12 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         // 11. 返回可访问的 URL
         String appDeployUrl = String.format("%s/%s/", deployHost, deployKey);
         //String appDeployUrl = String.format("%s/%s/", AppConstant.CODE_DEPLOY_HOST, deployKey);
+
         // 12. 异步生成截图并更新应用封面
-        generateAppScreenshotAsync(appId, appDeployUrl);
+        //generateAppScreenshotAsync(appId, appDeployUrl);
+
+        //12. 发送截图任务到rabbitMQ
+        screenshotProducer.sendScreenshotTask(appId,appDeployUrl);
         return appDeployUrl;
     }
 
