@@ -1,8 +1,8 @@
 package com.lanhai.lanaicodemother.task;
 
 import com.lanhai.lanaicodemother.model.entity.App;
+import com.lanhai.lanaicodemother.rabbitmq.producer.ScreenshotProducer;
 import com.lanhai.lanaicodemother.service.AppService;
-import com.lanhai.lanaicodemother.service.ScreenshotService;
 import com.lanhai.lanaicodemother.utils.WebScreenshotUtils;
 import com.mybatisflex.core.query.QueryWrapper;
 import jakarta.annotation.Resource;
@@ -26,70 +26,34 @@ public class ScreenshotScheduledTask {
     @Resource
     private AppService appService;
 
-    @Resource
-    private ScreenshotService screenshotService;
-
     @Value("${code.deploy-host:http://localhost}")
     private String deployHost;
+
+    @Resource
+    private ScreenshotProducer screenshotProducer;
 
 
     /**
      * 每天凌晨2点执行，为已部署但封面为空的应用自动生成封面截图
-     *  0 0 2 * * ? 表示每天凌晨2点0分0秒执行
-     *  Cron表达式：秒 分 时 日 月 周
-     *
+     * 0 0 2 * * ? 表示每天凌晨2点0分0秒执行
+     * Cron表达式：秒 分 时 日 月 周
      */
     @Scheduled(cron = "0 0 2 * * ?")
     public void generateMissingScreenshots() {
-        long startTime = System.currentTimeMillis();
-        log.info("========== 开始执行应用截图定时任务 ==========");
-
-        try {
-            // 1. 查询已部署但封面为空的应用
-            List<App> apps = queryAppsWithoutCover();
-            int total = apps.size();
-
-            if (total == 0) {
-                log.info("没有需要处理的应用，任务结束");
-                return;
-            }
-
-            log.info("查询到 {} 个需要截图的应用", total);
-
-            // 2. 统计计数器
-            int successCount = 0;
-            int failCount = 0;
-
-            // 3. 顺序处理每个应用
+        List<App> apps = queryAppsWithoutCover();
+        if (!apps.isEmpty()) {
             for (App app : apps) {
-                try {
-                    processAppScreenshot(app);
-                    successCount++;
-                    log.info("应用截图成功：appId={}, appName={}", app.getId(), app.getAppName());
-                } catch (Exception e) {
-                    failCount++;
-                    log.error("应用截图失败：appId={}, appName={}, error={}",
-                        app.getId(), app.getAppName(), e.getMessage(), e);
-                }
+                processAppScreenshot(app);
             }
-
-            // 4. 记录执行统计
-            long duration = System.currentTimeMillis() - startTime;
-            log.info("========== 应用截图定时任务执行完成 ==========");
-            log.info("总数：{}, 成功：{}, 失败：{}, 耗时：{}ms", total, successCount, failCount, duration);
-
-        } catch (Exception e) {
-            long duration = System.currentTimeMillis() - startTime;
-            log.error("应用截图定时任务执行异常，耗时：{}ms", duration, e);
         }
     }
 
     /**
-     * 每天凌晨2点执行，清理过期的临时截图文件
-     *  0 0 2 * * ? 表示每天凌晨2点0分0秒执行
-     *  Cron表达式：秒 分 时 日 月 周
+     * 每天凌晨3点执行，清理过期的临时截图文件
+     * 0 0 3 * * ? 表示每天凌晨2点0分0秒执行
+     * Cron表达式：秒 分 时 日 月 周
      */
-    @Scheduled(cron = "0 0 2 * * ?")
+    @Scheduled(cron = "0 0 3 * * ?")
     public void cleanupTempScreenshots() {
         log.info("开始定时清理过期的临时截图文件");
         try {
@@ -107,11 +71,10 @@ public class ScreenshotScheduledTask {
      */
     private List<App> queryAppsWithoutCover() {
         QueryWrapper queryWrapper = QueryWrapper.create()
-            .where(App::getDeployKey).isNotNull()
-            .and(App::getDeployKey).isNotNull()
-            .and(App::getCover).isNull().or(App::getCover).eq("")
-            .and(App::getIsDelete).eq(0)
-            .orderBy(App::getCreateTime, false);
+                .where(App::getDeployKey).isNotNull()
+                .and(App::getCover).isNull().or(App::getCover).eq("")
+                .and(App::getIsDelete).eq(0)
+                .orderBy(App::getCreateTime, false);
         return appService.list(queryWrapper);
     }
 
@@ -123,24 +86,13 @@ public class ScreenshotScheduledTask {
     private void processAppScreenshot(App app) {
         // 1. 构建应用访问URL
         String appUrl = buildAppUrl(app.getDeployKey());
-        log.info("开始截图：appId={}, url={}", app.getId(), appUrl);
+        //log.info("开始截图：appId={}, url={}", app.getId(), appUrl);
 
         // 2. 调用截图服务生成截图并上传到COS
-        String screenshotUrl = screenshotService.generateAndUploadScreenshot(appUrl);
+        //String screenshotUrl = screenshotService.generateAndUploadScreenshot(appUrl);
 
-        if (screenshotUrl == null || screenshotUrl.isEmpty()) {
-            throw new RuntimeException("截图生成失败");
-        }
-
-        // 3. 更新应用封面字段
-        App updateApp = new App();
-        updateApp.setId(app.getId());
-        updateApp.setCover(screenshotUrl);
-        boolean updated = appService.updateById(updateApp);
-
-        if (!updated) {
-            throw new RuntimeException("更新应用封面失败");
-        }
+        // 2. 发送截图任务到rabbitMQ
+        screenshotProducer.sendScreenshotTask(app.getId(), appUrl);
     }
 
     /**

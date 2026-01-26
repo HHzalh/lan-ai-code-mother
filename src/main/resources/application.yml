@@ -14,6 +14,34 @@ spring:
     redis:
   profiles:
     active: local
+    rabbitmq:
+      host:
+      port:
+      username:
+      password:
+      virtual-host:
+      # 发布确认（保证消息不丢失）
+      publisher-confirm-type: correlated
+      publisher-returns: true
+
+    # 消费者配置
+    listener:
+      simple:
+        acknowledge-mode: manual  # 手动确认
+        concurrency: 5            # 初始消费者数
+        max-concurrency: 10       # 最大消费者数
+        prefetch: 1               # 预取数量（公平分发）
+        retry:
+          enabled: true           # 开启重试
+          max-attempts: 3         # 最大重试次数
+          initial-interval: 2000  # 初始重试间隔
+          multiplier: 2           # 重试间隔倍数
+          max-interval: 10000     # 最大重试间隔
+
+    # 消息转换器（JSON）
+    template:
+      default-receive-queue: default-queue
+      mandatory: true             # 消息无法路由时返回给生产者
 
 server:
   port: 8123

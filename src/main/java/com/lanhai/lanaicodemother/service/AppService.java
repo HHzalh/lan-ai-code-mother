@@ -67,6 +67,7 @@ public interface AppService extends IService<App> {
      * @param appId  应用ID
      * @param appUrl 应用访问URL
      */
+    @Deprecated
     void generateAppScreenshotAsync(Long appId, String appUrl);
 
     /**
