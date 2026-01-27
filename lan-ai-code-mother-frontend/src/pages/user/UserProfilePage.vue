@@ -106,7 +106,7 @@ const copyInvitation = async () => {
   try {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       await navigator.clipboard.writeText(invitationText)
-      message.success('✨ 邀请信息已复制到剪贴板，快去邀请小伙伴吧!')
+      message.success('邀请信息已复制到剪贴板，快去邀请小伙伴吧!')
     } else {
       const textArea = document.createElement('textarea')
       textArea.value = invitationText
@@ -116,7 +116,7 @@ const copyInvitation = async () => {
       textArea.select()
       try {
         document.execCommand('copy')
-        message.success('✨ 邀请信息已复制到剪贴板，快去邀请小伙伴吧!')
+        message.success('邀请信息已复制到剪贴板，快去邀请小伙伴吧!')
       } catch {
         message.error('复制失败，请手动复制')
       }
@@ -230,7 +230,7 @@ const handleSignIn = async () => {
     if (res.data.code === 0 && res.data.data) {
       const data = res.data.data
       message.success(
-        `🎁 签到成功！获得 ${data.points} 积分，连续签到 ${data.continuousDays} 天${data.isBonus ? '，获得额外奖励！' : ''}`,
+        `签到成功！获得 ${data.points} 积分，连续签到 ${data.continuousDays} 天${data.isBonus ? '，获得额外奖励！' : ''}`,
       )
       todaySigned.value = true
       await loadAccountInfo()

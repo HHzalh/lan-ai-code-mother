@@ -132,7 +132,7 @@ const handleSubmit = async (values: API.UserLoginRequest) => {
     // 登录成功，把登录态保存到全局状态中
     if (res.data.code === 0 && res.data.data) {
       await loginUserStore.fetchLoginUser()
-      message.success('🎉 登录成功！欢迎回来')
+      message.success('登录成功！欢迎回来')
       setTimeout(() => {
         router.push({
           path: '/',

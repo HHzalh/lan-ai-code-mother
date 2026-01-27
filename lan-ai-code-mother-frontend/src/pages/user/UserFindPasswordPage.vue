@@ -87,7 +87,6 @@
               class="find-password-button"
               html-type="submit"
               size="large"
-              type="primary"
             >
               <template #icon>
                 <SendOutlined />
