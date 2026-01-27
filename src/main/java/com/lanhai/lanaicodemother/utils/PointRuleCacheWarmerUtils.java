@@ -1,4 +1,4 @@
-package com.lanhai.lanaicodemother.config;
+package com.lanhai.lanaicodemother.utils;
 
 import com.lanhai.lanaicodemother.service.PointRuleService;
 import jakarta.annotation.Resource;
@@ -10,20 +10,16 @@ import org.springframework.stereotype.Component;
 /**
  * 积分规则缓存预热器
  * 应用启动时自动加载规则到Redis缓存
- *
- * <p>优势：
- * <ul>
- *   <li>避免Redis重启后的缓存雪崩</li>
- *   <li>首次请求不受冷启动影响</li>
- *   <li>日志可追溯预热状态</li>
- * </ul>
+ * 避免Redis重启后的缓存雪崩
+ * 首次请求不受冷启动影响
+ * 日志可追溯预热状态
  *
  * @author 积分系统
  * @since 2026-01-16
  */
 @Slf4j
 @Component
-public class PointRuleCacheWarmer implements ApplicationRunner {
+public class PointRuleCacheWarmerUtils implements ApplicationRunner {
 
     @Resource
     private PointRuleService pointRuleService;
@@ -31,16 +27,9 @@ public class PointRuleCacheWarmer implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) {
         try {
-            log.info("开始预热积分规则缓存...");
-            long startTime = System.currentTimeMillis();
-
             // 触发getAllRules()加载缓存
             pointRuleService.getAllRules();
-
-            long endTime = System.currentTimeMillis();
-            long duration = endTime - startTime;
-
-            log.info("积分规则缓存预热完成，耗时：{}ms", duration);
+            log.info("积分规则缓存预热完成");
         } catch (Exception e) {
             log.error("积分规则缓存预热失败：{}", e.getMessage(), e);
             // 预热失败不影响应用启动

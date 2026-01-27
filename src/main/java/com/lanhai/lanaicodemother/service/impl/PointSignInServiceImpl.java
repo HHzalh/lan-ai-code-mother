@@ -12,7 +12,7 @@ import com.lanhai.lanaicodemother.model.enums.PointRuleKeyEnum;
 import com.lanhai.lanaicodemother.service.PointService;
 import com.lanhai.lanaicodemother.service.PointSignInService;
 import com.lanhai.lanaicodemother.service.UserAccountService;
-import com.lanhai.lanaicodemother.utils.RedisDistributedLock;
+import com.lanhai.lanaicodemother.utils.RedisDistributedLockUtils;
 import com.mybatisflex.core.query.QueryWrapper;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -48,7 +48,7 @@ public class PointSignInServiceImpl implements PointSignInService {
     @Resource
     private PointService pointService;
     @Resource
-    private RedisDistributedLock redisDistributedLock;
+    private RedisDistributedLockUtils redisDistributedLockUtils;
     @Resource
     private StringRedisTemplate stringRedisTemplate;
     @Autowired
@@ -59,7 +59,7 @@ public class PointSignInServiceImpl implements PointSignInService {
     public PointSignInResponse signIn(Long userId) {
         // 使用分布式锁防止重复签到
         String lockKey = SIGN_IN_LOCK_PREFIX + userId;
-        return redisDistributedLock.executeWithLock(lockKey, LOCK_WAIT_SECONDS, SIGN_IN_LOCK_EXPIRE_SECONDS, () -> doSignIn(userId));
+        return redisDistributedLockUtils.executeWithLock(lockKey, LOCK_WAIT_SECONDS, SIGN_IN_LOCK_EXPIRE_SECONDS, () -> doSignIn(userId));
     }
 
     /**

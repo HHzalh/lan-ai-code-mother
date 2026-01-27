@@ -17,7 +17,7 @@ import java.util.function.Supplier;
  * @author 积分系统
  */
 @Component
-public class RedisDistributedLock {
+public class RedisDistributedLockUtils {
 
     @Resource
     private RedissonClient redissonClient;

@@ -14,7 +14,7 @@ import com.lanhai.lanaicodemother.model.enums.PointRuleKeyEnum;
 import com.lanhai.lanaicodemother.model.enums.PointTypeEnum;
 import com.lanhai.lanaicodemother.service.PointService;
 import com.lanhai.lanaicodemother.service.UserAccountService;
-import com.lanhai.lanaicodemother.utils.RedisDistributedLock;
+import com.lanhai.lanaicodemother.utils.RedisDistributedLockUtils;
 import com.mybatisflex.core.query.QueryWrapper;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -46,7 +46,7 @@ public class PointServiceImpl implements PointService {
     @Resource
     private PointLogMapper pointLogMapper;
     @Resource
-    private RedisDistributedLock redisDistributedLock;
+    private RedisDistributedLockUtils redisDistributedLockUtils;
 
     @Resource
     private com.lanhai.lanaicodemother.service.PointRuleService pointRuleService;
@@ -66,7 +66,7 @@ public class PointServiceImpl implements PointService {
 
         // 2. 使用分布式锁处理邀请逻辑
         String lockKey = INVITE_LOCK_PREFIX + invitationCode + ":" + userId;
-        redisDistributedLock.executeWithLock(lockKey, PointConstants.LOCK_WAIT_SECONDS,
+        redisDistributedLockUtils.executeWithLock(lockKey, PointConstants.LOCK_WAIT_SECONDS,
                 PointConstants.INVITE_LOCK_EXPIRE_SECONDS, () -> doHandleInvitation(userId, inviterAccount, invitationCode));
     }
 
