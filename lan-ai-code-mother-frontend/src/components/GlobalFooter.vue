@@ -1,5 +1,5 @@
 <template>
-  <a-layout-footer class="footer">
+  <footer class="global-footer">
     <div class="footer-container">
       <!-- 主要内容区域 -->
       <div class="footer-content">
@@ -9,9 +9,6 @@
           <ul class="footer-links">
             <li>
               <router-link to="/" @click="scrollToCreate">创建应用</router-link>
-            </li>
-            <li>
-              <router-link to="/" @click="scrollToFeatured">精选案例</router-link>
             </li>
           </ul>
         </div>
@@ -46,9 +43,6 @@
                 Gitee 仓库
               </a>
             </li>
-            <li>
-              <router-link to="/help/docs#terms">服务条款</router-link>
-            </li>
           </ul>
         </div>
       </div>
@@ -61,7 +55,7 @@
             © 2026
             <a
               class="author-link"
-              href="https://www.gitee.com/hhzalh"
+              href="http://82.156.29.4/"
               rel="noopener noreferrer"
               target="_blank"
             >
@@ -73,7 +67,7 @@
         </div>
       </div>
     </div>
-  </a-layout-footer>
+  </footer>
 </template>
 
 <script lang="ts" setup>
@@ -92,46 +86,67 @@ const scrollToCreate = () => {
     }, 100)
   })
 }
-
-// 滚动到精选案例区域
-const scrollToFeatured = () => {
-  router.push('/').then(() => {
-    setTimeout(() => {
-      const element = document.querySelector('.featured-grid')
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }
-    }, 100)
-  })
-}
 </script>
 
+<style>
+/* ========== 全局变量（非scoped） ========== */
+:root {
+  --color-primary: #ff6b6b;
+  --color-primary-light: #ff8787;
+  --color-primary-dark: #fa5252;
+  --color-secondary: #ffa8a8;
+  --color-accent: #ffec99;
+  --color-text: #2d3436;
+  --color-text-secondary: #636e72;
+  --color-text-light: #b2bec3;
+  --color-bg: #fff5f5;
+  --color-glass: rgba(255, 255, 255, 0.7);
+  --color-glass-border: rgba(255, 255, 255, 0.9);
+  --shadow-soft: 0 8px 32px rgba(255, 107, 107, 0.1);
+  --shadow-hover: 0 12px 48px rgba(255, 107, 107, 0.15);
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --font-main: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+</style>
+
 <style scoped>
-.footer {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.98) 100%);
+/* ========== 字体引入 ========== */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap');
+
+/* ========== 主容器 ========== */
+.global-footer {
+  background: var(--color-glass);
   backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(59, 130, 246, 0.1);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--color-glass-border);
   margin-top: 60px;
   padding: 0;
   position: relative;
   overflow: hidden;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform;
 }
 
-.footer::before {
+/* 顶部装饰线 */
+.global-footer::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 1px;
+  height: 2px;
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(59, 130, 246, 0.3),
-    rgba(139, 92, 246, 0.3),
-    rgba(59, 130, 246, 0.3),
+    var(--color-primary),
+    var(--color-secondary),
+    var(--color-primary),
     transparent
   );
+  opacity: 0.3;
 }
 
 .footer-container {
@@ -140,11 +155,14 @@ const scrollToFeatured = () => {
   padding: 60px 24px 30px;
   position: relative;
   z-index: 1;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
+/* ========== 主要内容区域 ========== */
 .footer-content {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 40px;
   margin-bottom: 50px;
 }
@@ -152,18 +170,21 @@ const scrollToFeatured = () => {
 .footer-section {
   display: flex;
   flex-direction: column;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .section-title {
   font-size: 16px;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--color-text);
   margin: 0 0 20px;
   padding-bottom: 12px;
   position: relative;
   letter-spacing: 0.5px;
 }
 
+/* 标题下划线装饰 */
 .section-title::after {
   content: '';
   position: absolute;
@@ -171,8 +192,13 @@ const scrollToFeatured = () => {
   left: 0;
   width: 40px;
   height: 2px;
-  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
   border-radius: 1px;
+  transition: width 0.3s ease;
+}
+
+.footer-section:hover .section-title::after {
+  width: 60px;
 }
 
 .footer-links {
@@ -189,38 +215,40 @@ const scrollToFeatured = () => {
 }
 
 .footer-links a {
-  color: #64748b;
+  color: var(--color-text-secondary);
   text-decoration: none;
   font-size: 14px;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: inline-block;
   position: relative;
-  padding-left: 0;
+  padding: 4px 0;
 }
 
+/* 链接左侧装饰条 */
 .footer-links a::before {
   content: '';
   position: absolute;
-  left: -12px;
+  left: 0;
   top: 50%;
-  transform: translateY(-50%);
+  transform: translateY(-50%) translateZ(0);
   width: 0;
   height: 2px;
-  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
   transition: width 0.3s ease;
   border-radius: 1px;
 }
 
 .footer-links a:hover {
-  color: #3b82f6;
+  color: var(--color-primary);
   padding-left: 12px;
-  transform: translateX(4px);
+  transform: translate3d(4px, 0, 0);
 }
 
 .footer-links a:hover::before {
   width: 6px;
 }
 
+/* ========== 底部版权信息 ========== */
 .footer-bottom {
   margin-top: 40px;
 }
@@ -230,12 +258,13 @@ const scrollToFeatured = () => {
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(59, 130, 246, 0.2),
-    rgba(139, 92, 246, 0.2),
-    rgba(59, 130, 246, 0.2),
+    rgba(255, 107, 107, 0.2),
+    rgba(255, 168, 168, 0.2),
+    rgba(255, 107, 107, 0.2),
     transparent
   );
   margin-bottom: 30px;
+  transform: translateZ(0);
 }
 
 .copyright-info {
@@ -245,48 +274,62 @@ const scrollToFeatured = () => {
 
 .copyright {
   margin: 0 0 8px;
-  color: #64748b;
+  color: var(--color-text-secondary);
   font-size: 14px;
   line-height: 1.6;
+  transform: translateZ(0);
 }
 
 .author-link {
-  color: #3b82f6;
+  color: var(--color-primary);
   text-decoration: none;
   font-weight: 500;
   transition: all 0.3s ease;
   position: relative;
+  display: inline-block;
 }
 
 .author-link:hover {
-  color: #8b5cf6;
-  text-decoration: underline;
+  color: var(--color-primary-dark);
+  transform: translate3d(0, -2px, 0);
 }
 
 .slogan {
   margin: 0;
-  color: #94a3b8;
+  color: var(--color-text-light);
   font-size: 13px;
-  font-style: italic;
   letter-spacing: 0.5px;
+  font-weight: 400;
+  transform: translateZ(0);
 }
 
-/* 响应式设计 */
+/* ========== 响应式设计 ========== */
+
+/* 平板设备（1024px 及以下） */
 @media (max-width: 1024px) {
   .footer-content {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 32px;
   }
 
   .footer-container {
     padding: 50px 24px 24px;
   }
+
+  .section-title {
+    font-size: 15px;
+  }
+
+  .footer-links a {
+    font-size: 13px;
+  }
 }
 
+/* 小平板设备（768px 及以下） */
 @media (max-width: 768px) {
   .footer-content {
     grid-template-columns: repeat(2, 1fr);
-    gap: 24px;
+    gap: 28px;
   }
 
   .footer-container {
@@ -315,22 +358,109 @@ const scrollToFeatured = () => {
   }
 }
 
-@media (max-width: 480px) {
+/* 手机设备（640px 及以下） */
+@media (max-width: 640px) {
   .footer-content {
     grid-template-columns: 1fr;
     gap: 32px;
   }
 
   .footer-container {
+    padding: 36px 20px 20px;
+  }
+
+  .section-title {
+    font-size: 15px;
+    margin-bottom: 16px;
+  }
+
+  .section-title::after {
+    width: 30px;
+  }
+
+  .footer-section:hover .section-title::after {
+    width: 45px;
+  }
+
+  .footer-links a {
+    font-size: 14px;
+    padding: 6px 0;
+  }
+
+  .footer-links a:hover {
+    padding-left: 10px;
+  }
+
+  .copyright-info {
+    padding: 16px 0;
+  }
+
+  .copyright {
+    font-size: 12px;
+  }
+
+  .slogan {
+    font-size: 12px;
+  }
+}
+
+/* 小屏手机（480px 及以下） */
+@media (max-width: 480px) {
+  .footer-container {
     padding: 32px 16px 16px;
+  }
+
+  .footer-content {
+    gap: 28px;
+    margin-bottom: 40px;
   }
 
   .section-title {
     font-size: 14px;
   }
 
+  .footer-links {
+    gap: 8px;
+  }
+
+  .footer-links a {
+    font-size: 13px;
+  }
+
+  .copyright {
+    font-size: 12px;
+  }
+
+  .slogan {
+    font-size: 11px;
+  }
+}
+
+/* 超小屏设备（375px 及以下） */
+@media (max-width: 375px) {
+  .footer-container {
+    padding: 28px 12px 12px;
+  }
+
+  .footer-content {
+    gap: 24px;
+  }
+
+  .section-title {
+    font-size: 14px;
+    margin-bottom: 14px;
+  }
+
   .footer-links a {
     font-size: 12px;
+  }
+
+  .copyright {
+    font-size: 11px;
+  }
+
+  .slogan {
+    font-size: 11px;
   }
 }
 </style>
