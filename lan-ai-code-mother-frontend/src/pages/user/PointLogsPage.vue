@@ -1,171 +1,156 @@
 <template>
   <div class="point-logs-wrapper">
-    <!-- Hero 区域 -->
-    <section class="logs-hero">
-      <div class="hero-overlay"></div>
-      <div class="hero-content">
-        <div class="hero-badge">
-          <HistoryOutlined />
-          <span>积分流水记录</span>
-        </div>
-        <h1 class="hero-title">
-          <span class="title-number"></span>
-          积分变动明细
-        </h1>
-        <p class="hero-subtitle">
-          <FileTextOutlined />
-          查看您的积分收入与支出记录
-        </p>
-      </div>
-    </section>
+    <!-- 动态渐变背景 -->
+    <div class="gradient-bg"></div>
 
-    <!-- 主内容区 -->
-    <section class="logs-content">
-      <!-- 搜索卡片 -->
-      <div class="search-card warning-card">
-        <div class="card-header">
-          <SearchOutlined class="header-icon" />
-          <h3>筛选条件</h3>
-          <a-button size="small" type="text" @click="toggleSearch">
-            {{ searchExpanded ? '收起' : '展开' }}
-            <UpOutlined v-if="searchExpanded" />
-            <DownOutlined v-else />
-          </a-button>
-        </div>
+    <!-- 主容器 -->
+    <div class="logs-container">
+      <!-- 返回按钮 -->
+      <button class="back-btn glass-card" @click="goBack">
+        <svg
+          fill="none"
+          height="20"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2.5"
+          viewBox="0 0 24 24"
+          width="20"
+        >
+          <line x1="19" x2="5" y1="12" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        <span>返回个人中心</span>
+      </button>
 
-        <a-collapse v-model:activeKey="searchExpanded" :bordered="false">
-          <a-collapse-panel key="1" :show-arrow="false">
-            <a-form :model="searchParams" class="search-form" layout="vertical" @finish="doSearch">
-              <a-row :gutter="[16, 16]">
-                <a-col :lg="6" :md="12" :sm="24" :xs="24">
-                  <a-form-item label="业务类型">
-                    <a-select
-                      v-model:value="searchParams.businessType"
-                      allow-clear
-                      placeholder="选择业务类型"
-                      size="large"
-                    >
-                      <a-select-option value="">
-                        <FileTextOutlined />
-                        全部类型
-                      </a-select-option>
-                      <a-select-option value="SIGN_IN">
-                        <CheckCircleOutlined />
-                        签到
-                      </a-select-option>
-                      <a-select-option value="REGISTER_REWARD">
-                        <GiftOutlined />
-                        注册奖励
-                      </a-select-option>
-                      <a-select-option value="INVITEE_BONUS">
-                        <UserAddOutlined />
-                        被邀请人奖励
-                      </a-select-option>
-                      <a-select-option value="INVITER_BONUS">
-                        <TeamOutlined />
-                        邀请人奖励
-                      </a-select-option>
-                      <a-select-option value="GENERATE">
-                        <CodeOutlined />
-                        创建应用
-                      </a-select-option>
-                      <a-select-option value="MESSAGE">
-                        <MessageOutlined />
-                        AI对话
-                      </a-select-option>
-                      <a-select-option value="DEPLOY">
-                        <RocketOutlined />
-                        部署
-                      </a-select-option>
-                      <a-select-option value="DOWNLOAD">
-                        <DownloadOutlined />
-                        下载代码
-                      </a-select-option>
-                      <a-select-option value="SYSTEM_GRANT">
-                        <BankOutlined />
-                        系统发放
-                      </a-select-option>
-                    </a-select>
-                  </a-form-item>
-                </a-col>
-
-                <a-col :lg="6" :md="12" :sm="24" :xs="24">
-                  <a-form-item label="积分类型">
-                    <a-select
-                      v-model:value="searchParams.pointType"
-                      allow-clear
-                      placeholder="选择积分类型"
-                      size="large"
-                    >
-                      <a-select-option value="">
-                        <UnorderedListOutlined />
-                        全部
-                      </a-select-option>
-                      <a-select-option value="INCOME">
-                        <ArrowUpOutlined />
-                        收入
-                      </a-select-option>
-                      <a-select-option value="EXPENSE">
-                        <ArrowDownOutlined />
-                        支出
-                      </a-select-option>
-                    </a-select>
-                  </a-form-item>
-                </a-col>
-
-                <a-col :lg="6" :md="12" :sm="24" :xs="24">
-                  <a-form-item label="开始时间">
-                    <a-date-picker
-                      v-model:value="startDate"
-                      format="YYYY-MM-DD"
-                      placeholder="选择开始时间"
-                      size="large"
-                      style="width: 100%"
-                    />
-                  </a-form-item>
-                </a-col>
-
-                <a-col :lg="6" :md="12" :sm="24" :xs="24">
-                  <a-form-item label="结束时间">
-                    <a-date-picker
-                      v-model:value="endDate"
-                      format="YYYY-MM-DD"
-                      placeholder="选择结束时间"
-                      size="large"
-                      style="width: 100%"
-                    />
-                  </a-form-item>
-                </a-col>
-              </a-row>
-
-              <a-form-item>
-                <a-space :size="12">
-                  <a-button html-type="submit" size="large" type="primary">
-                    <template #icon>
-                      <SearchOutlined />
-                    </template>
-                    搜索
-                  </a-button>
-                  <a-button size="large" @click="resetSearch">
-                    <template #icon>
-                      <ReloadOutlined />
-                    </template>
-                    重置
-                  </a-button>
-                </a-space>
-              </a-form-item>
-            </a-form>
-          </a-collapse-panel>
-        </a-collapse>
+      <!-- 页面标题区 -->
+      <div class="page-header">
+        <h1 class="page-title">积分流水</h1>
+        <p class="page-subtitle">查看你的积分变动记录</p>
       </div>
 
-      <!-- 数据表格卡片 -->
-      <div class="table-card cyan-card">
-        <div class="card-header">
-          <UnorderedListOutlined class="header-icon" />
-          <h3>流水记录</h3>
-          <div class="header-actions">
-            <a-tag color="orange">共 {{ total }} 条记录</a-tag>
+      <!-- 筛选卡片 -->
+      <div class="filter-card glass-card">
+        <div class="filter-header">
+          <div class="filter-title">
+            <svg
+              fill="none"
+              height="20"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="20"
+            >
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" x2="16.65" y1="21" y2="16.65"></line>
+            </svg>
+            <span>筛选</span>
+          </div>
+          <button class="toggle-btn" @click="toggleFilter">
+            {{ filterExpanded ? '收起' : '展开' }}
+            <svg
+              v-if="!filterExpanded"
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="16"
+            >
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+            <svg
+              v-else
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="16"
+            >
+              <polyline points="18 15 12 9 6 15"></polyline>
+            </svg>
+          </button>
+        </div>
+
+        <div v-show="filterExpanded" class="filter-content">
+          <div class="filter-grid">
+            <div class="filter-item">
+              <label class="filter-label">类型</label>
+              <select v-model="searchParams.businessType" class="filter-select">
+                <option value="">全部</option>
+                <option value="SIGN_IN">签到</option>
+                <option value="REGISTER_REWARD">注册</option>
+                <option value="INVITEE_BONUS">被邀请</option>
+                <option value="INVITER_BONUS">邀请</option>
+                <option value="GENERATE">创建</option>
+                <option value="MESSAGE">对话</option>
+                <option value="DEPLOY">部署</option>
+                <option value="DOWNLOAD">下载</option>
+              </select>
+            </div>
+
+            <div class="filter-item">
+              <label class="filter-label">收支</label>
+              <select v-model="searchParams.pointType" class="filter-select">
+                <option value="">全部</option>
+                <option value="INCOME">收入</option>
+                <option value="EXPENSE">支出</option>
+              </select>
+            </div>
+
+            <div class="filter-item">
+              <label class="filter-label">开始</label>
+              <input v-model="startDateStr" class="filter-input" type="date" />
+            </div>
+
+            <div class="filter-item">
+              <label class="filter-label">结束</label>
+              <input v-model="endDateStr" class="filter-input" type="date" />
+            </div>
+          </div>
+
+          <div class="filter-actions">
+            <button class="action-btn primary" @click="doSearch">
+              <svg
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+              >
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" x2="16.65" y1="21" y2="16.65"></line>
+              </svg>
+              搜索
+            </button>
+            <button class="action-btn secondary" @click="resetSearch">重置</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 流水记录卡片 -->
+      <div class="records-card glass-card">
+        <div class="records-header">
+          <div class="records-title">
+            <svg
+              fill="none"
+              height="20"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="20"
+            >
+              <line x1="8" x2="21" y1="6" y2="6"></line>
+              <line x1="8" x2="21" y1="12" y2="12"></line>
+              <line x1="8" x2="21" y1="18" y2="18"></line>
+              <line x1="3" x2="3.01" y1="6" y2="6"></line>
+              <line x1="3" x2="3.01" y1="12" y2="12"></line>
+              <line x1="3" x2="3.01" y1="18" y2="18"></line>
+            </svg>
+            <span>流水记录</span>
+            <span class="records-count">{{ total }} 条</span>
           </div>
         </div>
 
@@ -173,116 +158,73 @@
           :columns="columns"
           :data-source="data"
           :pagination="pagination"
-          :scroll="{ x: 1200 }"
+          :scroll="{ x: 800 }"
+          class="logs-table"
           @change="doTableChange"
         >
           <template #bodyCell="{ column, record }">
-            <template v-if="column.dataIndex === 'businessTypeText'">
-              <a-tag :color="getBusinessTypeColor(record.businessType)">
-                <component :is="getBusinessTypeIcon(record.businessType)" />
-                {{ record.businessTypeText }}
-              </a-tag>
-            </template>
-            <template v-else-if="column.dataIndex === 'pointTypeText'">
-              <a-tag :color="record.pointType === 'INCOME' ? 'green' : 'red'">
-                <ArrowUpOutlined v-if="record.pointType === 'INCOME'" />
-                <ArrowDownOutlined v-else />
-                {{ record.pointTypeText }}
-              </a-tag>
-            </template>
-            <template v-else-if="column.dataIndex === 'pointChange'">
-              <span :class="record.pointType === 'INCOME' ? 'point-income' : 'point-expense'">
-                <ArrowUpOutlined v-if="record.pointType === 'INCOME'" />
-                <ArrowDownOutlined v-else />
-                {{ record.pointChange }}
+            <template v-if="column.key === 'pointType'">
+              <span
+                :class="record.pointType === 'INCOME' ? 'income' : 'expense'"
+                class="type-badge"
+              >
+                <svg
+                  v-if="record.pointType === 'INCOME'"
+                  fill="none"
+                  height="16"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="16"
+                >
+                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                  <polyline points="17 6 23 6 23 12"></polyline>
+                </svg>
+                <svg
+                  v-else
+                  fill="none"
+                  height="16"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="16"
+                >
+                  <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline>
+                  <polyline points="17 18 23 18 23 12"></polyline>
+                </svg>
+                {{ record.pointType === 'INCOME' ? '收入' : '支出' }}
               </span>
             </template>
-            <template v-else-if="column.dataIndex === 'createTime'">
-              <div class="time-cell">
-                <CalendarOutlined />
-                {{ formatTime(record.createTime) }}
-              </div>
+
+            <template v-else-if="column.key === 'pointChange'">
+              <span
+                :class="record.pointType === 'INCOME' ? 'income' : 'expense'"
+                class="amount-value"
+              >
+                {{ record.pointType === 'INCOME' ? '+' : '-' }}{{ record.pointChange }}
+              </span>
             </template>
           </template>
         </a-table>
       </div>
-    </section>
+    </div>
   </div>
 </template>
 
 <script lang="ts" setup>
 import { computed, onMounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { getMyLogs } from '@/api/pointController'
-import { message } from 'ant-design-vue'
-import { type Dayjs } from 'dayjs'
 import { formatTime } from '@/utils/time'
-import {
-  ArrowDownOutlined,
-  ArrowUpOutlined,
-  BankOutlined,
-  CalendarOutlined,
-  CheckCircleOutlined,
-  CodeOutlined,
-  DownloadOutlined,
-  DownOutlined,
-  FileTextOutlined,
-  GiftOutlined,
-  HistoryOutlined,
-  MessageOutlined,
-  ReloadOutlined,
-  RocketOutlined,
-  SearchOutlined,
-  TeamOutlined,
-  UnorderedListOutlined,
-  UpOutlined,
-  UserAddOutlined,
-} from '@ant-design/icons-vue'
 
-const columns = [
-  {
-    title: '业务类型',
-    dataIndex: 'businessTypeText',
-    width: 120,
-  },
-  {
-    title: '积分类型',
-    dataIndex: 'pointTypeText',
-    width: 100,
-  },
-  {
-    title: '变动积分',
-    dataIndex: 'pointChange',
-    width: 80,
-  },
-  {
-    title: '变动前',
-    dataIndex: 'beforePoints',
-    width: 80,
-  },
-  {
-    title: '变动后',
-    dataIndex: 'afterPoints',
-    width: 80,
-  },
-  {
-    title: '备注',
-    dataIndex: 'remark',
-    ellipsis: true,
-    width: 130,
-  },
-  {
-    title: '时间',
-    dataIndex: 'createTime',
-    width: 180,
-  },
-]
+const router = useRouter()
 
 // 数据
 const data = ref<API.PointLogVO[]>([])
 const total = ref(0)
-const startDate = ref<Dayjs | null>(null)
-const endDate = ref<Dayjs | null>(null)
-const searchExpanded = ref(['1'])
+const filterExpanded = ref(false)
+const startDateStr = ref('')
+const endDateStr = ref('')
 
 // 搜索条件
 const searchParams = reactive<API.PointLogQueryRequest>({
@@ -290,13 +232,70 @@ const searchParams = reactive<API.PointLogQueryRequest>({
   pageSize: 10,
 })
 
-// 切换搜索展开状态
-const toggleSearch = () => {
-  if (searchExpanded.value.length > 0) {
-    searchExpanded.value = []
-  } else {
-    searchExpanded.value = ['1']
+// 表格列配置
+const columns = [
+  {
+    title: '类型',
+    dataIndex: 'businessTypeText',
+    key: 'businessTypeText',
+    width: 120,
+  },
+  {
+    title: '收支',
+    key: 'pointType',
+    width: 100,
+  },
+  {
+    title: '积分变动',
+    key: 'pointChange',
+    width: 120,
+    align: 'right' as const,
+  },
+  {
+    title: '变动后余额',
+    dataIndex: 'afterPoints',
+    key: 'afterPoints',
+    width: 140,
+    align: 'right' as const,
+  },
+  {
+    title: '时间',
+    dataIndex: 'createTime',
+    key: 'createTime',
+    width: 180,
+    customRender: ({ record }: { record: API.PointLogVO }) => formatTime(record.createTime),
+  },
+  {
+    title: '备注',
+    dataIndex: 'remark',
+    key: 'remark',
+    ellipsis: true,
+  },
+]
+
+// 分页配置
+const pagination = computed(() => {
+  return {
+    current: searchParams.pageNum ?? 1,
+    pageSize: searchParams.pageSize ?? 10,
+    total: total.value,
+    showSizeChanger: true,
+    showQuickJumper: true,
+    showTotal: (total: number) => `共 ${total} 条`,
+    pageSizeOptions: ['10', '20', '50', '100'],
   }
+})
+
+// 表格变化处理
+const doTableChange = (pagination: any, filters: any, sorter: any) => {
+  searchParams.pageNum = pagination.current
+  searchParams.pageSize = pagination.pageSize
+  fetchData()
+}
+
+// 切换筛选展开状态
+const toggleFilter = () => {
+  filterExpanded.value = !filterExpanded.value
 }
 
 // 获取数据
@@ -305,41 +304,20 @@ const fetchData = async () => {
     const params: API.PointLogQueryRequest = {
       ...searchParams,
     }
-    if (startDate.value) {
-      params.startTime = startDate.value.format('YYYY-MM-DD') + 'T00:00:00'
+    if (startDateStr.value) {
+      params.startTime = startDateStr.value + 'T00:00:00'
     }
-    if (endDate.value) {
-      params.endTime = endDate.value.format('YYYY-MM-DD') + 'T23:59:59'
+    if (endDateStr.value) {
+      params.endTime = endDateStr.value + 'T23:59:59'
     }
     const res = await getMyLogs(params)
     if (res.data.data) {
       data.value = res.data.data.records ?? []
       total.value = res.data.data.totalRow ?? 0
-    } else {
-      message.error('获取数据失败，' + res.data.message)
     }
   } catch (error) {
     console.error('获取数据失败：', error)
-    message.error('获取数据失败')
   }
-}
-
-// 分页参数
-const pagination = computed(() => {
-  return {
-    current: searchParams.pageNum ?? 1,
-    pageSize: searchParams.pageSize ?? 10,
-    total: total.value,
-    showSizeChanger: true,
-    showTotal: (total: number) => `共 ${total} 条`,
-  }
-})
-
-// 表格变化处理
-const doTableChange = (page: any) => {
-  searchParams.pageNum = page.current
-  searchParams.pageSize = page.pageSize
-  fetchData()
 }
 
 // 搜索
@@ -352,41 +330,14 @@ const doSearch = () => {
 const resetSearch = () => {
   searchParams.businessType = undefined
   searchParams.pointType = undefined
-  startDate.value = null
-  endDate.value = null
+  startDateStr.value = ''
+  endDateStr.value = ''
   doSearch()
 }
 
-// 获取业务类型颜色
-const getBusinessTypeColor = (type?: string) => {
-  const colorMap: Record<string, string> = {
-    SIGN_IN: 'orange',
-    REGISTER_REWARD: 'gold',
-    INVITEE_BONUS: 'cyan',
-    INVITER_BONUS: 'blue',
-    GENERATE: 'purple',
-    DOWNLOAD: 'geekblue',
-    DEPLOY: 'red',
-    MESSAGE: 'magenta',
-    SYSTEM_GRANT: 'green',
-  }
-  return colorMap[type ?? ''] || 'default'
-}
-
-// 获取业务类型图标
-const getBusinessTypeIcon = (type?: string) => {
-  const iconMap: Record<string, any> = {
-    SIGN_IN: CheckCircleOutlined,
-    REGISTER_REWARD: GiftOutlined,
-    INVITEE_BONUS: UserAddOutlined,
-    INVITER_BONUS: TeamOutlined,
-    GENERATE: CodeOutlined,
-    MESSAGE: MessageOutlined,
-    DEPLOY: RocketOutlined,
-    DOWNLOAD: DownloadOutlined,
-    SYSTEM_GRANT: BankOutlined,
-  }
-  return iconMap[type ?? ''] || FileTextOutlined
+// 返回个人中心
+const goBack = () => {
+  router.push('/user/profile')
 }
 
 // 页面加载时请求一次
@@ -396,614 +347,494 @@ onMounted(() => {
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap');
+/* ========== 字体引入 ========== */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap');
 
+/* ========== 全局变量 ========== */
 :root {
-  --color-primary: #f97316;
-  --color-primary-dark: #ea580c;
-  --color-primary-light: #fbbf24;
-  --color-text: #1e293b;
-  --color-text-secondary: #64748b;
-  --color-border: #e2e8f0;
-  --color-bg-hover: #f8fafc;
-  --font-serif: 'Noto Serif SC', serif;
-  --font-sans: 'Noto Sans SC', sans-serif;
+  --color-primary: #ff6b6b;
+  --color-primary-light: #ff8787;
+  --color-primary-dark: #fa5252;
+  --color-secondary: #ffa8a8;
+  --color-accent: #ffec99;
+  --text-primary: #2d3436;
+  --text-secondary: #636e72;
+  --glass-bg: rgba(255, 255, 255, 0.65);
+  --glass-border: rgba(255, 255, 255, 0.85);
+  --shadow-soft: 0 8px 32px rgba(255, 107, 107, 0.12);
+  --shadow-hover: 0 12px 48px rgba(255, 107, 107, 0.18);
 }
 
+/* ========== 主容器 ========== */
 .point-logs-wrapper {
   min-height: 100vh;
-  background: #f8fafc;
-  padding-bottom: 40px;
-}
-
-/* Hero 区域 */
-.logs-hero {
   position: relative;
-  background-image: url('https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=1920&q=80');
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
-  border-radius: 0;
-  padding: 60px 24px;
-  margin-bottom: 32px;
   overflow: hidden;
+  font-family:
+    'Noto Sans SC',
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
 }
 
-.hero-overlay {
-  position: absolute;
+/* ========== 动态渐变背景 ========== */
+.gradient-bg {
+  position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(249, 115, 22, 0.92) 0%,
-    rgba(234, 88, 12, 0.88) 50%,
-    rgba(251, 191, 36, 0.85) 100%
-  );
-  backdrop-filter: blur(2px);
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(circle at 25% 25%, rgba(255, 107, 107, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(255, 168, 168, 0.12) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(255, 236, 153, 0.08) 0%, transparent 50%);
+  animation: gradientMove 20s ease-in-out infinite alternate;
+  z-index: 0;
+  pointer-events: none;
 }
 
-.hero-content {
+@keyframes gradientMove {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  100% {
+    transform: scale(1.1) rotate(5deg);
+  }
+}
+
+/* ========== 内容容器 ========== */
+.logs-container {
   position: relative;
-  max-width: 1200px;
+  z-index: 2;
+  max-width: 900px;
   margin: 0 auto;
-  z-index: 1;
+  padding: 40px 24px 80px;
 }
 
-.hero-badge {
+/* ========== 返回按钮 ========== */
+.back-btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(10px);
-  padding: 8px 20px;
-  border-radius: 24px;
-  color: white;
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.05em;
-  margin-bottom: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 10px 20px;
+  margin-bottom: 24px;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1.5px solid rgba(255, 107, 107, 0.2);
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  outline: none;
 }
 
-.hero-title {
-  font-family: var(--font-serif);
+.back-btn:hover {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  color: white;
+  border-color: transparent;
+  transform: translateX(-4px);
+  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.3);
+}
+
+.back-btn:active {
+  transform: translateX(-2px);
+}
+
+.back-btn svg {
+  flex-shrink: 0;
+}
+
+/* ========== 页面标题 ========== */
+.page-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.page-title {
   font-size: 48px;
   font-weight: 700;
-  color: white;
-  text-shadow:
-    0 2px 4px rgba(0, 0, 0, 0.25),
-    0 4px 12px rgba(0, 0, 0, 0.2);
-  margin: 0 0 16px;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
+  margin: 0 0 12px;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-family: 'Noto Sans SC', sans-serif;
 }
 
-.title-number {
-  display: inline-block;
-  font-size: 72px;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.3);
-  margin-right: 16px;
-  line-height: 1;
-}
-
-.hero-subtitle {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 18px;
-  color: rgba(255, 255, 255, 0.95);
-  text-shadow:
-    0 2px 4px rgba(0, 0, 0, 0.25),
-    0 1px 8px rgba(0, 0, 0, 0.2);
+.page-subtitle {
+  font-size: 16px;
+  color: var(--text-secondary);
   margin: 0;
-  font-weight: 400;
 }
 
-/* 快速统计 */
-.quick-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  margin-top: 40px;
-}
-
-.stat-item {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(10px);
-  padding: 28px 24px;
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+/* ========== 玻璃拟态卡片基类 ========== */
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  box-shadow: var(--shadow-soft);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   position: relative;
   overflow: hidden;
 }
 
-.stat-item::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 100%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.stat-item:hover::before {
-  opacity: 1;
-}
-
-.stat-item:hover {
-  background: rgba(255, 255, 255, 0.35);
+.glass-card:hover {
+  box-shadow: var(--shadow-hover);
   transform: translateY(-4px);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
-  border-color: rgba(255, 255, 255, 0.5);
 }
 
-.stat-icon {
-  width: 64px;
-  height: 64px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 16px;
-  font-size: 28px;
-  flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.income-icon {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
-}
-
-.expense-icon {
-  background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
-  color: white;
-}
-
-.balance-icon {
-  background: linear-gradient(135deg, #fbbf24 0%, #f97316 100%);
-  color: white;
-}
-
-.stat-content {
-  flex: 1;
-}
-
-.stat-value {
-  font-size: 32px;
-  font-weight: 800;
-  line-height: 1.2;
-  margin-bottom: 6px;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-.income-value {
-  color: #ffffff;
-}
-
-.expense-value {
-  color: #ffffff;
-}
-
-.balance-value {
-  color: #ffffff;
-}
-
-.stat-label {
-  font-size: 15px;
-  color: rgba(255, 255, 255, 0.9);
-  font-weight: 600;
-  letter-spacing: 0.5px;
-}
-
-.stat-divider {
-  display: none;
-}
-
-/* 主内容区 */
-.logs-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-/* 卡片通用样式 */
-.search-card,
-.table-card {
-  background: white;
-  border-radius: 16px;
+/* ========== 筛选卡片 ========== */
+.filter-card {
   padding: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  border: 1px solid var(--color-border);
-}
-
-.card-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
   margin-bottom: 24px;
+}
+
+.filter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
   padding-bottom: 16px;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid rgba(255, 107, 107, 0.1);
 }
 
-.header-icon {
-  font-size: 20px;
-  color: var(--color-primary);
-}
-
-.card-header h3 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--color-text);
-  flex: 1;
-}
-
-.header-actions {
+.filter-title {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
-/* 搜索表单 */
-.search-form {
+.toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: rgba(255, 107, 107, 0.08);
+  border: 1px solid rgba(255, 107, 107, 0.2);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-primary);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.toggle-btn:hover {
+  background: var(--color-primary);
+  color: white;
+}
+
+.filter-content {
   margin-top: 16px;
 }
 
-:deep(.ant-form-item-label > label) {
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.filter-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filter-label {
+  font-size: 13px;
   font-weight: 500;
-  color: var(--color-text);
+  color: var(--text-secondary);
 }
 
-:deep(.ant-select),
-:deep(.ant-picker) {
-  border-radius: 8px;
+.filter-select,
+.filter-input {
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1.5px solid rgba(255, 107, 107, 0.15);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  transition: all 0.3s ease;
+  outline: none;
 }
 
-:deep(.ant-select:focus),
-:deep(.ant-select-focused),
-:deep(.ant-picker-focused) {
+.filter-select:focus,
+.filter-input:focus {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.1);
+  background: rgba(255, 255, 255, 1);
 }
 
-:deep(.ant-collapse) {
+.filter-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 24px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border: none;
+  outline: none;
+}
+
+.action-btn.primary {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+}
+
+.action-btn.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 107, 107, 0.4);
+}
+
+.action-btn.secondary {
+  background: rgba(255, 107, 107, 0.1);
+  color: var(--color-primary);
+  border: 2px solid rgba(255, 107, 107, 0.2);
+}
+
+.action-btn.secondary:hover {
+  background: var(--color-primary);
+  color: white;
+}
+
+/* ========== 记录卡片 ========== */
+.records-card {
+  padding: 24px;
+}
+
+.records-header {
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 107, 107, 0.1);
+}
+
+.records-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.records-count {
+  margin-left: auto;
+  padding: 4px 12px;
+  background: rgba(255, 107, 107, 0.1);
+  color: var(--color-primary);
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ========== Ant Design 表格样式 ========== */
+.logs-table {
   background: transparent;
 }
 
-:deep(.ant-collapse-content-box) {
-  padding: 16px 0 0;
+.logs-table :deep(.ant-table) {
+  background: transparent;
 }
 
-:deep(.ant-collapse-header) {
-  display: none;
+.logs-table :deep(.ant-table-container) {
+  background: transparent;
 }
 
-/* 表格样式 */
-:deep(.ant-table) {
-  font-size: 14px;
+.logs-table :deep(.ant-table-content) {
+  overflow-x: auto;
 }
 
-:deep(.ant-table-thead > tr > th) {
-  background: #3b82f6;
-  font-weight: 700;
-  padding: 16px;
-  border-bottom: 2px solid var(--color-primary);
-  color: var(--color-text);
+.logs-table :deep(.ant-table-thead > tr > th) {
+  background: rgba(255, 107, 107, 0.05);
+  border-bottom: 1px solid rgba(255, 107, 107, 0.15);
+  color: var(--text-primary);
+  font-weight: 600;
+  padding: 14px 16px;
 }
 
-:deep(.ant-table-tbody > tr > td) {
-  padding: 16px;
-  border-bottom: 1px solid #f0f0f0;
-  transition: all 0.2s ease;
+.logs-table :deep(.ant-table-tbody > tr > td) {
+  background: rgba(255, 255, 255, 0.4);
+  border-bottom: 1px solid rgba(255, 107, 107, 0.08);
+  color: var(--text-primary);
+  padding: 14px 16px;
+  transition: all 0.3s ease;
 }
 
-:deep(.ant-table-tbody > tr:hover > td) {
-  background: #fff7ed;
+.logs-table :deep(.ant-table-tbody > tr:hover > td) {
+  background: rgba(255, 255, 255, 0.7);
 }
 
-:deep(.ant-table-tbody > tr:last-child > td) {
-  border-bottom: none;
+.logs-table :deep(.ant-table-tbody > tr > td:first-child),
+.logs-table :deep(.ant-table-thead > tr > th:first-child) {
+  border-radius: 8px 0 0 8px;
 }
 
-/* 业务类型标签 */
-:deep(.ant-tag) {
+.logs-table :deep(.ant-table-tbody > tr > td:last-child),
+.logs-table :deep(.ant-table-thead > tr > th:last-child) {
+  border-radius: 0 8px 8px 0;
+}
+
+/* 收支类型徽章 */
+.type-badge {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   padding: 4px 12px;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
 }
 
-/* 时间单元格 */
-.time-cell {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  color: var(--color-text-secondary);
-}
-
-/* 积分样式 */
-.point-income {
+.type-badge.income {
+  background: rgba(82, 196, 26, 0.1);
   color: #52c41a;
-  font-weight: 600;
-  font-size: 16px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
 }
 
-.point-expense {
+.type-badge.expense {
+  background: rgba(255, 77, 79, 0.1);
   color: #ff4d4f;
-  font-weight: 600;
+}
+
+/* 积分变动金额 */
+.amount-value {
   font-size: 16px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  font-weight: 700;
+  font-family: 'Noto Sans SC', sans-serif;
+}
+
+.amount-value.income {
+  color: #52c41a;
+}
+
+.amount-value.expense {
+  color: #ff4d4f;
 }
 
 /* 分页样式 */
-:deep(.ant-pagination) {
+.logs-table :deep(.ant-pagination) {
   margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 107, 107, 0.1);
 }
 
-:deep(.ant-pagination-item-active) {
-  background: var(--color-primary);
+.logs-table :deep(.ant-pagination-item) {
+  border-radius: 8px;
+  border-color: rgba(255, 107, 107, 0.2);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.logs-table :deep(.ant-pagination-item:hover) {
   border-color: var(--color-primary);
 }
 
-:deep(.ant-pagination-item-active a) {
+.logs-table :deep(.ant-pagination-item-active) {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  border-color: transparent;
+}
+
+.logs-table :deep(.ant-pagination-item-active a) {
   color: white;
 }
 
-:deep(.ant-pagination-item:hover) {
+.logs-table :deep(.ant-pagination-prev),
+.logs-table :deep(.ant-pagination-next) {
+  border-radius: 8px;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.logs-table :deep(.ant-pagination-prev:hover),
+.logs-table :deep(.ant-pagination-next:hover) {
   border-color: var(--color-primary);
 }
 
-:deep(.ant-pagination-item:hover a) {
-  color: var(--color-primary);
+.logs-table :deep(.ant-pagination-disabled) {
+  opacity: 0.5;
 }
 
-/* 按钮样式 */
-:deep(.ant-btn) {
+.logs-table :deep(.ant-pagination-options) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logs-table :deep(.ant-pagination-total-text) {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.logs-table :deep(.ant-select-selector) {
+  border-radius: 8px !important;
+  border-color: rgba(255, 107, 107, 0.2) !important;
+}
+
+.logs-table :deep(.ant-pagination-options-quick-jumper input) {
   border-radius: 8px;
-  font-weight: 500;
-  height: 32px;
+  border-color: rgba(255, 107, 107, 0.2);
 }
 
-:deep(.ant-btn-primary) {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-  border: none;
+.logs-table :deep(.ant-pagination-options-quick-jumper input:focus) {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(255, 107, 107, 0.1);
 }
 
-:deep(.ant-btn-primary:hover) {
-  background: linear-gradient(135deg, var(--color-primary-dark) 0%, #dc2626 100%);
-}
+/* ========== 响应式设计 ========== */
+@media (max-width: 768px) {
+  .logs-container {
+    padding: 24px 16px 60px;
+  }
 
-/* 响应式设计 */
-@media (max-width: 1024px) {
-  .quick-stats {
+  .page-title {
+    font-size: 36px;
+  }
+
+  .page-subtitle {
+    font-size: 15px;
+  }
+
+  .filter-grid {
     grid-template-columns: 1fr;
   }
 
-  .stat-divider {
-    display: none;
-  }
-}
-
-@media (max-width: 768px) {
-  .logs-hero {
-    padding: 40px 16px;
+  .filter-actions {
+    flex-direction: column;
   }
 
-  .hero-title {
-    font-size: 32px;
+  .action-btn {
+    width: 100%;
+    justify-content: center;
   }
 
-  .title-number {
-    font-size: 48px;
-  }
-
-  .hero-subtitle {
-    font-size: 16px;
-  }
-
-  .quick-stats {
-    gap: 16px;
-    margin-top: 24px;
-  }
-
-  .stat-item {
-    padding: 20px;
-  }
-
-  .stat-value {
-    font-size: 24px;
-  }
-
-  .logs-content {
-    padding: 0 16px;
-  }
-
-  .search-card,
-  .table-card {
-    padding: 16px;
-  }
-
-  :deep(.ant-table-thead > tr > th),
-  :deep(.ant-table-tbody > tr > td) {
-    padding: 12px 8px;
+  .logs-table :deep(.ant-table) {
     font-size: 13px;
   }
-}
 
-/* ========== 超强全局字体优化 ========== */
+  .logs-table :deep(.ant-table-thead > tr > th),
+  .logs-table :deep(.ant-table-tbody > tr > td) {
+    padding: 10px 12px;
+  }
 
-/* 强制所有文字清晰可读 */
-* {
-  -webkit-font-smoothing: antialiased !important;
-  -moz-osx-font-smoothing: grayscale !important;
-}
-
-/* Ant Design 按钮优化 */
-:deep(.ant-btn-primary) {
-  background: #3b82f6 !important;
-  border-color: #3b82f6 !important;
-  color: white !important;
-  font-weight: 700 !important;
-  font-size: 13px !important;
-  letter-spacing: 0.3px;
-  height: 32px !important;
-  padding: 0 16px !important;
-}
-
-:deep(.ant-btn-primary:hover) {
-  background: #2563eb !important;
-  border-color: #2563eb !important;
-}
-
-:deep(.ant-btn-default) {
-  color: #0f172a !important;
-  border-color: #e2e8f0 !important;
-  font-weight: 600 !important;
-  font-size: 13px !important;
-  background: white !important;
-}
-
-:deep(.ant-btn-default:hover) {
-  color: #3b82f6 !important;
-  border-color: #3b82f6 !important;
-}
-
-/* 表单标签优化 */
-:deep(.ant-form-item-label > label) {
-  color: #0f172a !important;
-  font-weight: 700 !important;
-  font-size: 14px !important;
-}
-
-/* 输入框文字优化 */
-:deep(.ant-input) {
-  color: #0f172a !important;
-  font-weight: 600 !important;
-  font-size: 14px !important;
-}
-
-:deep(.ant-input::placeholder) {
-  color: #64748b !important;
-  font-weight: 400 !important;
-}
-
-:deep(.ant-select-selection-item) {
-  color: #0f172a !important;
-  font-weight: 600 !important;
-}
-
-/* Textarea 文字 */
-:deep(.ant-input-textarea) {
-  color: #0f172a !important;
-  font-weight: 600 !important;
-}
-
-/* 表格内容文字优化 */
-:deep(.ant-table-tbody) {
-  color: #0f172a !important;
-}
-
-:deep(.ant-table-thead > tr > th) {
-  color: white !important;
-  font-weight: 700 !important;
-}
-
-/* Modal 标题优化 */
-:deep(.ant-modal-title) {
-  color: #0f172a !important;
-  font-weight: 700 !important;
-  font-size: 18px !important;
-}
-
-:deep(.ant-modal-body) {
-  color: #0f172a !important;
-}
-
-:deep(.ant-modal-content) {
-  color: #0f172a !important;
-}
-
-/* Tag 标签文字优化 */
-:deep(.ant-tag) {
-  font-weight: 700 !important;
-  color: #0f172a !important;
-}
-
-/* Card 标题 */
-:deep(.ant-card-head-title) {
-  color: #0f172a !important;
-  font-weight: 700 !important;
-  font-size: 18px !important;
-}
-
-/* Card 内容 */
-:deep(.ant-card-body) {
-  color: #0f172a !important;
-}
-
-/* 所有文本元素 */
-:deep(.ant-typography),
-:deep(.ant-text),
-:deep(label),
-:deep(span),
-:deep(p),
-:deep(div) {
-  color: #0f172a !important;
-}
-
-/* 链接文字 */
-:deep(a) {
-  color: #3b82f6 !important;
-  font-weight: 600 !important;
-}
-
-:deep(a:hover) {
-  color: #2563eb !important;
-}
-
-/* 下拉菜单 */
-:deep(.ant-dropdown-menu-item) {
-  color: #0f172a !important;
-  font-weight: 600 !important;
-}
-
-/* 分页 */
-:deep(.ant-pagination-item) {
-  color: #0f172a !important;
-  font-weight: 600 !important;
-}
-
-/* 描述列表 */
-:deep(.ant-descriptions-item-label) {
-  color: #0f172a !important;
-  font-weight: 700 !important;
-}
-
-:deep(.ant-descriptions-item-content) {
-  color: #0f172a !important;
-  font-weight: 600 !important;
+  .back-btn {
+    font-size: 13px;
+    padding: 8px 16px;
+  }
 }
 </style>
