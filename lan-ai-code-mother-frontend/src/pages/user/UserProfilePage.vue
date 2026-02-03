@@ -127,14 +127,6 @@ const copyInvitation = async () => {
   }
 }
 
-const openInvitationCard = () => {
-  if (!invitationCode.value) {
-    message.warning('邀请码加载中...')
-    return
-  }
-  showInvitationCard.value = true
-}
-
 const initForm = async () => {
   if (!loginUserStore.loginUser.id) {
     await loginUserStore.fetchLoginUser()
@@ -343,130 +335,109 @@ const truncateText = (text: string, maxLength: number) => {
 
 <template>
   <div class="user-profile-page">
-    <!-- 用户信息卡片 -->
-    <a-card :bordered="false" class="profile-card cyan-card">
-      <div class="profile-header">
-        <div class="avatar-section">
-          <a-avatar :size="120" :src="displayAvatar" class="user-avatar">
+    <!-- 用户信息卡片 - 现代化左右布局 -->
+    <div class="profile-card-modern">
+      <!-- 左侧：个人信息 -->
+      <div class="profile-left">
+        <div class="avatar-wrapper">
+          <a-avatar :size="88" :src="displayAvatar" class="user-avatar-modern">
             <template #icon>
               <UserOutlined />
             </template>
           </a-avatar>
-          <div class="user-info">
-            <a-tooltip v-if="formState.userName" :title="formState.userName">
-              <h2 class="user-name">{{ truncateText(formState.userName, 12) }}</h2>
-            </a-tooltip>
-            <h2 v-else class="user-name">未设置昵称</h2>
-            <p class="user-account">
-              <UserOutlined />
-              {{ formState.userAccount }}
-            </p>
-            <a-tooltip v-if="formState.userProfile" :title="formState.userProfile">
-              <p class="user-profile">{{ truncateText(formState.userProfile, 20) }}</p>
-            </a-tooltip>
-            <p v-else class="user-profile">这个人很懒，什么都没留下~</p>
-          </div>
         </div>
-      </div>
-
-      <!-- 用户统计 -->
-      <div class="user-stats">
-        <div class="stat-item">
-          <div class="stat-icon points-icon">
-            <WalletOutlined />
-          </div>
-          <div class="stat-content">
-            <span class="stat-label">当前积分</span>
-            <span class="stat-value">{{ accountInfo?.availablePoints ?? 0 }}</span>
-          </div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-icon days-icon">
-            <CalendarOutlined />
-          </div>
-          <div class="stat-content">
-            <span class="stat-label">已加入</span>
-            <span class="stat-value">{{ joinedDays }} 天</span>
-          </div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-icon email-icon">
-            <MailOutlined />
-          </div>
-          <div class="stat-content">
-            <span class="stat-label">邮箱</span>
-            <span class="stat-value stat-email">{{
-              loginUserStore.loginUser.userEmail || '未绑定'
-            }}</span>
-          </div>
-        </div>
-        <div class="stat-item stat-item-invitation">
-          <div class="stat-icon invite-icon">
-            <ShareAltOutlined />
-          </div>
-          <div class="stat-content">
-            <span class="stat-label">我的邀请码</span>
-            <a-button
-              class="invitation-code-btn ant-btn-purple"
-              size="small"
-              type="primary"
-              @click="openInvitationCard"
-            >
-              {{ invitationCode || '加载中...' }}
-              <ShareAltOutlined />
+        <div class="user-info-modern">
+          <h2 class="user-name-modern">
+            {{ truncateText(formState.userName || '未设置昵称', 12) }}
+          </h2>
+          <p class="user-account-modern">@{{ formState.userAccount }}</p>
+          <p class="user-bio-modern">{{ formState.userProfile || '这个人很懒，什么都没留下~' }}</p>
+          <div class="quick-actions">
+            <a-button class="quick-action-btn" size="small" @click="goToEditProfile">
+              <EditOutlined />
+              编辑资料
+            </a-button>
+            <a-button class="quick-action-btn" size="small" @click="goToPointLogs">
+              <HistoryOutlined />
+              积分明细
             </a-button>
           </div>
         </div>
       </div>
 
-      <!-- 操作按钮 -->
-      <div class="action-buttons">
-        <a-button
-          :loading="signing"
-          class="action-btn action-btn-gift ant-btn-success"
-          size="large"
-          @click="handleSignIn"
-        >
-          <template #icon>
-            <GiftOutlined />
-          </template>
-          {{ todaySigned ? '今日已签到' : '每日签到' }}
-        </a-button>
-        <a-button
-          class="action-btn action-btn-mall ant-btn-warning"
-          size="large"
-          @click="goToPointMall"
-        >
-          <template #icon>
-            <ShoppingOutlined />
-          </template>
-          积分商城
-        </a-button>
-        <a-button
-          class="action-btn action-btn-edit ant-btn-primary"
-          size="large"
-          @click="goToEditProfile"
-        >
-          <template #icon>
-            <EditOutlined />
-          </template>
-          编辑资料
-        </a-button>
-        <a-button
-          class="action-btn action-btn-logs ant-btn-info"
-          size="large"
-          @click="goToPointLogs"
-        >
-          <template #icon>
-            <HistoryOutlined />
-          </template>
-          积分明细
-        </a-button>
+      <!-- 右侧：数据统计 -->
+      <div class="profile-right">
+        <div class="stats-grid-modern">
+          <!-- 积分卡片 -->
+          <div class="stat-card-modern stat-card-points">
+            <div class="stat-header">
+              <WalletOutlined class="stat-icon-modern" />
+              <span class="stat-label-modern">当前积分</span>
+            </div>
+            <div class="stat-value-modern">{{ accountInfo?.availablePoints ?? 0 }}</div>
+            <div class="stat-actions">
+              <a-tooltip title="每日签到">
+                <a-button
+                  :loading="signing"
+                  class="stat-action-btn"
+                  shape="circle"
+                  size="small"
+                  type="primary"
+                  @click="handleSignIn"
+                >
+                  <GiftOutlined />
+                </a-button>
+              </a-tooltip>
+              <a-tooltip title="积分商城">
+                <a-button
+                  class="stat-action-btn"
+                  shape="circle"
+                  size="small"
+                  type="primary"
+                  @click="goToPointMall"
+                >
+                  <ShoppingOutlined />
+                </a-button>
+              </a-tooltip>
+            </div>
+          </div>
+
+          <!-- 加入天数 -->
+          <div class="stat-card-modern stat-card-days">
+            <div class="stat-header">
+              <CalendarOutlined class="stat-icon-modern" />
+              <span class="stat-label-modern">已加入</span>
+            </div>
+            <div class="stat-value-modern">{{ joinedDays }} <span class="stat-unit">天</span></div>
+          </div>
+
+          <!-- 邮箱 -->
+          <div class="stat-card-modern stat-card-email">
+            <div class="stat-header">
+              <MailOutlined class="stat-icon-modern" />
+              <span class="stat-label-modern">邮箱</span>
+            </div>
+            <div class="stat-value-small">{{ loginUserStore.loginUser.userEmail || '未绑定' }}</div>
+          </div>
+
+          <!-- 邀请码 -->
+          <div class="stat-card-modern stat-card-invite">
+            <div class="stat-header">
+              <ShareAltOutlined class="stat-icon-modern" />
+              <span class="stat-label-modern">邀请码</span>
+            </div>
+            <div class="invite-code-modern">{{ invitationCode || '加载中' }}</div>
+            <a-button class="copy-invite-btn" size="small" type="link" @click="copyInvitation">
+              <CopyOutlined />
+              复制
+            </a-button>
+          </div>
+        </div>
       </div>
-    </a-card>
+    </div>
 
     <!-- 我的应用 -->
-    <a-card :bordered="false" class="apps-card info-card">
+    <a-card :bordered="false" class="apps-card">
       <template #title>
         <div class="card-title">
           <AppstoreOutlined />
@@ -635,284 +606,296 @@ const truncateText = (text: string, maxLength: number) => {
   </div>
 </template>
 
-<style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap');
-
+<style>
+/* ========== 全局变量（非scoped） ========== */
 :root {
-  --color-primary: #f97316;
-  --color-primary-dark: #ea580c;
-  --color-primary-light: #fbbf24;
+  --color-primary: #3b82f6;
+  --color-primary-light: #60a5fa;
+  --color-primary-dark: #2563eb;
   --color-text: #1e293b;
   --color-text-secondary: #64748b;
-  --color-border: #4d82c8;
-  --color-bg-hover: #f8fafc;
-  --font-serif: 'Noto Serif SC', serif;
-  --font-sans: 'Noto Sans SC', sans-serif;
+  --color-text-light: #94a3b8;
+  --color-bg: #f8fafc;
+  --color-glass: rgba(255, 255, 255, 0.8);
+  --color-glass-border: rgba(255, 255, 255, 0.95);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-soft: 0 4px 16px rgba(0, 0, 0, 0.06);
+  --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.1);
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+  --font-main:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', sans-serif;
 }
+</style>
 
+<style scoped>
+/* ========== 字体引入 ========== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ========== 主容器 ========== */
 .user-profile-page {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 28px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
-}
-
-/* 用户信息卡片 */
-.profile-card {
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  border: 1px solid var(--color-border);
-  background: linear-gradient(135deg, #fff7ed 0%, #ffffff 100%);
-}
-
-.profile-header {
-  margin-bottom: 32px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.avatar-section {
-  display: flex;
   gap: 28px;
-  align-items: flex-start;
+  font-family: var(--font-main);
 }
 
-.user-avatar {
-  border: 4px solid white;
-  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.2);
+/* ========== 现代化用户信息卡片 ========== */
+.profile-card-modern {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 32px;
+  padding: 36px;
+  background: var(--color-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-soft);
+  border: 1px solid var(--color-glass-border);
+  position: relative;
+  overflow: hidden;
 }
 
-.user-info {
-  flex: 1;
-  padding-top: 12px;
+/* 装饰性渐变背景 */
+.profile-card-modern::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.04) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
 }
 
-.user-name {
-  font-family: var(--font-serif);
-  font-size: 28px;
-  font-weight: 700;
-  margin: 0 0 12px 0;
-  color: var(--color-text);
-}
-
-.user-account {
+/* 左侧：个人信息区 */
+.profile-left {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
+  flex-direction: column;
+  gap: 20px;
+  position: relative;
+  z-index: 1;
+  border-right: 1px solid rgba(0, 0, 0, 0.06);
+  padding-right: 32px;
+}
+
+.avatar-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.user-avatar-modern {
+  border: 3px solid white;
+  box-shadow: var(--shadow-soft);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.user-avatar-modern:hover {
+  transform: scale(1.03);
+  box-shadow: var(--shadow-hover);
+}
+
+.user-info-modern {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.user-name-modern {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+  letter-spacing: -0.3px;
+}
+
+.user-account-modern {
+  font-size: 14px;
   color: var(--color-text-secondary);
-  margin: 0 0 8px 0;
+  margin: 0;
   font-weight: 500;
 }
 
-.user-profile {
+.user-bio-modern {
   font-size: 13px;
   color: var(--color-text-secondary);
   margin: 0;
   line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-/* 用户统计 */
-.user-stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-  padding: 24px;
-  background: rgba(255, 255, 255, 0.6);
-  border-radius: 12px;
-  margin-bottom: 32px;
-  border: 1px solid var(--color-border);
-}
-
-.stat-item {
+.quick-actions {
   display: flex;
-  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.quick-action-btn {
+  height: 32px;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: white;
+  color: var(--color-text);
+  transition: all 0.2s ease;
+}
+
+.quick-action-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: rgba(59, 130, 246, 0.04);
+}
+
+/* 右侧：数据统计区 */
+.profile-right {
+  position: relative;
+  z-index: 1;
+}
+
+.stats-grid-modern {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 16px;
+}
+
+.stat-card-modern {
   padding: 20px;
   background: white;
-  border-radius: 12px;
-  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(0, 0, 0, 0.06);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
 }
 
-.stat-item:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 16px rgba(249, 115, 22, 0.15);
-  border-color: var(--color-primary);
+.stat-card-modern::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-primary-light));
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
-.stat-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 12px;
+.stat-card-modern:hover {
+  transform: translate3d(0, -4px, 0);
+  box-shadow: var(--shadow-hover);
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+.stat-card-modern:hover::before {
+  opacity: 1;
+}
+
+.stat-header {
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  flex-shrink: 0;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
-.points-icon {
-  background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-primary) 100%);
-  color: white;
+.stat-icon-modern {
+  font-size: 18px;
+  color: var(--color-primary);
 }
 
-.days-icon {
-  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
-  color: white;
-}
-
-.email-icon {
-  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
-  color: white;
-}
-
-.invite-icon {
-  background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
-  color: white;
-}
-
-.stat-content {
-  flex: 1;
-}
-
-.stat-label {
+.stat-label-modern {
   font-size: 13px;
   color: var(--color-text-secondary);
-  margin-bottom: 6px;
   font-weight: 500;
-  display: block;
 }
 
-.stat-value {
-  font-size: 22px;
+.stat-value-modern {
+  font-size: 32px;
   font-weight: 700;
   color: var(--color-text);
-  font-family: var(--font-serif);
+  letter-spacing: -0.8px;
+  line-height: 1.2;
+  margin-bottom: 4px;
 }
 
-.stat-email {
-  font-size: 14px;
+.stat-unit {
+  font-size: 16px;
   font-weight: 500;
-  word-break: break-all;
+  color: var(--color-text-secondary);
+  margin-left: 4px;
 }
 
-.stat-item-invitation {
-  grid-column: span 1;
-}
-
-.invitation-code-btn {
-  font-family: 'Courier New', monospace;
-  font-weight: 600;
-  height: 36px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-  border: none;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.invitation-code-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
-}
-
-/* 操作按钮 */
-.action-buttons {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-}
-
-/* 强制所有操作按钮使用统一大小 */
-.action-buttons :deep(.ant-btn) {
-  height: 48px !important;
-  font-size: 14px !important;
-  font-weight: 700 !important;
-  border-radius: 12px !important;
-  padding: 0 20px !important;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 8px !important;
-}
-
-.action-buttons :deep(.ant-btn:hover) {
-  transform: translateY(-2px) !important;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12) !important;
-}
-
-.action-buttons :deep(.ant-btn > .anticon) {
-  font-size: 16px !important;
-}
-
-.action-btn {
-  height: 48px;
+.stat-value-small {
   font-size: 14px;
-  font-weight: 700;
-  border-radius: 12px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.stat-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.stat-action-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
+  border: none;
+  color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  border: 2px solid transparent;
+  transition: all 0.2s ease;
 }
 
-.action-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+.stat-action-btn:hover {
+  background: var(--color-primary-dark);
+  transform: scale(1.05);
 }
 
-.action-btn-gift {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+.invite-code-modern {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Courier New', monospace;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text);
+  letter-spacing: 2px;
+  margin: 4px 0;
+}
+
+.copy-invite-btn {
+  padding: 0;
+  height: auto;
+  font-size: 13px;
+  color: var(--color-primary);
+  background: none;
   border: none;
-  color: white;
 }
 
-.action-btn-gift:hover {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+.copy-invite-btn:hover {
+  color: var(--color-primary-dark);
+  background: none;
 }
 
-.action-btn-mall {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-  border: none;
-  color: white;
-}
-
-.action-btn-mall:hover {
-  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
-}
-
-.action-btn-edit {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  border: none;
-  color: white;
-}
-
-.action-btn-edit:hover {
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-}
-
-.action-btn-logs {
-  background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
-  border: none;
-  color: white;
-}
-
-.action-btn-logs:hover {
-  background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
-}
-
-/* 我的应用卡片 */
+/* ========== 我的应用卡片 ========== */
 .apps-card {
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  border: 1px solid var(--color-border);
+  background: var(--color-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-soft);
+  border: 1px solid var(--color-glass-border);
 }
 
 .card-title {
@@ -921,7 +904,6 @@ const truncateText = (text: string, maxLength: number) => {
   gap: 8px;
   font-size: 18px;
   font-weight: 600;
-  font-family: var(--font-serif);
   color: var(--color-text);
 }
 
@@ -932,16 +914,129 @@ const truncateText = (text: string, maxLength: number) => {
   margin-bottom: 24px;
 }
 
+/* 分页器 */
 .pagination-wrapper {
   display: flex;
   justify-content: center;
   margin-top: 24px;
 }
 
-/* 邀请卡片弹窗样式 */
+/* ========== 响应式设计 ========== */
+
+/* 大屏设备（1200px 及以下） */
+@media (max-width: 1200px) {
+  .profile-card-modern {
+    grid-template-columns: 280px 1fr;
+    gap: 24px;
+  }
+
+  .stats-grid-modern {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* 小平板设备（968px 及以下） */
+@media (max-width: 968px) {
+  .profile-card-modern {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    padding: 28px;
+  }
+
+  .profile-left {
+    border-right: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    padding-right: 0;
+    padding-bottom: 24px;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .avatar-wrapper {
+    flex-shrink: 0;
+  }
+
+  .user-info-modern {
+    flex: 1;
+  }
+
+  .quick-actions {
+    flex-wrap: wrap;
+  }
+
+  .stats-grid-modern {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* 手机设备（768px 及以下） */
+@media (max-width: 768px) {
+  .user-profile-page {
+    padding: 16px;
+    gap: 20px;
+  }
+
+  .profile-card-modern {
+    padding: 20px;
+  }
+
+  .profile-left {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .user-info-modern {
+    align-items: center;
+  }
+
+  .quick-actions {
+    justify-content: center;
+  }
+
+  .stats-grid-modern {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .stat-value-modern {
+    font-size: 28px;
+  }
+
+  .apps-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 小屏手机（480px 及以下） */
+@media (max-width: 480px) {
+  .profile-card-modern {
+    padding: 16px;
+  }
+
+  .user-avatar-modern {
+    width: 72px !important;
+    height: 72px !important;
+  }
+
+  .user-name-modern {
+    font-size: 20px;
+  }
+
+  .stat-card-modern {
+    padding: 16px;
+  }
+
+  .stat-value-modern {
+    font-size: 24px;
+  }
+}
+
+/* ========== 邀请卡片弹窗 ========== */
 .invitation-modal :deep(.ant-modal-content) {
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
+  box-shadow: var(--shadow-hover);
 }
 
 .invitation-modal :deep(.ant-modal-body) {
@@ -983,11 +1078,10 @@ const truncateText = (text: string, maxLength: number) => {
 }
 
 .invitation-title {
-  font-family: var(--font-serif);
   font-size: 26px;
   font-weight: 700;
   margin: 0 0 12px 0;
-  color: #5798f1;
+  color: white;
 }
 
 .invitation-subtitle {
@@ -999,7 +1093,7 @@ const truncateText = (text: string, maxLength: number) => {
 .invitation-content {
   padding: 32px;
   background: white;
-  border-radius: 20px 20px 0 0;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 
 .section-title {
@@ -1021,8 +1115,8 @@ const truncateText = (text: string, maxLength: number) => {
   flex-direction: column;
   gap: 16px;
   padding: 24px;
-  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
-  border-radius: 12px;
+  background: linear-gradient(135deg, #fff5f5 0%, #ffe5e5 100%);
+  border-radius: var(--radius-md);
   border: 2px solid var(--color-primary-light);
 }
 
@@ -1043,13 +1137,14 @@ const truncateText = (text: string, maxLength: number) => {
   font-weight: 600;
   background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
   border: none;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateZ(0);
 }
 
 .copy-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(249, 115, 22, 0.4);
+  transform: translate3d(0, -2px, 0);
+  box-shadow: var(--shadow-hover);
 }
 
 .invitation-rewards {
@@ -1064,14 +1159,15 @@ const truncateText = (text: string, maxLength: number) => {
   align-items: center;
   gap: 16px;
   padding: 20px;
-  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-  border-radius: 12px;
+  background: linear-gradient(135deg, #f0fff4 0%, #dcfce7 100%);
+  border-radius: var(--radius-md);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: 1px solid transparent;
+  transform: translateZ(0);
 }
 
 .reward-item:hover {
-  transform: translateY(-2px);
+  transform: translate3d(0, -2px, 0);
   box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
   border-color: #86efac;
 }
@@ -1080,7 +1176,7 @@ const truncateText = (text: string, maxLength: number) => {
   width: 48px;
   height: 48px;
   background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1104,7 +1200,6 @@ const truncateText = (text: string, maxLength: number) => {
   font-size: 22px;
   font-weight: 700;
   color: #16a34a;
-  font-family: var(--font-serif);
 }
 
 .invitation-steps {
@@ -1122,14 +1217,15 @@ const truncateText = (text: string, maxLength: number) => {
   align-items: center;
   gap: 12px;
   padding: 14px 18px;
-  background: var(--color-bg-hover);
-  border-radius: 10px;
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: 1px solid transparent;
+  transform: translateZ(0);
 }
 
 .step-item:hover {
-  background: #fff7ed;
+  background: #fff5f5;
   border-color: var(--color-primary-light);
 }
 
@@ -1145,7 +1241,6 @@ const truncateText = (text: string, maxLength: number) => {
   font-size: 13px;
   font-weight: 700;
   flex-shrink: 0;
-  font-family: var(--font-serif);
 }
 
 .step-text {
@@ -1160,10 +1255,10 @@ const truncateText = (text: string, maxLength: number) => {
 
 .link-display {
   padding: 14px;
-  background: var(--color-bg-hover);
-  border-radius: 10px;
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
   word-break: break-all;
-  border: 1px solid var(--color-border);
+  border: 1px solid rgba(255, 107, 107, 0.2);
 }
 
 .link-text {
@@ -1173,17 +1268,20 @@ const truncateText = (text: string, maxLength: number) => {
   line-height: 1.6;
 }
 
-/* 响应式设计 */
-@media (max-width: 1200px) {
+/* ========== 响应式设计 ========== */
+
+/* 大屏设备（1280px 及以下） */
+@media (max-width: 1280px) {
   .user-stats {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr 1fr;
   }
 
   .action-buttons {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr 1fr;
   }
 }
 
+/* 小平板设备（768px 及以下） */
 @media (max-width: 768px) {
   .user-profile-page {
     padding: 16px;
@@ -1197,10 +1295,6 @@ const truncateText = (text: string, maxLength: number) => {
 
   .user-stats {
     grid-template-columns: 1fr;
-  }
-
-  .stat-item-invitation {
-    grid-column: span 1;
   }
 
   .action-buttons {
@@ -1224,308 +1318,47 @@ const truncateText = (text: string, maxLength: number) => {
   }
 }
 
-/* ========== 全局字体和按钮优化 ========== */
-
-/* Ant Design 按钮优化 */
+/* ========== 全局样式覆盖 ========== */
 :deep(.ant-btn-primary) {
-  background: #3b82f6 !important;
-  border-color: #3b82f6 !important;
-  color: white !important;
-  font-weight: 600 !important;
-  font-size: 13px !important;
-  letter-spacing: 0.3px;
-  height: 32px !important;
-  padding: 0 16px !important;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  border-color: var(--color-primary);
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  height: 36px;
+  padding: 0 20px;
+  border-radius: var(--radius-sm);
 }
 
 :deep(.ant-btn-primary:hover) {
-  background: #2563eb !important;
-  border-color: #2563eb !important;
+  background: linear-gradient(135deg, var(--color-primary-dark) 0%, #e63939 100%);
+  border-color: var(--color-primary-dark);
+  transform: translate3d(0, -1px, 0);
 }
 
-:deep(.ant-btn-default) {
-  color: #1e293b !important;
-  border-color: #e2e8f0 !important;
-  font-weight: 500 !important;
-  font-size: 13px !important;
-}
-
-:deep(.ant-btn-default:hover) {
-  color: #3b82f6 !important;
-  border-color: #3b82f6 !important;
-}
-
-/* 表单标签优化 */
 :deep(.ant-form-item-label > label) {
-  color: #1e293b !important;
-  font-weight: 600 !important;
+  color: var(--color-text);
+  font-weight: 600;
+  font-size: 14px;
 }
 
-/* 输入框文字优化 */
-:deep(.ant-input),
-:deep(.ant-select-selection-item) {
-  color: #1e293b !important;
-  font-weight: 500 !important;
-}
-
-/* 表格内容文字优化 */
-:deep(.ant-table-tbody) {
-  color: #1e293b !important;
-}
-
-/* Modal 标题优化 */
-:deep(.ant-modal-title) {
-  color: #1e293b !important;
-  font-weight: 700 !important;
-}
-
-/* Tag 标签文字优化 */
-:deep(.ant-tag) {
-  font-weight: 600 !important;
-}
-
-/* ========== 超强全局字体优化 ========== */
-
-/* 强制所有文字清晰可读 */
-* {
-  -webkit-font-smoothing: antialiased !important;
-  -moz-osx-font-smoothing: grayscale !important;
-}
-
-/* Ant Design 按钮优化 */
-:deep(.ant-btn-primary) {
-  background: #3b82f6 !important;
-  border-color: #3b82f6 !important;
-  color: white !important;
-  font-weight: 700 !important;
-  font-size: 13px !important;
-  letter-spacing: 0.3px;
-  height: 32px !important;
-  padding: 0 16px !important;
-}
-
-:deep(.ant-btn-primary:hover) {
-  background: #2563eb !important;
-  border-color: #2563eb !important;
-}
-
-:deep(.ant-btn-default) {
-  color: #0f172a !important;
-  border-color: #e2e8f0 !important;
-  font-weight: 600 !important;
-  font-size: 13px !important;
-  background: white !important;
-}
-
-:deep(.ant-btn-default:hover) {
-  color: #3b82f6 !important;
-  border-color: #3b82f6 !important;
-}
-
-/* 表单标签优化 */
-:deep(.ant-form-item-label > label) {
-  color: #0f172a !important;
-  font-weight: 700 !important;
-  font-size: 14px !important;
-}
-
-/* 输入框文字优化 */
 :deep(.ant-input) {
-  color: #0f172a !important;
-  font-weight: 600 !important;
-  font-size: 14px !important;
+  color: var(--color-text);
+  font-weight: 500;
+  font-size: 14px;
 }
 
-:deep(.ant-input::placeholder) {
-  color: #64748b !important;
-  font-weight: 400 !important;
-}
-
-:deep(.ant-select-selection-item) {
-  color: #0f172a !important;
-  font-weight: 600 !important;
-}
-
-/* Textarea 文字 */
-:deep(.ant-input-textarea) {
-  color: #0f172a !important;
-  font-weight: 600 !important;
-}
-
-/* 表格内容文字优化 */
-:deep(.ant-table-tbody) {
-  color: #0f172a !important;
-}
-
-:deep(.ant-table-thead > tr > th) {
-  color: white !important;
-  font-weight: 700 !important;
-}
-
-/* Modal 标题优化 */
 :deep(.ant-modal-title) {
-  color: #0f172a !important;
-  font-weight: 700 !important;
-  font-size: 18px !important;
+  color: var(--color-text);
+  font-weight: 700;
+  font-size: 18px;
 }
 
-:deep(.ant-modal-body) {
-  color: #0f172a !important;
-}
-
-:deep(.ant-modal-content) {
-  color: #0f172a !important;
-}
-
-/* Tag 标签文字优化 */
 :deep(.ant-tag) {
-  font-weight: 700 !important;
-  color: #0f172a !important;
+  font-weight: 600;
 }
 
-/* Card 标题 */
-:deep(.ant-card-head-title) {
-  color: #0f172a !important;
-  font-weight: 700 !important;
-  font-size: 18px !important;
-}
-
-/* Card 内容 */
-:deep(.ant-card-body) {
-  color: #0f172a !important;
-}
-
-/* 所有文本元素 */
-:deep(.ant-typography),
-:deep(.ant-text),
-:deep(label),
-:deep(span),
-:deep(p),
-:deep(div) {
-  color: #0f172a !important;
-}
-
-/* 链接文字 */
-:deep(a) {
-  color: #3b82f6 !important;
-  font-weight: 600 !important;
-}
-
-:deep(a:hover) {
-  color: #2563eb !important;
-}
-
-/* 下拉菜单 */
-:deep(.ant-dropdown-menu-item) {
-  color: #0f172a !important;
-  font-weight: 600 !important;
-}
-
-/* 分页 */
-:deep(.ant-pagination-item) {
-  color: #0f172a !important;
-  font-weight: 600 !important;
-}
-
-/* 描述列表 */
-:deep(.ant-descriptions-item-label) {
-  color: #0f172a !important;
-  font-weight: 700 !important;
-}
-
-:deep(.ant-descriptions-item-content) {
-  color: #0f172a !important;
-  font-weight: 600 !important;
-}
-
-/* ========== 超强力表单元素优化 ========== */
-
-/* 表单标签 - 纯黑色 + 超粗体 */
-.user-profile-page :deep(.ant-form-item-label > label) {
-  color: #000000 !important;
-  font-size: 15px !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.5px;
-}
-
-/* 输入框 - 纯黑色文字 + 白色背景 */
-.user-profile-page :deep(.ant-input),
-.user-profile-page :deep(.ant-input-number) {
-  background: #ffffff !important;
-  border-color: #cbd5e1 !important;
-  color: #000000 !important;
-  font-weight: 700 !important;
-  font-size: 14px !important;
-}
-
-.user-profile-page :deep(.ant-input::placeholder),
-.user-profile-page :deep(.ant-input-number::placeholder) {
-  color: #475569 !important;
-  font-weight: 500 !important;
-}
-
-.user-profile-page :deep(.ant-input:hover),
-.user-profile-page :deep(.ant-input-number:hover) {
-  border-color: #3b82f6 !important;
-}
-
-.user-profile-page :deep(.ant-input:focus),
-.user-profile-page :deep(.ant-input-number:focus),
-.user-profile-page :deep(.ant-input-focused) {
-  border-color: #3b82f6 !important;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1) !important;
-  background: #ffffff !important;
-  color: #000000 !important;
-}
-
-/* Select 选择器 */
-.user-profile-page :deep(.ant-select-selector) {
-  background: #ffffff !important;
-  border-color: #cbd5e1 !important;
-  color: #000000 !important;
-  font-weight: 700 !important;
-  font-size: 14px !important;
-}
-
-.user-profile-page :deep(.ant-select-selection-item) {
-  color: #000000 !important;
-  font-weight: 700 !important;
-}
-
-.user-profile-page :deep(.ant-select-selection-placeholder) {
-  color: #475569 !important;
-  font-weight: 500 !important;
-}
-
-.user-profile-page :deep(.ant-select:hover .ant-select-selector) {
-  border-color: #3b82f6 !important;
-}
-
-.user-profile-page :deep(.ant-select-focused .ant-select-selector) {
-  border-color: #3b82f6 !important;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1) !important;
-  color: #000000 !important;
-}
-
-/* 表格内容增强 */
-.user-profile-page :deep(.ant-table-tbody > tr > td) {
-  color: #000000 !important;
-  font-weight: 600 !important;
-}
-
-/* Modal 增强 */
-.user-profile-page :deep(.ant-modal-title) {
-  color: #000000 !important;
-  font-weight: 700 !important;
-}
-
-.user-profile-page :deep(.ant-modal-body) {
-  color: #000000 !important;
-}
-
-/* Tag 标签增强 */
-.user-profile-page :deep(.ant-tag) {
-  font-weight: 700 !important;
-  color: #000000 !important;
+:deep(.ant-table-tbody) {
+  color: var(--color-text);
 }
 </style>

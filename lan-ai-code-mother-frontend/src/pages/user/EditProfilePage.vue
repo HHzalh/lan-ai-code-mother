@@ -52,6 +52,20 @@ const joinedDays = computed(() => {
   return dayjs().diff(dayjs(loginUserStore.loginUser.createTime), 'day')
 })
 
+// 用户角色标签
+const userRoleLabel = computed(() => {
+  const role = loginUserStore.loginUser.userRole
+  if (role === 'admin') return '管理员'
+  if (role === 'user') return '普通用户'
+  return '未知角色'
+})
+
+// 创建时间标签
+const createTimeLabel = computed(() => {
+  if (!loginUserStore.loginUser.createTime) return '创建时间：未知'
+  return `创建时间：${dayjs(loginUserStore.loginUser.createTime).format('YYYY-MM-DD')}`
+})
+
 const initForm = async () => {
   if (!loginUserStore.loginUser.id) {
     await loginUserStore.fetchLoginUser()
@@ -200,136 +214,159 @@ const truncateText = (text: string, maxLength: number) => {
 
 <template>
   <div class="edit-profile-wrapper">
-    <!-- Hero 区域 -->
-    <section class="edit-hero">
-      <div class="hero-content">
-        <p class="eyebrow">EDIT PROFILE</p>
-        <h2>编辑资料</h2>
-        <p class="subtitle">修改您的个人信息和账户设置</p>
-      </div>
-    </section>
-
-    <!-- 用户资料卡片 -->
-    <section class="profile-card">
-      <div class="profile-info">
-        <div class="user-avatar-section">
-          <a-avatar :size="80" :src="displayAvatar" class="user-avatar" />
-          <div class="avatar-upload">
-            <a-upload
-              :before-upload="handleAvatarUpload"
-              :show-upload-list="false"
-              accept="image/*"
-            >
-              <a-button :loading="avatarUploading" size="large">
-                <UploadOutlined />
-                更换头像
-              </a-button>
-            </a-upload>
-          </div>
-        </div>
-        <div class="user-details">
-          <a-tooltip v-if="formState.userName" :title="formState.userName">
-            <h3 class="user-name">{{ truncateText(formState.userName, 12) }}</h3>
-          </a-tooltip>
-          <h3 v-else class="user-name">未设置</h3>
-          <p class="user-account">@{{ formState.userAccount }}</p>
-          <div class="user-stats">
-            <div class="stat-item">
-              <GiftOutlined />
-              <span>积分 {{ accountInfo?.availablePoints ?? 0 }}</span>
-            </div>
-            <div class="stat-item">
-              <UserOutlined />
-              <span>已加入 {{ joinedDays }} 天</span>
-            </div>
-            <div class="stat-item">
-              <MailOutlined />
-              <a-tag color="orange" size="small">未绑定邮箱</a-tag>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 基本信息卡片 -->
-    <section class="info-card">
-      <div class="card-header">
-        <EditOutlined class="card-icon" />
-        <h3>基本信息</h3>
-      </div>
-      <a-form
-        :model="formState"
-        autocomplete="off"
-        class="edit-form"
-        name="editProfile"
-        @finish="handleSubmit"
-      >
-        <a-form-item
-          :rules="[{ required: true, message: '请输入用户名' }]"
-          label="用户名"
-          name="userName"
-        >
-          <a-input v-model:value="formState.userName" placeholder="请输入用户名" size="large" />
-        </a-form-item>
-        <a-form-item label="个人简介" name="userProfile">
-          <a-textarea
-            v-model:value="formState.userProfile"
-            :rows="4"
-            placeholder="介绍一下自己，内容会显示在个人名片中"
-          />
-        </a-form-item>
-        <a-form-item class="form-actions">
-          <a-button :loading="submitting" html-type="submit" size="large"> 保存修改 </a-button>
-          <a-button size="large" @click="goBack">取消</a-button>
-        </a-form-item>
-      </a-form>
-    </section>
-
-    <!-- 邮箱管理卡片 -->
-    <section class="info-card">
-      <div class="card-header">
-        <MailOutlined class="card-icon" />
-        <h3>邮箱管理</h3>
-      </div>
-      <div class="email-management">
-        <div class="email-status">
-          <MailOutlined />
-          <span>暂未绑定邮箱</span>
-          <a-tag color="orange" size="small">未绑定</a-tag>
-        </div>
-        <a-button class="bind-email-btn" size="large">
-          <MailOutlined />
-          绑定邮箱
-        </a-button>
-      </div>
-    </section>
-
-    <!-- 安全设置卡片 -->
-    <section class="info-card">
-      <div class="card-header">
-        <SafetyOutlined class="card-icon" />
-        <h3>安全设置</h3>
-      </div>
-      <div class="security-settings">
-        <div class="security-item">
-          <div class="security-info">
-            <h5>登录密码</h5>
-            <p>用于登录账户的密码，建议定期修改</p>
-          </div>
-          <a-button class="change-password-btn" size="large" @click="openPasswordModal">
-            <LockOutlined />
-            修改密码
+    <!-- 不对称网格布局 -->
+    <div class="asym-grid">
+      <!-- 左侧栏（窄） -->
+      <div class="left-sidebar">
+        <!-- 返回按钮 -->
+        <div class="back-section">
+          <a-button class="back-button" size="large" @click="goBack">
+            <ArrowLeftOutlined />
+            返回个人中心
           </a-button>
         </div>
-      </div>
-    </section>
 
-    <!-- 返回按钮 -->
-    <div class="back-button-container">
-      <a-button class="back-button" size="large" type="primary" @click="goBack">
-        <ArrowLeftOutlined />
-        返回个人中心
-      </a-button>
+        <!-- 用户资料卡片（樱花粉玻璃拟态） -->
+        <section class="profile-card-mini sakura-glass">
+          <div class="avatar-section">
+            <a-avatar :size="64" :src="displayAvatar" class="user-avatar" />
+            <div class="avatar-upload">
+              <a-upload
+                :before-upload="handleAvatarUpload"
+                :show-upload-list="false"
+                accept="image/*"
+              >
+                <a-button :loading="avatarUploading" size="small" type="text">
+                  <UploadOutlined />
+                  更换
+                </a-button>
+              </a-upload>
+            </div>
+          </div>
+          <div class="user-info-mini">
+            <h3 class="user-name">{{ truncateText(formState.userName || '未设置', 10) }}</h3>
+            <p class="user-account">@{{ formState.userAccount }}</p>
+            <div class="user-role-badge">
+              <span class="role-tag">{{ userRoleLabel }}</span>
+            </div>
+            <div class="user-stats-mini">
+              <div class="stat-mini">
+                <GiftOutlined />
+                <span>{{ accountInfo?.availablePoints ?? 0 }}</span>
+              </div>
+              <div class="stat-mini">
+                <UserOutlined />
+                <span>{{ joinedDays }}天</span>
+              </div>
+            </div>
+            <div class="create-time-mini">
+              <p>{{ createTimeLabel }}</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- 安全设置卡片 -->
+        <section class="security-card">
+          <div class="card-header">
+            <SafetyOutlined class="card-icon" />
+            <h3>安全设置</h3>
+          </div>
+          <div class="security-list">
+            <div class="security-item-compact">
+              <div class="security-info">
+                <LockOutlined class="security-icon" />
+                <div>
+                  <h5>登录密码</h5>
+                  <p>定期修改密码保护账户安全</p>
+                </div>
+              </div>
+              <a-button class="change-password-btn" size="small" @click="openPasswordModal">
+                修改
+              </a-button>
+            </div>
+
+            <div class="security-item-compact security-item-spaced">
+              <div class="security-info">
+                <MailOutlined class="security-icon" />
+                <div>
+                  <h5>绑定邮箱</h5>
+                  <p>绑定邮箱以接收重要通知</p>
+                </div>
+              </div>
+              <a-button class="change-password-btn" size="small"> 绑定 </a-button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- 右侧栏（宽） -->
+      <div class="right-main">
+        <!-- Hero 区域 -->
+        <section class="edit-hero">
+          <div class="hero-content">
+            <p class="eyebrow">EDIT PROFILE</p>
+            <h2>编辑资料</h2>
+            <p class="subtitle">修改您的个人信息和账户设置</p>
+          </div>
+        </section>
+
+        <!-- 基本信息卡片（非对称两栏布局） -->
+        <section class="info-card">
+          <div class="card-header">
+            <EditOutlined class="card-icon" />
+            <h3>基本信息</h3>
+          </div>
+          <a-form
+            :model="formState"
+            autocomplete="off"
+            class="edit-form"
+            name="editProfile"
+            @finish="handleSubmit"
+          >
+            <!-- 账户信息区域（两栏非对称） -->
+            <div class="account-info-section">
+              <a-form-item
+                :rules="[{ required: true, message: '请输入用户名' }]"
+                class="form-item-name"
+                label="用户名"
+                name="userName"
+              >
+                <a-input
+                  v-model:value="formState.userName"
+                  placeholder="请输入用户名"
+                  size="large"
+                />
+              </a-form-item>
+
+              <a-form-item class="form-item-account" label="账号">
+                <a-input
+                  :value="formState.userAccount"
+                  disabled
+                  placeholder="系统账号"
+                  size="large"
+                />
+              </a-form-item>
+            </div>
+
+            <!-- 个人简介（全宽） -->
+            <a-form-item class="form-item-bio" label="个人简介" name="userProfile">
+              <a-textarea
+                v-model:value="formState.userProfile"
+                :maxlength="200"
+                :rows="4"
+                placeholder="介绍一下自己，内容会显示在个人名片中"
+                show-count
+              />
+            </a-form-item>
+
+            <a-form-item class="form-actions">
+              <a-button :loading="submitting" html-type="submit" size="large" type="primary">
+                保存修改
+              </a-button>
+            </a-form-item>
+          </a-form>
+        </section>
+      </div>
     </div>
 
     <!-- 修改密码弹窗 -->
@@ -422,36 +459,363 @@ const truncateText = (text: string, maxLength: number) => {
   </div>
 </template>
 
-<style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&family=Noto+Serif+SC:wght@600;700&display=swap');
-
+<style>
+/* ========== 全局变量（非scoped） ========== */
 :root {
-  --color-primary: #f97316;
-  --color-primary-dark: #ea580c;
-  --color-primary-light: #fbbf24;
-  --color-text: #1e293b;
-  --color-text-secondary: #64748b;
-  --color-border: #e2e8f0;
-  --font-sans: 'Noto Sans SC', sans-serif;
-  --font-serif: 'Noto Serif SC', serif;
+  --color-primary: #ff6b6b;
+  --color-primary-light: #ff8787;
+  --color-primary-dark: #fa5252;
+  --color-secondary: #ffa8a8;
+  --color-accent: #ffec99;
+  --color-text: #2d3436;
+  --color-text-secondary: #636e72;
+  --color-text-light: #b2bec3;
+  --color-bg: #fff5f5;
+  --color-glass: rgba(255, 255, 255, 0.7);
+  --color-glass-border: rgba(255, 255, 255, 0.9);
+  --shadow-soft: 0 8px 32px rgba(255, 107, 107, 0.1);
+  --shadow-hover: 0 12px 48px rgba(255, 107, 107, 0.15);
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --font-main: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+</style>
+
+<style scoped>
+/* ========== 字体引入 ========== */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;800&display=swap');
+
+/* ========== 主容器 ========== */
+.edit-profile-wrapper {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+  font-family: var(--font-main);
+  text-align: left;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
-.edit-profile-wrapper {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 24px 0 64px;
+/* ========== 不对称网格布局 ========== */
+.asym-grid {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 32px;
+  align-items: start;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* ========== 左侧栏（窄） ========== */
+.left-sidebar {
   display: flex;
   flex-direction: column;
   gap: 24px;
+  position: sticky;
+  top: 100px;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.back-section {
+  margin-bottom: 8px;
+}
+
+.back-button {
+  width: 100%;
+  height: 44px;
+  font-size: 15px;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  background: var(--color-glass);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--color-glass-border);
+  color: var(--color-text);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateZ(0);
+  text-align: left;
+}
+
+.back-button:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  transform: translate3d(2px, 0, 0);
+  box-shadow: var(--shadow-soft);
+}
+
+/* ========== 樱花粉玻璃拟态 ========== */
+.sakura-glass {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 228, 225, 0.85) 0%,
+    rgba(255, 183, 197, 0.75) 100%
+  ) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 183, 197, 0.3) !important;
+  box-shadow: 0 8px 32px rgba(255, 183, 197, 0.2) !important;
+}
+
+/* 用户资料卡片（迷你） */
+.profile-card-mini {
+  background: linear-gradient(135deg, rgba(255, 228, 225, 0.85) 0%, rgba(255, 183, 197, 0.75) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: 0 8px 32px rgba(255, 183, 197, 0.2);
+  border: 1px solid rgba(255, 183, 197, 0.3);
+  color: var(--color-text);
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 樱花瓣装饰效果 */
+.profile-card-mini.sakura-glass::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -30%;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(255, 192, 203, 0.3) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.profile-card-mini.sakura-glass > * {
+  position: relative;
+  z-index: 1;
+}
+
+.avatar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.user-avatar {
+  border: 3px solid rgba(255, 183, 197, 0.4);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.avatar-upload :deep(.ant-btn) {
+  background: rgba(255, 107, 107, 0.1);
+  border-color: rgba(255, 107, 107, 0.2);
+  color: var(--color-primary);
+  border-radius: var(--radius-sm);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateZ(0);
+}
+
+.avatar-upload :deep(.ant-btn:hover) {
+  background: rgba(255, 107, 107, 0.15);
+  border-color: rgba(255, 107, 107, 0.3);
+  transform: translate3d(0, -1px, 0);
+}
+
+.user-info-mini {
+  text-align: center;
+}
+
+.user-info-mini .user-name {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1.3;
+}
+
+.user-info-mini .user-account {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+/* 用户角色徽章 */
+.user-role-badge {
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.role-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  background: linear-gradient(135deg, rgba(255, 107, 107, 0.15) 0%, rgba(255, 168, 168, 0.15) 100%);
+  border: 1px solid rgba(255, 107, 107, 0.25);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-primary);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateZ(0);
+}
+
+.role-tag:hover {
+  background: linear-gradient(135deg, rgba(255, 107, 107, 0.2) 0%, rgba(255, 168, 168, 0.2) 100%);
+  transform: translate3d(0, -1px, 0);
+}
+
+/* 创建时间 */
+.create-time-mini {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 183, 197, 0.25);
+}
+
+.create-time-mini p {
+  margin: 0;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  font-weight: 400;
+  letter-spacing: 0.3px;
+}
+
+.user-stats-mini {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.stat-mini {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text);
+  opacity: 0.9;
+}
+
+/* 安全设置卡片 */
+.security-card {
+  background: var(--color-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-soft);
+  border: 1px solid var(--color-glass-border);
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.security-card .card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 107, 107, 0.15);
+}
+
+.security-card .card-icon {
+  font-size: 20px;
+  color: var(--color-primary);
+}
+
+.security-card .card-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.security-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.security-item-compact {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(255, 107, 107, 0.05);
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 107, 107, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.security-item-compact:hover {
+  background: rgba(255, 107, 107, 0.08);
+  border-color: rgba(255, 107, 107, 0.2);
+}
+
+/* 安全项间距 */
+.security-item-spaced {
+  margin-top: 16px;
+}
+
+.security-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.security-icon {
+  font-size: 18px;
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.security-info h5 {
+  margin: 0 0 2px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.security-info p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.change-password-btn {
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateZ(0);
+}
+
+.change-password-btn:hover {
+  transform: translate3d(0, -1px, 0);
+}
+
+/* ========== 右侧栏（宽） ========== */
+.right-main {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 /* Hero 区域 */
 .edit-hero {
-  background: linear-gradient(135deg, rgba(249, 115, 22, 0.1) 0%, rgba(251, 191, 36, 0.05) 100%);
-  border-radius: 18px;
-  padding: 28px 32px;
-  box-shadow: 0 10px 30px rgba(249, 115, 22, 0.1);
-  border: 1px solid rgba(249, 115, 22, 0.2);
+  background: var(--color-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: var(--radius-lg);
+  padding: 32px 40px;
+  box-shadow: var(--shadow-soft);
+  border: 1px solid var(--color-glass-border);
+  text-align: left;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .eyebrow {
@@ -460,122 +824,48 @@ const truncateText = (text: string, maxLength: number) => {
   color: var(--color-primary);
   margin-bottom: 8px;
   font-weight: 600;
+  text-transform: uppercase;
 }
 
 .edit-hero h2 {
-  margin: 0;
-  font-size: 28px;
+  margin: 0 0 12px;
+  font-size: 32px;
   color: var(--color-text);
   font-weight: 700;
-  font-family: var(--font-serif);
 }
 
 .subtitle {
-  margin-top: 8px;
+  margin: 0;
   color: var(--color-text-secondary);
-}
-
-/* 用户资料卡片 */
-.profile-card {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-  border-radius: 18px;
-  padding: 32px 40px;
-  box-shadow: 0 10px 30px rgba(249, 115, 22, 0.3);
-  color: white;
-}
-
-.profile-info {
-  display: flex;
-  align-items: center;
-  gap: 32px;
-}
-
-.user-avatar-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-}
-
-.user-avatar {
-  flex-shrink: 0;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-}
-
-.avatar-upload :deep(.ant-btn) {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.3);
-  color: white;
-  backdrop-filter: blur(10px);
-}
-
-.avatar-upload :deep(.ant-btn:hover) {
-  background: rgba(255, 255, 255, 0.3);
-  border-color: rgba(255, 255, 255, 0.4);
-  color: white;
-}
-
-.user-details {
-  flex: 1;
-}
-
-.user-name {
-  margin: 0 0 8px 0;
-  font-size: 32px;
-  font-weight: 700;
-  color: #ffffff !important;
-  text-shadow:
-    0 2px 12px rgba(0, 0, 0, 0.5),
-    0 1px 4px rgba(0, 0, 0, 0.4),
-    0 0 2px rgba(0, 0, 0, 0.3);
-  letter-spacing: 0.5px;
-  font-family: var(--font-serif);
-  line-height: 1.2;
-}
-
-.user-account {
-  margin: 0 0 20px 0;
-  font-size: 18px;
-  opacity: 1;
-  color: #ffffff !important;
-  font-weight: 700;
-  text-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.4),
-    0 1px 3px rgba(0, 0, 0, 0.3);
-  letter-spacing: 0.3px;
-  font-family: var(--font-sans);
-}
-
-.user-stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 24px;
-}
-
-.stat-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  opacity: 0.9;
+  font-size: 15px;
 }
 
 /* 信息卡片 */
 .info-card {
-  background: #fff;
-  border-radius: 18px;
+  background: var(--color-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: var(--radius-lg);
   padding: 32px 40px;
-  box-shadow: 0 12px 35px rgba(15, 39, 80, 0.07);
-  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-soft);
+  border: 1px solid var(--color-glass-border);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: left;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.info-card:hover {
+  box-shadow: var(--shadow-hover);
 }
 
 .card-header {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
   padding-bottom: 16px;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid rgba(255, 107, 107, 0.15);
 }
 
 .card-icon {
@@ -585,7 +875,7 @@ const truncateText = (text: string, maxLength: number) => {
 
 .card-header h3 {
   margin: 0;
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 600;
   color: var(--color-text);
 }
@@ -594,15 +884,57 @@ const truncateText = (text: string, maxLength: number) => {
   padding: 0;
 }
 
+/* ========== 非对称表单布局 ========== */
+.account-info-section {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.form-item-name {
+  margin-bottom: 0;
+}
+
+.form-item-account {
+  margin-bottom: 0;
+}
+
+.form-item-bio {
+  margin-bottom: 32px;
+}
+
+/* 账号输入框禁用样式 */
+.form-item-account :deep(.ant-input:disabled) {
+  background: rgba(255, 107, 107, 0.05);
+  border-color: rgba(255, 107, 107, 0.15);
+  color: var(--color-text-secondary);
+  cursor: not-allowed;
+}
+
+.form-item-account :deep(.ant-input:disabled:hover) {
+  border-color: rgba(255, 107, 107, 0.15);
+}
+
 .edit-form :deep(.ant-input),
 .edit-form :deep(.ant-input-textarea) {
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateZ(0);
 }
 
 .edit-form :deep(.ant-input:focus),
 .edit-form :deep(.ant-input-textarea:focus) {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.1);
+  box-shadow: 0 0 0 2px rgba(255, 107, 107, 0.1);
+}
+
+.edit-form :deep(.ant-form-item) {
+  margin-bottom: 24px;
+}
+
+.edit-form :deep(.ant-form-item-label) {
+  text-align: left;
 }
 
 .form-actions {
@@ -610,85 +942,30 @@ const truncateText = (text: string, maxLength: number) => {
   margin-bottom: 0;
   display: flex;
   gap: 12px;
+  justify-content: flex-start;
 }
 
-.email-management {
-  padding: 20px;
-  background: #f8fafc;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+.form-actions :deep(.ant-btn) {
+  border-radius: var(--radius-sm);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateZ(0);
 }
 
-.email-status {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 13px;
-  color: var(--color-text-secondary);
-}
-
-.bind-email-btn {
-  border-radius: 8px;
-}
-
-.security-settings {
-  padding: 20px;
-  background: #f8fafc;
-  border-radius: 12px;
-}
-
-.security-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.security-info h5 {
-  margin: 0 0 4px 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.security-info p {
-  margin: 0;
-  font-size: 14px;
-  color: var(--color-text-secondary);
-}
-
-.change-password-btn {
-  border-radius: 8px;
-}
-
-/* 返回按钮 */
-.back-button-container {
-  display: flex;
-  justify-content: center;
-  margin-top: 24px;
-}
-
-.back-button {
-  height: 48px;
-  padding: 0 32px;
-  font-size: 16px;
-  font-weight: 500;
-  border-radius: 24px;
+.form-actions :deep(.ant-btn-primary) {
   background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
   border: none;
 }
 
-.back-button:hover {
-  background: linear-gradient(135deg, var(--color-primary-dark) 0%, #3b82f6 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(249, 115, 22, 0.4);
+.form-actions :deep(.ant-btn-primary:hover) {
+  transform: translate3d(0, -2px, 0);
+  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.3);
 }
 
-/* 修改密码弹窗 */
+/* ========== 修改密码弹窗 ========== */
 .password-modal :deep(.ant-modal-content) {
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
+  box-shadow: var(--shadow-hover);
 }
 
 .password-modal :deep(.ant-modal-body) {
@@ -697,8 +974,11 @@ const truncateText = (text: string, maxLength: number) => {
 
 .modal-header {
   padding: 32px 32px 24px;
-  background: linear-gradient(135deg, rgba(249, 115, 22, 0.1) 0%, rgba(251, 191, 36, 0.05) 100%);
-  border-bottom: 1px solid var(--color-border);
+  background: var(--color-glass);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 107, 107, 0.15);
+  text-align: left;
 }
 
 .modal-header h3 {
@@ -716,16 +996,18 @@ const truncateText = (text: string, maxLength: number) => {
 
 .password-form {
   padding: 32px;
+  text-align: left;
 }
 
 .password-input :deep(.ant-input),
 .password-input :deep(.ant-input-password) {
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   height: 48px;
-  font-size: 13px;
+  font-size: 14px;
   padding-left: 40px;
-  border-color: #d9d9d9;
-  transition: all 0.3s;
+  border-color: rgba(255, 107, 107, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateZ(0);
 }
 
 .password-input :deep(.ant-input:hover),
@@ -737,7 +1019,7 @@ const truncateText = (text: string, maxLength: number) => {
 .password-input :deep(.ant-input-focused),
 .password-input :deep(.ant-input-password:focus) {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.1);
+  box-shadow: 0 0 0 2px rgba(255, 107, 107, 0.1);
 }
 
 .password-input :deep(.ant-input-prefix) {
@@ -747,7 +1029,7 @@ const truncateText = (text: string, maxLength: number) => {
 }
 
 .password-input :deep(.ant-input-password-icon) {
-  color: #999;
+  color: var(--color-text-light);
   font-size: 16px;
   cursor: pointer;
   transition: color 0.3s;
@@ -766,252 +1048,153 @@ const truncateText = (text: string, maxLength: number) => {
   display: flex;
   gap: 12px;
   width: 100%;
+  justify-content: flex-end;
 }
 
 .cancel-button {
-  flex: 1;
+  flex: 0;
   height: 48px;
-  border-radius: 8px;
+  padding: 0 24px;
+  border-radius: var(--radius-sm);
   font-size: 16px;
   font-weight: 500;
-  background: #ffffff;
-  border: 1px solid #d9d9d9;
-  color: #666;
-  transition: all 0.3s ease;
+  background: white;
+  border: 1px solid rgba(255, 107, 107, 0.2);
+  color: var(--color-text-secondary);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .cancel-button:hover {
   border-color: var(--color-primary);
   color: var(--color-primary);
-  background: #f8fafc;
+  background: rgba(255, 107, 107, 0.05);
 }
 
 .submit-button {
-  flex: 1;
+  flex: 0;
   height: 48px;
-  border-radius: 8px;
+  padding: 0 32px;
+  border-radius: var(--radius-sm);
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 600;
   background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
   border: none;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .submit-button:hover {
-  background: linear-gradient(135deg, var(--color-primary-dark) 0%, #3b82f6 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(249, 115, 22, 0.4);
+  transform: translate3d(0, -1px, 0);
+  box-shadow: 0 8px 20px rgba(255, 107, 107, 0.4);
 }
 
 .submit-button:active {
-  transform: translateY(0);
+  transform: translate3d(0, 0, 0);
+}
+
+/* ========== 响应式设计 ========== */
+@media (max-width: 1024px) {
+  .edit-profile-wrapper {
+    padding: 24px 16px 48px;
+  }
+
+  .asym-grid {
+    grid-template-columns: 280px 1fr;
+    gap: 24px;
+  }
+
+  .left-sidebar {
+    position: static;
+  }
+
+  .edit-hero {
+    padding: 28px 32px;
+  }
+
+  .edit-hero h2 {
+    font-size: 28px;
+  }
+
+  .info-card {
+    padding: 28px 32px;
+  }
+
+  .account-info-section {
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
 }
 
 @media (max-width: 768px) {
-  .info-card,
-  .profile-card {
-    padding: 24px;
+  .asym-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
   }
 
-  .profile-info {
-    flex-direction: column;
-    text-align: center;
+  .left-sidebar {
+    position: static;
   }
 
-  .user-avatar-section {
+  .back-button {
     width: 100%;
   }
 
-  .user-stats {
-    justify-content: center;
+  .profile-card-mini {
+    padding: 20px;
+  }
+
+  .edit-hero {
+    padding: 24px;
+  }
+
+  .edit-hero h2 {
+    font-size: 24px;
+  }
+
+  .info-card {
+    padding: 24px;
   }
 
   .card-header {
-    margin-bottom: 16px;
+    margin-bottom: 20px;
+    padding-bottom: 14px;
   }
 
-  .email-management {
+  .security-item-compact {
     flex-direction: column;
     align-items: flex-start;
-    gap: 16px;
+    gap: 12px;
   }
 
-  .security-item {
+  .change-password-btn {
+    width: 100%;
+  }
+
+  /* 表单响应式 */
+  .account-info-section {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .form-item-name,
+  .form-item-account {
+    margin-bottom: 24px;
+  }
+
+  .form-actions {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
+  }
+
+  .form-actions :deep(.ant-btn) {
+    width: 100%;
   }
 
   .button-group {
     flex-direction: column;
   }
 
-  .form-actions {
-    flex-direction: column;
+  .cancel-button,
+  .submit-button {
+    width: 100%;
   }
-}
-
-/* ========== 全局字体和按钮优化 ========== */
-
-/* 强制所有文字清晰可读 */
-* {
-  -webkit-font-smoothing: antialiased !important;
-  -moz-osx-font-smoothing: grayscale !important;
-}
-
-/* 页面容器文字 */
-.edit-profile-wrapper {
-  color: #0f172a !important;
-}
-
-/* Ant Design 按钮优化 */
-:deep(.ant-btn-primary) {
-  background: #3b82f6 !important;
-  border-color: #3b82f6 !important;
-  color: white !important;
-  font-weight: 700 !important;
-  font-size: 13px !important;
-  letter-spacing: 0.3px;
-  height: 32px !important;
-  padding: 0 16px !important;
-}
-
-:deep(.ant-btn-primary:hover) {
-  background: #2563eb !important;
-  border-color: #2563eb !important;
-}
-
-:deep(.ant-btn-default) {
-  color: #0f172a !important;
-  border-color: #e2e8f0 !important;
-  font-weight: 600 !important;
-  font-size: 13px !important;
-  background: white !important;
-}
-
-:deep(.ant-btn-default:hover) {
-  color: #3b82f6 !important;
-  border-color: #3b82f6 !important;
-}
-
-/* 表单标签优化 */
-:deep(.ant-form-item-label > label) {
-  color: #0f172a !important;
-  font-weight: 700 !important;
-  font-size: 14px !important;
-}
-
-/* 输入框文字优化 */
-:deep(.ant-input) {
-  color: #0f172a !important;
-  font-weight: 600 !important;
-  font-size: 14px !important;
-}
-
-:deep(.ant-input::placeholder) {
-  color: #64748b !important;
-  font-weight: 400 !important;
-}
-
-:deep(.ant-select-selection-item) {
-  color: #0f172a !important;
-  font-weight: 600 !important;
-}
-
-/* Textarea 文字 */
-:deep(.ant-input-textarea) {
-  color: #0f172a !important;
-  font-weight: 600 !important;
-}
-
-/* 表格内容文字优化 */
-:deep(.ant-table-tbody) {
-  color: #0f172a !important;
-}
-
-:deep(.ant-table-thead > tr > th) {
-  color: white !important;
-  font-weight: 700 !important;
-}
-
-/* Modal 标题优化 */
-:deep(.ant-modal-title) {
-  color: #0f172a !important;
-  font-weight: 700 !important;
-  font-size: 18px !important;
-}
-
-:deep(.ant-modal-body) {
-  color: #0f172a !important;
-}
-
-/* Tag 标签文字优化 */
-:deep(.ant-tag) {
-  font-weight: 700 !important;
-  color: #0f172a !important;
-}
-
-/* Card 标题 */
-:deep(.ant-card-head-title) {
-  color: #0f172a !important;
-  font-weight: 700 !important;
-  font-size: 18px !important;
-}
-
-/* 所有文本和标签 */
-:deep(.ant-typography),
-:deep(.ant-text),
-:deep(label),
-:deep(span),
-:deep(div),
-:deep(p) {
-  color: #0f172a !important;
-}
-
-/* 特别优化：深黑色文字 */
-.edit-profile-wrapper :deep(.ant-form-item-label > label),
-.edit-profile-wrapper :deep(.ant-input),
-.edit-profile-wrapper :deep(.ant-input-textarea),
-.edit-profile-wrapper :deep(.ant-select),
-.edit-profile-wrapper :deep(.ant-select-selection-item) {
-  color: #000000 !important;
-  font-weight: 700 !important;
-}
-
-.edit-profile-wrapper :deep(.ant-form-item-label > label) {
-  color: #000000 !important;
-  font-size: 15px !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.5px;
-}
-
-.edit-profile-wrapper :deep(.ant-input::placeholder),
-.edit-profile-wrapper :deep(.ant-input-textarea::placeholder) {
-  color: #475569 !important;
-  font-weight: 500 !important;
-}
-
-.edit-profile-wrapper :deep(.ant-input),
-.edit-profile-wrapper :deep(.ant-input-textarea) {
-  background: #ffffff !important;
-  border-color: #cbd5e1 !important;
-  color: #000000 !important;
-  font-weight: 700 !important;
-  font-size: 14px !important;
-}
-
-.edit-profile-wrapper :deep(.ant-input:hover),
-.edit-profile-wrapper :deep(.ant-input-textarea:hover) {
-  border-color: #3b82f6 !important;
-}
-
-.edit-profile-wrapper :deep(.ant-input:focus),
-.edit-profile-wrapper :deep(.ant-input-textarea:focus),
-.edit-profile-wrapper :deep(.ant-input-focused),
-.edit-profile-wrapper :deep(.ant-input-textarea-focused) {
-  border-color: #3b82f6 !important;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1) !important;
-  background: #ffffff !important;
-  color: #000000 !important;
 }
 </style>
