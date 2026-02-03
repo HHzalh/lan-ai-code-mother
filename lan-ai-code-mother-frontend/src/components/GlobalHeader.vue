@@ -77,8 +77,10 @@ import {
   LoginOutlined,
   LogoutOutlined,
   TeamOutlined,
+  MessageOutlined,
   UserOutlined,
 } from '@ant-design/icons-vue'
+import ChatManagePage from "@/pages/admin/ChatManagePage.vue";
 
 const loginUserStore = useLoginUserStore()
 const router = useRouter()
@@ -121,6 +123,12 @@ const originItems = [
     icon: () => h(AppstoreOutlined),
     label: '应用管理',
     title: '应用管理',
+  },
+  {
+    key: '/admin/ChatManage',
+    icon: () => h(MessageOutlined),
+    label: '对话管理',
+    title: '对话管理',
   },
   {
     key: '/admin/pointManage',

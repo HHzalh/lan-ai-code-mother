@@ -1,212 +1,241 @@
 <template>
-  <div class="chat-manage-container">
-    <!-- Hero 背景 -->
-    <div class="hero-background">
-      <div class="hero-overlay"></div>
-    </div>
+  <div class="chat-manage-wrapper admin-manage-wrapper">
+    <!-- 动态渐变背景 -->
+    <div class="gradient-bg admin-gradient-bg"></div>
 
-    <!-- 背景装饰元素 -->
-    <div class="bg-decoration">
-      <div class="circle circle-1"></div>
-      <div class="circle circle-2"></div>
-      <div class="circle circle-3"></div>
-    </div>
+    <!-- 主容器 -->
+    <div class="manage-container admin-manage-container">
+      <!-- 页面标题区 -->
+      <div class="page-header admin-page-header">
+        <h1 class="page-title admin-page-title">对话历史管理</h1>
+        <p class="page-subtitle admin-page-subtitle">查看和管理所有对话记录</p>
+      </div>
 
-    <!-- 主内容区 -->
-    <div class="content-wrapper">
-      <!-- 页面头部 -->
-      <div class="page-header">
-        <div class="header-left">
-          <div class="icon-wrapper">
-            <MessageOutlined class="header-icon" />
+      <!-- 筛选卡片 -->
+      <div class="filter-card admin-glass-card admin-filter-card">
+        <div class="filter-header admin-filter-header">
+          <div class="filter-title admin-filter-title">
+            <svg
+              fill="none"
+              height="20"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="20"
+            >
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" x2="16.65" y1="21" y2="16.65"></line>
+            </svg>
+            <span>筛选</span>
           </div>
-          <div class="header-text">
-            <h1 class="page-title">对话历史管理</h1>
-            <p class="page-subtitle">
-              <CommentOutlined />
-              管理AI对话记录与消息
-            </p>
-          </div>
+          <button class="action-btn primary admin-action-btn primary" @click="doSearch">
+            <svg
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="16"
+            >
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" x2="16.65" y1="21" y2="16.65"></line>
+            </svg>
+            搜索
+          </button>
         </div>
-        <div class="header-actions">
-          <a-button :icon="h(ReloadOutlined)" class="action-btn" size="large" @click="fetchData">
-            刷新
-          </a-button>
+
+        <div class="filter-grid admin-filter-grid">
+          <div class="filter-item admin-filter-item">
+            <label class="filter-label admin-filter-label">消息内容</label>
+            <input
+              v-model="searchParams.message"
+              class="filter-input admin-filter-input"
+              placeholder="请输入消息内容"
+            />
+          </div>
+
+          <div class="filter-item admin-filter-item">
+            <label class="filter-label admin-filter-label">消息类型</label>
+            <select v-model="searchParams.messageType" class="filter-select admin-filter-select">
+              <option value="">全部</option>
+              <option value="user">用户消息</option>
+              <option value="ai">AI消息</option>
+            </select>
+          </div>
+
+          <div class="filter-item admin-filter-item">
+            <label class="filter-label admin-filter-label">应用ID</label>
+            <input
+              v-model="searchParams.appId"
+              class="filter-input admin-filter-input"
+              placeholder="请输入应用ID"
+            />
+          </div>
+
+          <div class="filter-item admin-filter-item">
+            <label class="filter-label admin-filter-label">用户ID</label>
+            <input
+              v-model="searchParams.userId"
+              class="filter-input admin-filter-input"
+              placeholder="请输入用户ID"
+            />
+          </div>
         </div>
       </div>
 
-      <!-- 主卡片 -->
-      <div class="main-card info-card">
-        <!-- 搜索区域 -->
-        <div class="search-section">
-          <div class="search-header">
-            <FilterOutlined class="search-icon" />
-            <span class="search-title">筛选条件</span>
+      <!-- 对话列表卡片 -->
+      <div class="table-card admin-glass-card admin-table-card">
+        <div class="table-header admin-table-header">
+          <div class="table-title admin-table-title">
+            <svg
+              fill="none"
+              height="20"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="20"
+            >
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+            <span>对话列表</span>
+            <span class="table-count admin-table-count">{{ total }} 条</span>
           </div>
-          <a-form :model="searchParams" class="search-form" layout="vertical" @finish="doSearch">
-            <div class="search-grid">
-              <a-form-item label="消息内容">
-                <a-input
-                  v-model:value="searchParams.message"
-                  placeholder="请输入消息内容"
-                  size="large"
-                >
-                  <template #prefix>
-                    <SearchOutlined class="input-icon" />
-                  </template>
-                </a-input>
-              </a-form-item>
-              <a-form-item label="消息类型">
-                <a-select
-                  v-model:value="searchParams.messageType"
-                  placeholder="选择消息类型"
-                  size="large"
-                >
-                  <a-select-option value="">全部</a-select-option>
-                  <a-select-option value="user">用户消息</a-select-option>
-                  <a-select-option value="assistant">AI消息</a-select-option>
-                </a-select>
-              </a-form-item>
-              <a-form-item label="应用ID">
-                <a-input v-model:value="searchParams.appId" placeholder="请输入应用ID" size="large">
-                  <template #prefix>
-                    <AppstoreOutlined class="input-icon" />
-                  </template>
-                </a-input>
-              </a-form-item>
-              <a-form-item label="用户ID">
-                <a-input
-                  v-model:value="searchParams.userId"
-                  placeholder="请输入用户ID"
-                  size="large"
-                >
-                  <template #prefix>
-                    <UserOutlined class="input-icon" />
-                  </template>
-                </a-input>
-              </a-form-item>
-              <a-form-item class="search-button-item">
-                <a-button block html-type="submit" size="large" type="primary" @click="doSearch">
-                  <template #icon>
-                    <SearchOutlined />
-                  </template>
-                  搜索
-                </a-button>
-              </a-form-item>
-            </div>
-          </a-form>
+          <button class="action-btn secondary admin-action-btn secondary" @click="fetchData">
+            <svg
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="16"
+            >
+              <path d="M23 4v6h-6"></path>
+              <path d="M1 20v-6h6"></path>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+            刷新
+          </button>
         </div>
 
-        <a-divider class="section-divider" />
-
-        <!-- 数据表格 -->
-        <div class="table-section">
-          <div class="table-header">
-            <TableOutlined class="table-icon" />
-            <span class="table-title">对话列表</span>
-          </div>
-
-          <a-table
-            :columns="columns"
-            :data-source="data"
-            :pagination="pagination"
-            :scroll="{ x: 1500 }"
-            class="chat-table"
-            @change="doTableChange"
-          >
-            <template #bodyCell="{ column, record }">
-              <template v-if="column.dataIndex === 'id'">
-                <a-tag class="id-tag">
-                  <NumberOutlined />
-                  {{ record.id }}
-                </a-tag>
-              </template>
-              <template v-else-if="column.dataIndex === 'message'">
-                <a-tooltip :title="record.message">
-                  <div class="message-text">
-                    <CommentOutlined class="message-icon" />
-                    {{ record.message }}
-                  </div>
-                </a-tooltip>
-              </template>
-              <template v-else-if="column.dataIndex === 'messageType'">
-                <a-tag
-                  :class="{
-                    'message-user': record.messageType === 'user',
-                    'message-ai': record.messageType === 'assistant',
-                  }"
-                  class="message-type-tag"
-                >
-                  <UserOutlined v-if="record.messageType === 'user'" />
-                  <RobotOutlined v-else />
-                  {{ record.messageType === 'user' ? '用户消息' : 'AI消息' }}
-                </a-tag>
-              </template>
-              <template v-else-if="column.dataIndex === 'appId'">
-                <a-tag class="app-tag">
-                  <AppstoreOutlined />
-                  {{ record.appId }}
-                </a-tag>
-              </template>
-              <template v-else-if="column.dataIndex === 'userId'">
-                <a-tag class="user-tag">
-                  <UserOutlined />
-                  {{ record.userId }}
-                </a-tag>
-              </template>
-              <template v-else-if="column.dataIndex === 'createTime'">
-                <div class="time-cell">
-                  <CalendarOutlined class="time-icon" />
-                  <span>{{ formatTime(record.createTime) }}</span>
-                </div>
-              </template>
-              <template v-else-if="column.key === 'action'">
-                <a-space>
-                  <a-button size="large" type="primary" @click="viewAppChat(record.appId)">
-                    <template #icon>
-                      <EyeOutlined />
-                    </template>
-                    查看对话
-                  </a-button>
-                  <a-popconfirm title="确定要删除这条消息吗？" @confirm="deleteMessage(record.id)">
-                    <a-button danger size="large" type="primary">
-                      <template #icon>
-                        <DeleteOutlined />
-                      </template>
-                      删除
-                    </a-button>
-                  </a-popconfirm>
-                </a-space>
-              </template>
+        <a-table
+          :columns="columns"
+          :data-source="data"
+          :pagination="pagination"
+          :scroll="{ x: 'max-content' }"
+          class="chat-table admin-data-table"
+          @change="doTableChange"
+        >
+          <template #bodyCell="{ column, record }">
+            <template v-if="column.dataIndex === 'id'">
+              <span class="id-badge admin-id-badge">{{ record.id }}</span>
             </template>
-          </a-table>
-        </div>
+
+            <template v-else-if="column.dataIndex === 'message'">
+              <span class="message-text admin-message-text">{{
+                truncateText(record.message, 30)
+              }}</span>
+            </template>
+
+            <template v-else-if="column.dataIndex === 'messageType'">
+              <span
+                :class="record.messageType === 'user' ? 'admin-user-badge' : 'admin-ai-badge'"
+                class="type-badge"
+              >
+                <svg
+                  fill="none"
+                  height="12"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="12"
+                >
+                  <path
+                    v-if="record.messageType === 'user'"
+                    d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"
+                  ></path>
+                  <circle v-if="record.messageType === 'user'" cx="12" cy="7" r="4"></circle>
+                  <g v-else>
+                    <path
+                      d="M12 2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2 2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"
+                    ></path>
+                    <path
+                      d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"
+                    ></path>
+                  </g>
+                </svg>
+                {{ record.messageType === 'user' ? '用户消息' : 'AI消息' }}
+              </span>
+            </template>
+
+            <template v-else-if="column.dataIndex === 'appId'">
+              <span class="app-id-badge admin-id-badge">{{ record.appId }}</span>
+            </template>
+
+            <template v-else-if="column.dataIndex === 'userId'">
+              <span
+                class="user-id-badge admin-type-badge"
+                style="background: rgba(249, 115, 22, 0.1); color: #ea580c"
+                >{{ record.userId }}</span
+              >
+            </template>
+
+            <template v-else-if="column.dataIndex === 'createTime'">
+              <span class="time-text admin-time-text">{{ formatTime(record.createTime) }}</span>
+            </template>
+
+            <template v-else-if="column.key === 'action'">
+              <div class="action-buttons admin-action-buttons">
+                <button
+                  class="action-btn-sm primary admin-action-btn-sm primary"
+                  @click="viewAppChat(record.appId)"
+                >
+                  <svg
+                    fill="none"
+                    height="14"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                    width="14"
+                  >
+                    <path d="M1 12s4-8 11-8 11 8-11 8-4 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                  查看
+                </button>
+                <button
+                  class="action-btn-sm danger admin-action-btn-sm danger"
+                  @click="deleteMessage(record.id)"
+                >
+                  <svg
+                    fill="none"
+                    height="14"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                    width="14"
+                  >
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path
+                      d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                    ></path>
+                  </svg>
+                  删除
+                </button>
+              </div>
+            </template>
+          </template>
+        </a-table>
       </div>
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { computed, h, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { message } from 'ant-design-vue'
+import { message, Modal } from 'ant-design-vue'
 import { listAllChatHistoryByPageForAdmin } from '@/api/chatHistoryController'
 import { formatTime } from '@/utils/time'
-import {
-  AppstoreOutlined,
-  CalendarOutlined,
-  CommentOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  FilterOutlined,
-  MessageOutlined,
-  NumberOutlined,
-  ReloadOutlined,
-  RobotOutlined,
-  SearchOutlined,
-  TableOutlined,
-  UserOutlined,
-} from '@ant-design/icons-vue'
 
 const router = useRouter()
 
@@ -214,39 +243,38 @@ const columns = [
   {
     title: 'ID',
     dataIndex: 'id',
-    width: 100,
+    width: 60,
     fixed: 'left' as const,
   },
   {
     title: '消息内容',
     dataIndex: 'message',
-    width: 350,
+    width: 80,
   },
   {
     title: '消息类型',
     dataIndex: 'messageType',
-    width: 140,
+    width: 120,
   },
   {
     title: '应用ID',
     dataIndex: 'appId',
-    width: 120,
+    width: 60,
   },
   {
     title: '用户ID',
     dataIndex: 'userId',
-    width: 120,
+    width: 60,
   },
   {
     title: '创建时间',
     dataIndex: 'createTime',
-    width: 170,
+    width: 150,
   },
   {
     title: '操作',
     key: 'action',
-    width: 220,
-    fixed: 'right' as const,
+    width: 200,
   },
 ]
 
@@ -259,6 +287,13 @@ const searchParams = reactive<API.ChatHistoryQueryRequest>({
   pageNum: 1,
   pageSize: 10,
 })
+
+// 截取文本
+const truncateText = (text: string, maxLength: number) => {
+  if (!text) return ''
+  if (text.length <= maxLength) return text
+  return text.substring(0, maxLength) + '...'
+}
 
 // 获取数据
 const fetchData = async () => {
@@ -305,6 +340,7 @@ const doTableChange = (page: { current: number; pageSize: number }) => {
 
 // 搜索
 const doSearch = () => {
+  if (searchParams.messageType === '') delete searchParams.messageType
   searchParams.pageNum = 1
   fetchData()
 }
@@ -320,725 +356,27 @@ const viewAppChat = (appId: number | undefined) => {
 const deleteMessage = async (id: number | undefined) => {
   if (!id) return
 
-  try {
-    // 注意：这里需要后端提供删除对话历史的接口
-    message.success('✅ 删除成功')
-    fetchData()
-  } catch (error) {
-    console.error('删除失败：', error)
-    message.error('删除失败')
-  }
+  Modal.confirm({
+    title: '确认删除',
+    content: '确定要删除这条消息吗？',
+    okText: '确定',
+    cancelText: '取消',
+    okButtonProps: { danger: true },
+    onOk: async () => {
+      try {
+        // 注意：这里需要后端提供删除对话历史的接口
+        message.success('删除成功')
+        fetchData()
+      } catch (error) {
+        console.error('删除失败：', error)
+        message.error('删除失败')
+      }
+    },
+  })
 }
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap');
-
-:root {
-  --color-primary: #f97316;
-  --color-primary-dark: #ea580c;
-  --color-primary-light: #fbbf24;
-  --color-text: #1e293b;
-  --color-text-secondary: #64748b;
-  --color-border: #e2e8f0;
-  --color-bg-hover: #f8fafc;
-  --font-serif: 'Noto Serif SC', serif;
-  --font-sans: 'Noto Sans SC', sans-serif;
-}
-
-.chat-manage-container {
-  min-height: 100vh;
-  padding: 0;
-  position: relative;
-  overflow: hidden;
-}
-
-/* Hero 背景 */
-.hero-background {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: url('https://images.unsplash.com/photo-1535905557558-afc4877a26fc?w=1920&q=80');
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
-  z-index: 0;
-}
-
-.hero-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    135deg,
-    rgba(249, 115, 22, 0.98) 0%,
-    rgba(234, 88, 12, 0.85) 50%,
-    rgba(251, 191, 36, 0.82) 100%
-  );
-  backdrop-filter: blur(2px);
-}
-
-/* 背景装饰 */
-.bg-decoration {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  overflow: hidden;
-  z-index: 1;
-  pointer-events: none;
-}
-
-.circle {
-  position: absolute;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
-  animation: float 20s infinite ease-in-out;
-}
-
-.circle-1 {
-  width: 400px;
-  height: 400px;
-  top: -150px;
-  right: -100px;
-  animation-delay: 0s;
-}
-
-.circle-2 {
-  width: 250px;
-  height: 250px;
-  bottom: 20%;
-  left: -80px;
-  animation-delay: 7s;
-}
-
-.circle-3 {
-  width: 180px;
-  height: 180px;
-  bottom: 15%;
-  right: 15%;
-  animation-delay: 12s;
-}
-
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(0) scale(1);
-  }
-  50% {
-    transform: translateY(-40px) scale(1.15);
-  }
-}
-
-/* 主内容区 */
-.content-wrapper {
-  position: relative;
-  z-index: 2;
-  padding: 32px;
-  animation: fadeIn 0.6s ease-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* 页面头部 */
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 28px;
-  gap: 24px;
-  flex-wrap: wrap;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  flex: 1;
-}
-
-.icon-wrapper {
-  width: 72px;
-  height: 72px;
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(20px);
-  border-radius: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 36px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-  border: 2px solid rgba(255, 255, 255, 0.3);
-}
-
-.header-icon {
-  color: white;
-}
-
-.header-text {
-  color: white;
-}
-
-.page-title {
-  font-family: var(--font-serif);
-  font-size: 36px;
-  font-weight: 700;
-  margin: 0 0 8px 0;
-  color: white;
-  letter-spacing: -0.5px;
-  text-shadow:
-    0 2px 4px rgba(0, 0, 0, 0.25),
-    0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-.page-subtitle {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 16px;
-  margin: 0;
-  opacity: 0.95;
-  font-weight: 400;
-}
-
-.header-actions {
-  display: flex;
-  gap: 12px;
-}
-
-.action-btn {
-  height: 48px;
-  border-radius: 12px;
-  font-weight: 600;
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(20px);
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  color: white;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.action-btn:hover {
-  background: rgba(255, 255, 255, 0.35);
-  transform: translateY(-2px);
-}
-
-/* 主卡片 */
-.main-card {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  border-radius: 20px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-  padding: 32px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-/* 搜索区域 */
-.search-section {
-  margin-bottom: 0;
-}
-
-.search-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
-  padding-bottom: 16px;
-  border-bottom: 2px solid var(--color-border);
-}
-
-.search-icon {
-  font-size: 20px;
-  color: var(--color-primary);
-}
-
-.search-title {
-  font-family: var(--font-serif);
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.search-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-  align-items: end;
-}
-
-.search-form :deep(.ant-form-item) {
-  margin-bottom: 0;
-}
-
-.search-form :deep(.ant-form-item-label > label) {
-  font-weight: 600;
-  color: var(--color-text);
-  font-size: 14px;
-}
-
-.search-form :deep(.ant-input),
-.search-form :deep(.ant-select-selector) {
-  border-radius: 12px;
-  height: 48px;
-  border: 2px solid var(--color-border);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.search-form :deep(.ant-input:hover),
-.search-form :deep(.ant-select:hover .ant-select-selector) {
-  border-color: var(--color-primary);
-}
-
-.search-form :deep(.ant-input:focus),
-.search-form :deep(.ant-input-focused),
-.search-form :deep(.ant-select-focused .ant-select-selector) {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.1);
-}
-
-.input-icon {
-  color: var(--color-text-secondary);
-  font-size: 16px;
-}
-
-.search-button-item {
-  grid-column: span 1;
-}
-
-.search-button-item :deep(.ant-btn) {
-  height: 48px;
-  border-radius: 12px;
-  font-weight: 600;
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-  border: none;
-  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.search-button-item :deep(.ant-btn:hover) {
-  background: linear-gradient(135deg, var(--color-primary-dark) 0%, #dc2626 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(249, 115, 22, 0.4);
-}
-
-/* 分隔线 */
-.section-divider {
-  margin: 28px 0;
-  border-color: var(--color-border);
-}
-
-/* 表格区域 */
-.table-section {
-  margin-top: 0;
-}
-
-.table-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
-  padding-bottom: 16px;
-  border-bottom: 2px solid var(--color-border);
-}
-
-.table-icon {
-  font-size: 20px;
-  color: var(--color-primary);
-}
-
-.table-title {
-  font-family: var(--font-serif);
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-/* 表格样式 */
-.chat-table :deep(.ant-table) {
-  background: white;
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.chat-table :deep(.ant-table-thead > tr > th) {
-  background: #3b82f6;
-  color: white;
-  font-weight: 700;
-  font-size: 14px;
-  padding: 16px;
-  border: none;
-  letter-spacing: 0.5px;
-}
-
-.chat-table :deep(.ant-table-tbody > tr > td) {
-  padding: 16px;
-  font-size: 14px;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.chat-table :deep(.ant-table-tbody > tr:hover > td) {
-  background: var(--color-bg-hover);
-}
-
-/* ID标签 */
-.id-tag {
-  font-size: 13px;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  border: none;
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-  color: #2563eb;
-}
-
-/* 消息文本 */
-.message-text {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  max-width: 350px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 13px;
-  color: var(--color-text-secondary);
-}
-
-.message-icon {
-  color: var(--color-primary);
-  font-size: 14px;
-  flex-shrink: 0;
-}
-
-/* 消息类型标签 */
-.message-type-tag {
-  font-size: 13px;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  border: none;
-}
-
-.message-user {
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-  color: #2563eb;
-}
-
-.message-ai {
-  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
-  color: #16a34a;
-}
-
-/* 应用标签 */
-.app-tag {
-  font-size: 13px;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  border: none;
-  background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
-  color: #9333ea;
-}
-
-/* 用户标签 */
-.user-tag {
-  font-size: 13px;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  border: none;
-  background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%);
-  color: #ea580c;
-}
-
-/* 时间单元格 */
-.time-cell {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--color-text-secondary);
-}
-
-.time-icon {
-  color: var(--color-primary);
-  font-size: 14px;
-}
-
-/* 操作按钮 */
-.chat-table :deep(.ant-space) {
-  display: flex;
-  gap: 8px;
-}
-
-.chat-table :deep(.ant-btn-primary) {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-  border: none;
-  border-radius: 10px;
-  font-weight: 600;
-  height: 32px;
-  padding: 0 20px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.chat-table :deep(.ant-btn-primary:hover) {
-  background: linear-gradient(135deg, var(--color-primary-dark) 0%, #dc2626 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
-}
-
-.chat-table :deep(.ant-btn-dangerous) {
-  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-  border: none;
-  color: #dc2626;
-  border-radius: 10px;
-  font-weight: 600;
-  height: 32px;
-  padding: 0 20px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.chat-table :deep(.ant-btn-dangerous:hover) {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-  color: white;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
-}
-
-/* 分页样式 */
-.chat-table :deep(.ant-pagination) {
-  margin-top: 24px;
-}
-
-.chat-table :deep(.ant-pagination-item-active) {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-  border-color: transparent;
-}
-
-.chat-table :deep(.ant-pagination-item-active a) {
-  color: white;
-}
-
-/* 响应式设计 */
-@media (max-width: 1024px) {
-  .page-header {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .header-left {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .header-actions {
-    justify-content: flex-start;
-  }
-}
-
-@media (max-width: 768px) {
-  .content-wrapper {
-    padding: 20px;
-  }
-
-  .main-card {
-    padding: 24px;
-  }
-
-  .page-title {
-    font-size: 28px;
-  }
-
-  .search-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .search-button-item {
-    grid-column: span 1;
-  }
-
-  .circle {
-    display: none;
-  }
-}
-
-/* ========== 超强全局字体优化 ========== */
-
-/* 强制所有文字清晰可读 */
-* {
-  -webkit-font-smoothing: antialiased !important;
-  -moz-osx-font-smoothing: grayscale !important;
-}
-
-/* Ant Design 按钮优化 */
-:deep(.ant-btn-primary) {
-  background: #3b82f6 !important;
-  border-color: #3b82f6 !important;
-  color: white !important;
-  font-weight: 700 !important;
-  font-size: 13px !important;
-  letter-spacing: 0.3px;
-  height: 32px !important;
-  padding: 0 16px !important;
-}
-
-:deep(.ant-btn-primary:hover) {
-  background: #2563eb !important;
-  border-color: #2563eb !important;
-}
-
-:deep(.ant-btn-default) {
-  color: #0f172a !important;
-  border-color: #e2e8f0 !important;
-  font-weight: 600 !important;
-  font-size: 13px !important;
-  background: white !important;
-}
-
-:deep(.ant-btn-default:hover) {
-  color: #3b82f6 !important;
-  border-color: #3b82f6 !important;
-}
-
-/* 表单标签优化 */
-:deep(.ant-form-item-label > label) {
-  color: #0f172a !important;
-  font-weight: 700 !important;
-  font-size: 14px !important;
-}
-
-/* 输入框文字优化 */
-:deep(.ant-input) {
-  color: #0f172a !important;
-  font-weight: 600 !important;
-  font-size: 14px !important;
-}
-
-:deep(.ant-input::placeholder) {
-  color: #64748b !important;
-  font-weight: 400 !important;
-}
-
-:deep(.ant-select-selection-item) {
-  color: #0f172a !important;
-  font-weight: 600 !important;
-}
-
-/* Textarea 文字 */
-:deep(.ant-input-textarea) {
-  color: #0f172a !important;
-  font-weight: 600 !important;
-}
-
-/* 表格内容文字优化 */
-:deep(.ant-table-tbody) {
-  color: #0f172a !important;
-}
-
-:deep(.ant-table-thead > tr > th) {
-  color: white !important;
-  font-weight: 700 !important;
-}
-
-/* Modal 标题优化 */
-:deep(.ant-modal-title) {
-  color: #0f172a !important;
-  font-weight: 700 !important;
-  font-size: 18px !important;
-}
-
-:deep(.ant-modal-body) {
-  color: #0f172a !important;
-}
-
-:deep(.ant-modal-content) {
-  color: #0f172a !important;
-}
-
-/* Tag 标签文字优化 */
-:deep(.ant-tag) {
-  font-weight: 700 !important;
-  color: #0f172a !important;
-}
-
-/* Card 标题 */
-:deep(.ant-card-head-title) {
-  color: #0f172a !important;
-  font-weight: 700 !important;
-  font-size: 18px !important;
-}
-
-/* Card 内容 */
-:deep(.ant-card-body) {
-  color: #0f172a !important;
-}
-
-/* 所有文本元素 */
-:deep(.ant-typography),
-:deep(.ant-text),
-:deep(label),
-:deep(span),
-:deep(p),
-:deep(div) {
-  color: #0f172a !important;
-}
-
-/* 链接文字 */
-:deep(a) {
-  color: #3b82f6 !important;
-  font-weight: 600 !important;
-}
-
-:deep(a:hover) {
-  color: #2563eb !important;
-}
-
-/* 下拉菜单 */
-:deep(.ant-dropdown-menu-item) {
-  color: #0f172a !important;
-  font-weight: 600 !important;
-}
-
-/* 分页 */
-:deep(.ant-pagination-item) {
-  color: #0f172a !important;
-  font-weight: 600 !important;
-}
-
-/* 描述列表 */
-:deep(.ant-descriptions-item-label) {
-  color: #0f172a !important;
-  font-weight: 700 !important;
-}
-
-:deep(.ant-descriptions-item-content) {
-  color: #0f172a !important;
-  font-weight: 600 !important;
-}
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap');
+@import '@/styles/admin-glassmorphism.css';
 </style>
