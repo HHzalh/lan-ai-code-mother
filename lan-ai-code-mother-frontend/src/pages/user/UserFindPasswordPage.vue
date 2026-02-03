@@ -1,228 +1,240 @@
 <template>
-  <div class="find-password-container">
-    <!-- Hero 图片背景 -->
-    <div class="hero-background">
-      <div class="hero-overlay"></div>
+  <div class="auth-container">
+    <!-- 渐变背景 -->
+    <div class="gradient-bg">
+      <div class="gradient-orb orb-1"></div>
+      <div class="gradient-orb orb-2"></div>
+      <div class="gradient-orb orb-3"></div>
     </div>
 
-    <!-- 背景装饰元素 -->
-    <div class="bg-decoration">
-      <div class="circle circle-1"></div>
-      <div class="circle circle-2"></div>
-      <div class="circle circle-3"></div>
-    </div>
+    <!-- 内容容器 -->
+    <div class="content-wrapper">
+      <!-- 左侧步骤指示 -->
+      <div class="intro-section">
+        <div class="brand-mark">
+          <div class="mark-icon">
+            <svg fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22Z"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+              />
+              <path
+                d="M12 16V12"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+              />
+              <path
+                d="M12 8H12.01"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+              />
+            </svg>
+          </div>
+          <h1 class="brand-title">密码找回</h1>
+        </div>
 
-    <div class="find-password-card info-card">
-      <!-- Logo 和标题 -->
-      <div class="card-header">
-        <div class="logo-wrapper">
-          <div class="logo-icon">
-            <SafetyOutlined />
+        <div class="step-indicator">
+          <div :class="{ active: step === 1, completed: step > 1 }" class="step-item">
+            <div class="step-number">1</div>
+            <div class="step-content">
+              <h3 class="step-title">验证身份</h3>
+              <p class="step-desc">确认账号和邮箱</p>
+            </div>
+          </div>
+
+          <div :class="{ active: step > 1 }" class="step-line"></div>
+
+          <div :class="{ active: step === 2, completed: step > 2 }" class="step-item">
+            <div class="step-number">2</div>
+            <div class="step-content">
+              <h3 class="step-title">重置密码</h3>
+              <p class="step-desc">设置新密码</p>
+            </div>
+          </div>
+
+          <div :class="{ active: step > 2 }" class="step-line"></div>
+
+          <div :class="{ completed: step > 2 }" class="step-item">
+            <div class="step-number">3</div>
+            <div class="step-content">
+              <h3 class="step-title">完成</h3>
+              <p class="step-desc">使用新密码登录</p>
+            </div>
           </div>
         </div>
-        <h1 class="find-password-title">找回密码</h1>
-        <p class="welcome-text">
-          <KeyOutlined />
-          忘记密码？别担心，<br />
-          我们会通过邮箱帮您安全找回密码
-        </p>
+
+        <div class="intro-footer">
+          <p class="intro-text">我们会通过邮箱帮你安全找回密码</p>
+        </div>
       </div>
 
-      <!-- 第一步：发送验证码 -->
-      <div v-if="step === 1" class="step-content">
-        <a-form
-          ref="step1FormRef"
-          :model="findPasswordForm"
-          autocomplete="off"
-          class="find-password-form"
-          layout="vertical"
-          name="findPassword"
-          @finish="handleSendCode"
-        >
-          <!-- 账号输入 -->
-          <a-form-item
-            :rules="[
-              { required: true, message: '请输入账号' },
-              { min: 4, message: '账号长度不能少于 4 位' },
-            ]"
-            name="userAccount"
-          >
-            <a-input
-              v-model:value="findPasswordForm.userAccount"
-              class="find-password-input"
-              placeholder="请输入账号"
-              size="large"
+      <!-- 右侧表单区域 -->
+      <div class="form-section">
+        <div class="glass-card">
+          <!-- 步骤 1: 验证身份 -->
+          <div v-if="step === 1" class="step-content">
+            <div class="card-header">
+              <h2 class="card-title">忘记密码</h2>
+              <p class="card-subtitle">别担心，我们来帮你找回</p>
+            </div>
+
+            <a-form
+              ref="step1FormRef"
+              :model="findPasswordForm"
+              autocomplete="off"
+              class="reset-form"
+              @finish="handleSendCode"
             >
-              <template #prefix>
-                <UserOutlined class="input-icon" />
-              </template>
-            </a-input>
-          </a-form-item>
+              <a-form-item
+                :rules="[
+                  { required: true, message: '请输入账号' },
+                  { min: 4, message: '账号长度不能少于 4 位' },
+                ]"
+                name="userAccount"
+              >
+                <label class="form-label">账号</label>
+                <a-input
+                  v-model:value="findPasswordForm.userAccount"
+                  class="glass-input"
+                  placeholder="请输入你的账号"
+                  size="large"
+                />
+              </a-form-item>
 
-          <!-- 邮箱输入 -->
-          <a-form-item
-            :rules="[
-              { required: true, message: '请输入邮箱地址' },
-              { type: 'email', message: '请输入正确的邮箱格式' },
-            ]"
-            name="email"
-          >
-            <a-input
-              v-model:value="findPasswordForm.email"
-              class="find-password-input"
-              placeholder="请输入邮箱"
-              size="large"
+              <a-form-item
+                :rules="[
+                  { required: true, message: '请输入邮箱地址' },
+                  { type: 'email', message: '请输入正确的邮箱格式' },
+                ]"
+                name="email"
+              >
+                <label class="form-label">邮箱地址</label>
+                <a-input
+                  v-model:value="findPasswordForm.email"
+                  class="glass-input"
+                  placeholder="请输入注册时使用的邮箱"
+                  size="large"
+                />
+              </a-form-item>
+
+              <a-button
+                :loading="sendCodeLoading"
+                block
+                class="submit-button"
+                html-type="submit"
+                size="large"
+                type="primary"
+              >
+                {{ sendCodeLoading ? '发送中...' : '发送验证码' }}
+              </a-button>
+            </a-form>
+
+            <div class="form-footer">
+              <span class="footer-text">想起密码了？</span>
+              <RouterLink class="footer-link" to="/user/login">返回登录</RouterLink>
+            </div>
+          </div>
+
+          <!-- 步骤 2: 重置密码 -->
+          <div v-if="step === 2" class="step-content">
+            <div class="success-alert">
+              <div class="alert-icon">✓</div>
+              <div class="alert-content">
+                <p class="alert-title">验证码已发送</p>
+                <p class="alert-desc">请查收你的邮箱，验证码有效期为 5 分钟</p>
+              </div>
+            </div>
+
+            <div class="card-header" style="margin-top: 32px">
+              <h2 class="card-title">重置密码</h2>
+              <p class="card-subtitle">请输入验证码和新密码</p>
+            </div>
+
+            <a-form
+              ref="step2FormRef"
+              :model="resetPasswordForm"
+              autocomplete="off"
+              class="reset-form"
+              @finish="handleResetPassword"
             >
-              <template #prefix>
-                <MailOutlined class="input-icon" />
-              </template>
-            </a-input>
-          </a-form-item>
+              <a-form-item
+                :rules="[
+                  { required: true, message: '请输入验证码' },
+                  { min: 4, message: '验证码不能少于 4 位' },
+                ]"
+                name="code"
+              >
+                <label class="form-label">验证码</label>
+                <a-input
+                  v-model:value="resetPasswordForm.code"
+                  class="glass-input"
+                  placeholder="请输入邮箱收到的验证码"
+                  size="large"
+                />
+              </a-form-item>
 
-          <!-- 发送验证码按钮 -->
-          <a-form-item>
-            <a-button
-              :loading="sendCodeLoading"
-              block
-              class="find-password-button"
-              html-type="submit"
-              size="large"
-            >
-              <template #icon>
-                <SendOutlined />
-              </template>
-              发送验证码
-            </a-button>
-          </a-form-item>
-        </a-form>
-      </div>
+              <a-form-item
+                :rules="[
+                  { required: true, message: '请输入新密码' },
+                  { min: 8, message: '密码不能小于 8 位' },
+                  { max: 20, message: '密码不能超过 20 位' },
+                ]"
+                name="newPassword"
+              >
+                <label class="form-label">新密码</label>
+                <a-input-password
+                  v-model:value="resetPasswordForm.newPassword"
+                  class="glass-input"
+                  placeholder="请输入新密码（至少 8 位）"
+                  size="large"
+                />
+              </a-form-item>
 
-      <!-- 第二步：重置密码 -->
-      <div v-if="step === 2" class="step-content">
-        <a-form
-          ref="step2FormRef"
-          :model="resetPasswordForm"
-          autocomplete="off"
-          class="find-password-form"
-          layout="vertical"
-          name="resetPassword"
-          @finish="handleResetPassword"
-        >
-          <!-- 成功提示 -->
-          <a-alert
-            :closable="false"
-            description="验证码已发送到您的邮箱，请查收（有效期5分钟）"
-            message="验证码已发送"
-            show-icon
-            style="margin-bottom: 20px"
-            type="success"
-          >
-            <template #icon>
-              <CheckCircleOutlined />
-            </template>
-          </a-alert>
+              <a-form-item
+                :rules="[
+                  { required: true, message: '请确认新密码' },
+                  { validator: validateCheckPassword },
+                ]"
+                name="checkPassword"
+              >
+                <label class="form-label">确认新密码</label>
+                <a-input-password
+                  v-model:value="resetPasswordForm.checkPassword"
+                  class="glass-input"
+                  placeholder="请再次输入新密码"
+                  size="large"
+                />
+              </a-form-item>
 
-          <!-- 验证码输入 -->
-          <a-form-item
-            :rules="[
-              { required: true, message: '请输入验证码' },
-              { min: 4, message: '验证码不能少于 4 位' },
-            ]"
-            label="验证码"
-            name="code"
-          >
-            <a-input
-              v-model:value="resetPasswordForm.code"
-              class="find-password-input"
-              placeholder="请输入邮箱收到的验证码"
-              size="large"
-            >
-              <template #prefix>
-                <SafetyOutlined class="input-icon" />
-              </template>
-            </a-input>
-          </a-form-item>
+              <a-button
+                :loading="resetLoading"
+                block
+                class="submit-button primary"
+                html-type="submit"
+                size="large"
+                type="primary"
+              >
+                {{ resetLoading ? '重置中...' : '重置密码' }}
+              </a-button>
 
-          <!-- 新密码输入 -->
-          <a-form-item
-            :rules="[
-              { required: true, message: '请输入新密码' },
-              { min: 8, message: '密码不能小于 8 位' },
-              { max: 20, message: '密码不能超过 20 位' },
-            ]"
-            label="新密码"
-            name="newPassword"
-          >
-            <a-input-password
-              v-model:value="resetPasswordForm.newPassword"
-              class="find-password-input"
-              placeholder="请输入新密码（至少8位）"
-              size="large"
-            >
-              <template #prefix>
-                <LockOutlined class="input-icon" />
-              </template>
-            </a-input-password>
-          </a-form-item>
+              <a-button block class="submit-button secondary" size="large" @click="handleBack">
+                返回上一步
+              </a-button>
+            </a-form>
 
-          <!-- 确认密码输入 -->
-          <a-form-item
-            :rules="[
-              { required: true, message: '请确认新密码' },
-              { min: 8, message: '密码不能小于 8 位' },
-              { validator: validateCheckPassword },
-            ]"
-            label="确认新密码"
-            name="checkPassword"
-          >
-            <a-input-password
-              v-model:value="resetPasswordForm.checkPassword"
-              class="find-password-input"
-              placeholder="请再次输入新密码"
-              size="large"
-            >
-              <template #prefix>
-                <LockOutlined class="input-icon" />
-              </template>
-            </a-input-password>
-          </a-form-item>
-
-          <!-- 重置密码按钮 -->
-          <a-form-item>
-            <a-button
-              :loading="resetLoading"
-              block
-              class="find-password-button"
-              html-type="submit"
-              size="large"
-              type="primary"
-            >
-              <template #icon>
-                <KeyOutlined />
-              </template>
-              重置密码
-            </a-button>
-          </a-form-item>
-
-          <!-- 返回按钮 -->
-          <a-form-item>
-            <a-button block class="back-button" size="large" @click="handleBack">
-              <template #icon>
-                <ArrowLeftOutlined />
-              </template>
-              返回上一步
-            </a-button>
-          </a-form-item>
-        </a-form>
-      </div>
-
-      <!-- 返回登录链接 -->
-      <div class="login-link">
-        想起密码了？
-        <RouterLink class="link-text" to="/user/login">
-          <LoginOutlined />
-          返回登录
-        </RouterLink>
+            <div class="form-footer">
+              <span class="footer-text">想起密码了？</span>
+              <RouterLink class="footer-link" to="/user/login">返回登录</RouterLink>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -230,21 +242,10 @@
 
 <script lang="ts" setup>
 import { useRouter } from 'vue-router'
+import { findPassword, resetPassword } from '@/api/userController'
 import type { FormInstance } from 'ant-design-vue'
 import { message } from 'ant-design-vue'
 import { reactive, ref } from 'vue'
-import { findPassword, resetPassword } from '@/api/userController'
-import {
-  ArrowLeftOutlined,
-  CheckCircleOutlined,
-  KeyOutlined,
-  LockOutlined,
-  LoginOutlined,
-  MailOutlined,
-  SafetyOutlined,
-  SendOutlined,
-  UserOutlined,
-} from '@ant-design/icons-vue'
 
 const router = useRouter()
 const step1FormRef = ref<FormInstance>()
@@ -266,9 +267,6 @@ const resetPasswordForm = reactive<API.ResetPasswordRequest>({
   checkPassword: '',
 })
 
-/**
- * 验证确认密码
- */
 const validateCheckPassword = (
   _rule: unknown,
   value: string,
@@ -281,19 +279,14 @@ const validateCheckPassword = (
   }
 }
 
-/**
- * 发送验证码
- */
 const handleSendCode = async (values: API.FindPasswordRequest) => {
   sendCodeLoading.value = true
   try {
     const res = await findPassword(values)
     if (res.data.code === 0) {
-      message.success('✅ 验证码已发送到您的邮箱，请查收')
-      // 保存账号和邮箱到重置密码表单
+      message.success('验证码已发送到你的邮箱，请查收')
       resetPasswordForm.userAccount = values.userAccount || ''
       resetPasswordForm.email = values.email || ''
-      // 进入下一步
       step.value = 2
     } else {
       message.error(res.data.message || '发送失败，请重试')
@@ -307,9 +300,6 @@ const handleSendCode = async (values: API.FindPasswordRequest) => {
   }
 }
 
-/**
- * 重置密码
- */
 const handleResetPassword = async (values: API.ResetPasswordRequest) => {
   resetLoading.value = true
   try {
@@ -321,7 +311,7 @@ const handleResetPassword = async (values: API.ResetPasswordRequest) => {
       checkPassword: values.checkPassword,
     })
     if (res.data.code === 0) {
-      message.success('🎉 密码重置成功！请使用新密码登录')
+      message.success('密码重置成功！请使用新密码登录')
       setTimeout(() => {
         router.push({
           path: '/user/login',
@@ -340,9 +330,6 @@ const handleResetPassword = async (values: API.ResetPasswordRequest) => {
   }
 }
 
-/**
- * 返回上一步
- */
 const handleBack = () => {
   step.value = 1
   resetPasswordForm.code = ''
@@ -351,590 +338,574 @@ const handleBack = () => {
 }
 </script>
 
-<style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap');
-
+<style>
+/* ========== 全局变量（非scoped） ========== */
 :root {
-  --color-primary: #f97316;
-  --color-primary-dark: #ea580c;
-  --color-primary-light: #fbbf24;
-  --color-text: #1e293b;
-  --color-text-secondary: #64748b;
-  --color-border: #e2e8f0;
-  --color-bg-hover: #f8fafc;
-  --font-serif: 'Noto Serif SC', serif;
-  --font-sans: 'Noto Sans SC', sans-serif;
+  --color-primary: #ff6b6b;
+  --color-primary-light: #ff8787;
+  --color-primary-dark: #fa5252;
+  --color-secondary: #ffa8a8;
+  --color-accent: #ffec99;
+  --color-text: #2d3436;
+  --color-text-secondary: #636e72;
+  --color-text-light: #b2bec3;
+  --color-bg: #fff5f5;
+  --color-glass: rgba(255, 255, 255, 0.7);
+  --color-glass-border: rgba(255, 255, 255, 0.9);
+  --shadow-soft: 0 8px 32px rgba(255, 107, 107, 0.1);
+  --shadow-hover: 0 12px 48px rgba(255, 107, 107, 0.15);
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --font-main: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
 }
+</style>
 
-.find-password-container {
+<style scoped>
+/* ========== 字体引入 ========== */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap');
+
+/* ========== 主容器 ========== */
+.auth-container {
   min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+  font-family: var(--font-main);
+  background: var(--color-bg);
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 40px 20px;
-  position: relative;
-  overflow: hidden;
 }
 
-/* Hero 背景 */
-.hero-background {
-  position: absolute;
+/* ========== 渐变背景 ========== */
+.gradient-bg {
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-image: url('https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=1920&q=80');
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
   z-index: 0;
-}
-
-.hero-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    135deg,
-    rgba(249, 115, 22, 0.92) 0%,
-    rgba(234, 88, 12, 0.88) 50%,
-    rgba(251, 191, 36, 0.85) 100%
-  );
-  backdrop-filter: blur(2px);
-}
-
-/* 背景装饰 */
-.bg-decoration {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
   overflow: hidden;
-  z-index: 1;
-  pointer-events: none;
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
 }
 
-.circle {
+.gradient-orb {
   position: absolute;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  animation: float 20s infinite ease-in-out;
+  filter: blur(80px);
+  opacity: 0.6;
+  animation: float 20s ease-in-out infinite;
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
-.circle-1 {
-  width: 300px;
-  height: 300px;
-  top: -100px;
-  left: -100px;
+.orb-1 {
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, var(--color-primary) 0%, transparent 70%);
+  top: -200px;
+  right: -100px;
   animation-delay: 0s;
 }
 
-.circle-2 {
-  width: 200px;
-  height: 200px;
-  top: 20%;
-  right: 10%;
-  animation-delay: 5s;
+.orb-2 {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, var(--color-secondary) 0%, transparent 70%);
+  bottom: -150px;
+  left: -100px;
+  animation-delay: 7s;
 }
 
-.circle-3 {
-  width: 150px;
-  height: 150px;
-  bottom: 10%;
-  left: 20%;
-  animation-delay: 10s;
+.orb-3 {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, var(--color-accent) 0%, transparent 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation-delay: 14s;
 }
 
 @keyframes float {
   0%,
   100% {
-    transform: translateY(0) scale(1);
+    transform: translate3d(0, 0, 0) scale(1);
   }
-  50% {
-    transform: translateY(-30px) scale(1.1);
+  33% {
+    transform: translate3d(30px, -30px, 0) scale(1.1);
+  }
+  66% {
+    transform: translate3d(-20px, 20px, 0) scale(0.9);
   }
 }
 
-/* 找回密码卡片 */
-.find-password-card {
-  background: rgba(255, 255, 255, 0.98);
+/* ========== 内容容器 ========== */
+.content-wrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  max-width: 1200px;
+  width: 100%;
+  z-index: 1;
+  align-items: center;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* ========== 左侧介绍区域 ========== */
+.intro-section {
+  padding: 40px;
+}
+
+.brand-mark {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 50px;
+  opacity: 0;
+  animation: fadeInUp 0.8s ease forwards;
+}
+
+.mark-icon {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  border-radius: var(--radius-md);
+  color: white;
+  box-shadow: var(--shadow-soft);
+}
+
+.mark-icon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.brand-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+/* ========== 步骤指示器 ========== */
+.step-indicator {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-bottom: 40px;
+}
+
+.step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  opacity: 0;
+  animation: fadeInUp 0.8s ease forwards;
+  position: relative;
+}
+
+.step-item:nth-child(1) {
+  animation-delay: 0.2s;
+}
+
+.step-item:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.step-item:nth-child(5) {
+  animation-delay: 0.6s;
+}
+
+.step-number {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 107, 107, 0.1);
+  border: 2px solid rgba(255, 107, 107, 0.2);
+  border-radius: 50%;
+  color: var(--color-primary);
+  font-weight: 600;
+  font-size: 14px;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.step-item.active .step-number {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+  box-shadow: 0 0 12px var(--color-primary);
+}
+
+.step-item.completed .step-number {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+}
+
+.step-content {
+  flex: 1;
+  padding-top: 4px;
+}
+
+.step-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0 0 4px 0;
+}
+
+.step-item.active .step-title {
+  color: var(--color-primary);
+}
+
+.step-desc {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.step-line {
+  height: 40px;
+  margin-left: 17px;
+  width: 2px;
+  background: rgba(255, 107, 107, 0.2);
+  transition: all 0.3s ease;
+}
+
+.step-line.active {
+  background: var(--color-primary);
+}
+
+.intro-footer {
+  opacity: 0;
+  animation: fadeInUp 0.8s ease 0.6s forwards;
+}
+
+.intro-text {
+  font-size: 16px;
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* ========== 右侧表单区域 ========== */
+.form-section {
+  display: flex;
+  justify-content: center;
+}
+
+.glass-card {
+  background: var(--color-glass);
   backdrop-filter: blur(20px);
-  border-radius: 24px;
-  padding: 48px 42px;
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--color-glass-border);
+  border-radius: var(--radius-lg);
+  padding: 48px;
   width: 100%;
   max-width: 480px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  position: relative;
-  z-index: 2;
-  animation: slideUp 0.6s ease-out;
+  box-shadow: var(--shadow-soft);
+  animation: fadeInUp 1s ease 0.2s both;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform, opacity;
 }
 
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.step-content {
+  animation: fadeIn 0.4s ease;
 }
 
-/* 卡片头部 */
 .card-header {
   text-align: center;
   margin-bottom: 36px;
 }
 
-.logo-wrapper {
-  margin-bottom: 20px;
+.card-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0 0 12px 0;
 }
 
-.logo-icon {
-  width: 72px;
-  height: 72px;
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-  border-radius: 20px;
-  display: inline-flex;
+.card-subtitle {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+/* ========== 成功提示 ========== */
+.success-alert {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: rgba(255, 107, 107, 0.08);
+  border: 1px solid rgba(255, 107, 107, 0.2);
+  border-radius: var(--radius-md);
+  margin-bottom: 32px;
+}
+
+.alert-icon {
+  width: 36px;
+  height: 36px;
+  display: flex;
   align-items: center;
   justify-content: center;
+  background: var(--color-primary);
   color: white;
-  font-size: 36px;
-  box-shadow: 0 8px 24px rgba(249, 115, 22, 0.4);
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-}
-
-.find-password-title {
-  font-family: var(--font-serif);
-  font-size: 32px;
+  border-radius: 50%;
   font-weight: 700;
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  text-align: center;
-  margin: 0 0 16px 0;
-  letter-spacing: -0.5px;
-}
-
-.welcome-text {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  text-align: center;
-  color: var(--color-text-secondary);
-  font-size: 13px;
-  margin: 0;
-  line-height: 1.6;
-  font-weight: 400;
-}
-
-.welcome-text .anticon {
   font-size: 18px;
+  flex-shrink: 0;
+}
+
+.alert-content {
+  flex: 1;
+}
+
+.alert-title {
+  font-size: 15px;
+  font-weight: 600;
   color: var(--color-primary);
+  margin: 0 0 4px 0;
 }
 
-/* 表单样式 */
-.step-content {
-  margin-top: 0;
+.alert-desc {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: 1.5;
 }
 
-.find-password-form {
-  margin-top: 0;
+/* ========== 表单样式 ========== */
+.reset-form {
+  margin-bottom: 24px;
 }
 
-.find-password-form :deep(.ant-form-item) {
-  margin-bottom: 20px;
+.reset-form :deep(.ant-form-item) {
+  margin-bottom: 24px;
 }
 
-.find-password-form :deep(.ant-form-item:last-child) {
+.reset-form :deep(.ant-form-item:last-child) {
   margin-bottom: 0;
 }
 
-.find-password-input {
-  border-radius: 12px;
-  transition: all 0.3s ease;
+.form-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text);
+  margin-bottom: 8px;
 }
 
-.find-password-input :deep(.ant-input),
-.find-password-input :deep(.ant-input-password) {
-  border-radius: 12px;
-  height: 50px;
-  font-size: 13px;
-  padding-left: 44px;
-  border: 2px solid #e5e7eb;
-  background: #f9fafb;
-  transition: all 0.3s ease;
-}
-
-.find-password-input :deep(.ant-input:hover),
-.find-password-input :deep(.ant-input-password:hover) {
-  border-color: #f97316;
-  background: #ffffff;
-}
-
-.find-password-input :deep(.ant-input:focus),
-.find-password-input :deep(.ant-input-focused),
-.find-password-input :deep(.ant-input-password:focus) {
-  border-color: #f97316;
-  background: #ffffff;
-  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.1);
-}
-
-.input-icon {
-  color: #9ca3af;
-  font-size: 16px;
-  transition: color 0.3s ease;
-}
-
-.find-password-input:focus-within .input-icon {
-  color: #f97316;
-}
-
-.find-password-input :deep(.ant-input-password-icon) {
-  color: #9ca3af;
-  font-size: 16px;
-  transition: color 0.3s ease;
-}
-
-.find-password-input :deep(.ant-input-password-icon:hover) {
-  color: #f97316;
-}
-
-/* 找回密码按钮 */
-.find-password-button {
-  height: 52px;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 600;
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-  border: none;
-  margin-top: 8px;
-  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+.glass-input :deep(.ant-input),
+.glass-input :deep(.ant-input-password) {
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 107, 107, 0.2);
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  height: 48px;
+  color: var(--color-text);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.find-password-button:hover {
-  background: linear-gradient(135deg, var(--color-primary-dark) 0%, #dc2626 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(249, 115, 22, 0.4);
+.glass-input :deep(.ant-input::placeholder),
+.glass-input :deep(.ant-input-password::placeholder) {
+  color: var(--color-text-light);
 }
 
-.find-password-button:active {
+.glass-input :deep(.ant-input:hover),
+.glass-input :deep(.ant-input-password:hover) {
+  border-color: var(--color-primary-light);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.glass-input :deep(.ant-input:focus),
+.glass-input :deep(.ant-input-focused),
+.glass-input :deep(.ant-input-password:focus) {
+  border-color: var(--color-primary);
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+  outline: none;
+}
+
+.glass-input :deep(.ant-input-password-icon) {
+  color: var(--color-text-light);
+  transition: color 0.3s ease;
+}
+
+.glass-input :deep(.ant-input-password-icon:hover) {
+  color: var(--color-primary);
+}
+
+/* ========== 提交按钮 ========== */
+.submit-button {
+  height: 50px;
+  border: none;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-soft);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-bottom: 12px;
+}
+
+.submit-button:hover {
+  background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary));
+  box-shadow: var(--shadow-hover);
+  transform: translate3d(0, -2px, 0);
+}
+
+.submit-button:active {
   transform: translateY(0);
 }
 
-/* 返回按钮 */
-.back-button {
-  height: 52px;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 600;
-  background: #ffffff;
-  border: 2px solid var(--color-border);
-  color: var(--color-text-secondary);
-  margin-top: 8px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.submit-button.secondary {
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 107, 107, 0.3);
+  color: var(--color-text);
+  box-shadow: none;
 }
 
-.back-button:hover {
+.submit-button.secondary:hover {
+  background: rgba(255, 255, 255, 0.7);
   border-color: var(--color-primary);
   color: var(--color-primary);
-  background: var(--color-bg-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.2);
+  box-shadow: var(--shadow-soft);
 }
 
-.back-button:active {
-  transform: translateY(0);
-}
-
-/* 登录链接 */
-.login-link {
+/* ========== 表单底部 ========== */
+.form-footer {
   text-align: center;
-  color: var(--color-text-secondary);
-  font-size: 14px;
-  margin-top: 24px;
   padding-top: 24px;
-  border-top: 1px solid var(--color-border);
+  border-top: 1px solid rgba(255, 107, 107, 0.1);
 }
 
-.link-text {
+.footer-text {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin-right: 4px;
+}
+
+.footer-link {
+  font-size: 14px;
   color: var(--color-primary);
   text-decoration: none;
-  font-weight: 600;
-  margin-left: 4px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+  font-weight: 500;
   transition: all 0.3s ease;
 }
 
-.link-text:hover {
+.footer-link:hover {
   color: var(--color-primary-dark);
   text-decoration: underline;
 }
 
-/* Alert 样式 */
-:deep(.ant-alert-success) {
-  background: linear-gradient(135deg, #dcfce7 0%, #d1fae5 100%);
-  border: 1px solid #86efac;
-  border-radius: 12px;
-  padding: 12px 16px;
+/* ========== 动画 ========== */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 30px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
 }
 
-:deep(.ant-alert-success .anticon) {
-  color: #22c55e;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
 }
 
-/* 响应式设计 */
+/* ========== 响应式设计 ========== */
+@media (max-width: 1024px) {
+  .content-wrapper {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .intro-section {
+    order: 2;
+    padding: 20px;
+  }
+
+  .brand-mark {
+    justify-content: center;
+  }
+
+  .gradient-orb {
+    filter: blur(60px);
+  }
+
+  .orb-1,
+  .orb-2,
+  .orb-3 {
+    width: 300px;
+    height: 300px;
+  }
+}
+
 @media (max-width: 640px) {
-  .find-password-card {
-    padding: 36px 28px;
-    border-radius: 20px;
+  .auth-container {
+    padding: 20px 16px;
   }
 
-  .find-password-title {
-    font-size: 28px;
+  .glass-card {
+    padding: 32px 24px;
   }
 
-  .welcome-text {
-    font-size: 14px;
+  .card-title {
+    font-size: 24px;
   }
 
-  .logo-icon {
-    width: 64px;
-    height: 64px;
-    font-size: 32px;
+  .brand-title {
+    font-size: 22px;
   }
 
-  .circle {
-    display: none;
+  .step-title {
+    font-size: 15px;
+  }
+
+  .step-desc {
+    font-size: 12px;
   }
 }
 
-/* ========== 超强全局字体优化 ========== */
-
-/* 强制所有文字清晰可读 */
-* {
-  -webkit-font-smoothing: antialiased !important;
-  -moz-osx-font-smoothing: grayscale !important;
+/* ========== Ant Design 覆盖样式 ========== */
+:deep(.ant-form-item-explain-error) {
+  color: var(--color-primary-dark) !important;
+  font-size: 13px;
+  margin-top: 6px;
 }
 
-/* Ant Design 按钮优化 */
 :deep(.ant-btn-primary) {
-  background: #3b82f6 !important;
-  border-color: #3b82f6 !important;
+  background: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
   color: white !important;
-  font-weight: 700 !important;
-  font-size: 13px !important;
-  letter-spacing: 0.3px;
-  height: 32px !important;
-  padding: 0 16px !important;
 }
 
-:deep(.ant-btn-primary:hover) {
-  background: #2563eb !important;
-  border-color: #2563eb !important;
-}
-
-:deep(.ant-btn-default) {
-  color: #0f172a !important;
-  border-color: #e2e8f0 !important;
-  font-weight: 600 !important;
-  font-size: 13px !important;
-  background: white !important;
-}
-
-:deep(.ant-btn-default:hover) {
-  color: #3b82f6 !important;
-  border-color: #3b82f6 !important;
-}
-
-/* 表单标签优化 */
-:deep(.ant-form-item-label > label) {
-  color: #0f172a !important;
-  font-weight: 700 !important;
-  font-size: 14px !important;
-}
-
-/* 输入框文字优化 */
-:deep(.ant-input) {
-  color: #0f172a !important;
-  font-weight: 600 !important;
-  font-size: 14px !important;
-}
-
-:deep(.ant-input::placeholder) {
-  color: #64748b !important;
-  font-weight: 400 !important;
-}
-
-:deep(.ant-select-selection-item) {
-  color: #0f172a !important;
-  font-weight: 600 !important;
-}
-
-/* Textarea 文字 */
-:deep(.ant-input-textarea) {
-  color: #0f172a !important;
-  font-weight: 600 !important;
-}
-
-/* 表格内容文字优化 */
-:deep(.ant-table-tbody) {
-  color: #0f172a !important;
-}
-
-:deep(.ant-table-thead > tr > th) {
-  color: white !important;
-  font-weight: 700 !important;
-}
-
-/* Modal 标题优化 */
-:deep(.ant-modal-title) {
-  color: #0f172a !important;
-  font-weight: 700 !important;
-  font-size: 18px !important;
-}
-
-:deep(.ant-modal-body) {
-  color: #0f172a !important;
-}
-
-:deep(.ant-modal-content) {
-  color: #0f172a !important;
-}
-
-/* Tag 标签文字优化 */
-:deep(.ant-tag) {
-  font-weight: 700 !important;
-  color: #0f172a !important;
-}
-
-/* Card 标题 */
-:deep(.ant-card-head-title) {
-  color: #0f172a !important;
-  font-weight: 700 !important;
-  font-size: 18px !important;
-}
-
-/* Card 内容 */
-:deep(.ant-card-body) {
-  color: #0f172a !important;
-}
-
-/* 所有文本元素 */
-:deep(.ant-typography),
-:deep(.ant-text),
-:deep(label),
-:deep(span),
-:deep(p),
-:deep(div) {
-  color: #0f172a !important;
-}
-
-/* 链接文字 */
-:deep(a) {
-  color: #3b82f6 !important;
-  font-weight: 600 !important;
-}
-
-:deep(a:hover) {
-  color: #2563eb !important;
-}
-
-/* 下拉菜单 */
-:deep(.ant-dropdown-menu-item) {
-  color: #0f172a !important;
-  font-weight: 600 !important;
-}
-
-/* 分页 */
-:deep(.ant-pagination-item) {
-  color: #0f172a !important;
-  font-weight: 600 !important;
-}
-
-/* 描述列表 */
-:deep(.ant-descriptions-item-label) {
-  color: #0f172a !important;
-  font-weight: 700 !important;
-}
-
-:deep(.ant-descriptions-item-content) {
-  color: #0f172a !important;
-  font-weight: 600 !important;
-}
-
-/* ========== 超强力表单元素优化 ========== */
-
-/* 表单标签 - 纯黑色 + 超粗体 */
-.find-password-container :deep(.ant-form-item-label > label) {
-  color: #000000 !important;
-  font-size: 15px !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.5px;
-}
-
-/* 输入框 - 纯黑色文字 + 白色背景 */
-.find-password-container :deep(.ant-input),
-.find-password-container :deep(.ant-input-password) {
-  background: #ffffff !important;
-  border-color: #cbd5e1 !important;
-  color: #000000 !important;
-  font-weight: 700 !important;
-  font-size: 14px !important;
-}
-
-.find-password-container :deep(.ant-input::placeholder),
-.find-password-container :deep(.ant-input-password::placeholder) {
-  color: #475569 !important;
-  font-weight: 500 !important;
-}
-
-.find-password-container :deep(.ant-input:hover),
-.find-password-container :deep(.ant-input-password:hover) {
-  border-color: #3b82f6 !important;
-}
-
-.find-password-container :deep(.ant-input:focus),
-.find-password-container :deep(.ant-input-password:focus),
-.find-password-container :deep(.ant-input-focused) {
-  border-color: #3b82f6 !important;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1) !important;
-  background: #ffffff !important;
-  color: #000000 !important;
-}
-
-/* Modal 增强 */
-.find-password-container :deep(.ant-modal-title) {
-  color: #000000 !important;
-  font-weight: 700 !important;
-}
-
-.find-password-container :deep(.ant-modal-body) {
-  color: #000000 !important;
-}
-
-/* Tag 标签增强 */
-.find-password-container :deep(.ant-tag) {
-  font-weight: 700 !important;
-  color: #000000 !important;
+:deep(.ant-btn-loading) {
+  opacity: 0.8;
 }
 </style>

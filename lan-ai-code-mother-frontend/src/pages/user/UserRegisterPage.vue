@@ -1,176 +1,184 @@
 <template>
-  <div class="register-container">
-    <!-- Hero 图片背景 -->
-    <div class="hero-background">
-      <div class="hero-overlay"></div>
+  <div class="auth-container">
+    <!-- 渐变背景 -->
+    <div class="gradient-bg">
+      <div class="gradient-orb orb-1"></div>
+      <div class="gradient-orb orb-2"></div>
+      <div class="gradient-orb orb-3"></div>
     </div>
 
-    <!-- 背景装饰元素 -->
-    <div class="bg-decoration">
-      <div class="circle circle-1"></div>
-      <div class="circle circle-2"></div>
-      <div class="circle circle-3"></div>
-    </div>
+    <!-- 内容容器 -->
+    <div class="content-wrapper">
+      <!-- 左侧介绍区域 -->
+      <div class="intro-section">
+        <div class="brand-mark">
+          <div class="mark-icon">
+            <svg fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M12 2L2 7L12 12L22 7L12 2Z"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+              />
+              <path
+                d="M2 17L12 22L22 17"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+              />
+              <path
+                d="M2 12L12 17L22 12"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+              />
+            </svg>
+          </div>
+          <h1 class="brand-title">加入创作者社区</h1>
+        </div>
 
-    <div class="register-card success-card">
-      <!-- Logo 和标题 -->
-      <div class="card-header">
-        <div class="logo-wrapper">
-          <div class="logo-icon">
-            <CodeOutlined />
+        <div class="benefit-list">
+          <div
+            v-for="(benefit, index) in benefits"
+            :key="index"
+            :style="{ '--delay': `${index * 0.1}s` }"
+            class="benefit-card"
+          >
+            <div class="benefit-icon">{{ benefit.icon }}</div>
+            <div class="benefit-content">
+              <h3 class="benefit-title">{{ benefit.title }}</h3>
+              <p class="benefit-desc">{{ benefit.desc }}</p>
+            </div>
           </div>
         </div>
-        <h1 class="register-title">创建账号</h1>
-        <p class="welcome-text">开启您的 AI 代码生成之旅</p>
       </div>
 
-      <!-- 注册表单 -->
-      <a-form
-        ref="formRef"
-        :model="formState"
-        autocomplete="off"
-        class="register-form"
-        layout="vertical"
-        name="register"
-        @finish="handleSubmit"
-      >
-        <!-- 账号输入 -->
-        <a-form-item
-          :rules="[
-            { required: true, message: '请输入账号' },
-            { min: 4, message: '账号长度不能少于 4 位' },
-            { max: 20, message: '账号长度不能超过 20 位' },
-            { pattern: /^[a-zA-Z0-9_]+$/, message: '账号只能包含字母、数字和下划线' },
-          ]"
-          name="userAccount"
-        >
-          <a-input
-            v-model:value="formState.userAccount"
-            class="register-input"
-            placeholder="请输入账号（4-20位字母数字）"
-            size="large"
-            @change="handleAccountChange"
-          >
-            <template #prefix>
-              <UserOutlined class="input-icon" />
-            </template>
-          </a-input>
-        </a-form-item>
-
-        <!-- 密码输入 -->
-        <a-form-item
-          :rules="[
-            { required: true, message: '请输入密码' },
-            { min: 8, message: '密码不能小于 8 位' },
-            { max: 20, message: '密码不能超过 20 位' },
-          ]"
-          name="userPassword"
-        >
-          <a-input-password
-            v-model:value="formState.userPassword"
-            class="register-input"
-            placeholder="请输入密码（至少8位）"
-            size="large"
-            @change="handlePasswordChange"
-          >
-            <template #prefix>
-              <LockOutlined class="input-icon" />
-            </template>
-          </a-input-password>
-        </a-form-item>
-
-        <!-- 密码强度指示器 -->
-        <div v-if="formState.userPassword" class="password-strength">
-          <div class="strength-bar">
-            <div
-              :class="['strength-segment', { active: passwordStrength >= 1 }]"
-              class="strength-segment weak"
-            ></div>
-            <div
-              :class="['strength-segment', { active: passwordStrength >= 2 }]"
-              class="strength-segment medium"
-            ></div>
-            <div
-              :class="['strength-segment', { active: passwordStrength >= 3 }]"
-              class="strength-segment strong"
-            ></div>
+      <!-- 右侧注册表单 -->
+      <div class="form-section">
+        <div class="glass-card">
+          <div class="card-header">
+            <h2 class="card-title">创建账号</h2>
+            <p class="card-subtitle">开启你的 AI 创作之旅</p>
           </div>
-          <span :class="['strength-text', passwordStrengthClass]">
-            {{ passwordStrengthText }}
-          </span>
+
+          <a-form
+            ref="formRef"
+            :model="formState"
+            autocomplete="off"
+            class="register-form"
+            @finish="handleSubmit"
+          >
+            <!-- 账号输入 -->
+            <a-form-item
+              :rules="[
+                { required: true, message: '请输入账号' },
+                { min: 4, message: '账号长度不能少于 4 位' },
+                { max: 20, message: '账号长度不能超过 20 位' },
+              ]"
+              name="userAccount"
+            >
+              <label class="form-label">账号</label>
+              <a-input
+                v-model:value="formState.userAccount"
+                class="glass-input"
+                placeholder="请输入账号（4-20 位）"
+                size="large"
+              />
+            </a-form-item>
+
+            <!-- 密码输入 -->
+            <a-form-item
+              :rules="[
+                { required: true, message: '请输入密码' },
+                { min: 8, message: '密码不能小于 8 位' },
+                { max: 20, message: '密码不能超过 20 位' },
+              ]"
+              name="userPassword"
+            >
+              <label class="form-label">密码</label>
+              <a-input-password
+                v-model:value="formState.userPassword"
+                class="glass-input"
+                placeholder="请输入密码（至少 8 位）"
+                size="large"
+                @change="handlePasswordChange"
+              />
+
+              <!-- 密码强度指示器 -->
+              <div v-if="formState.userPassword" class="password-strength">
+                <div class="strength-bar">
+                  <div
+                    v-for="i in 4"
+                    :key="i"
+                    :class="['strength-segment', { active: i <= passwordStrength }]"
+                  ></div>
+                </div>
+                <span class="strength-text">{{ passwordStrengthText }}</span>
+              </div>
+            </a-form-item>
+
+            <!-- 确认密码 -->
+            <a-form-item
+              :rules="[
+                { required: true, message: '请确认密码' },
+                { validator: validateCheckPassword },
+              ]"
+              name="checkPassword"
+            >
+              <label class="form-label">确认密码</label>
+              <a-input-password
+                v-model:value="formState.checkPassword"
+                class="glass-input"
+                placeholder="请再次输入密码"
+                size="large"
+              />
+            </a-form-item>
+
+            <!-- 邀请码 -->
+            <a-form-item name="invitationCode">
+              <label class="form-label">
+                邀请码
+                <span class="optional-tag">（可选）</span>
+              </label>
+              <a-input
+                v-model:value="formState.invitationCode"
+                class="glass-input"
+                placeholder="填写邀请码可获得积分奖励"
+                size="large"
+              />
+            </a-form-item>
+
+            <!-- 图形验证码 -->
+            <CaptchaInput ref="captchaRef" v-model="formState.captcha" />
+
+            <!-- 注册按钮 -->
+            <a-button
+              :loading="loading"
+              block
+              class="submit-button"
+              html-type="submit"
+              size="large"
+              type="primary"
+            >
+              {{ loading ? '注册中...' : '立即注册' }}
+            </a-button>
+
+            <!-- 协议提示 -->
+            <div class="agreement-notice">
+              注册即表示同意我们的
+              <a class="agreement-link" href="/help/docs#terms">服务条款</a>
+            </div>
+          </a-form>
+
+          <!-- 底部链接 -->
+          <div class="form-footer">
+            <span class="footer-text">已有账号？</span>
+            <RouterLink class="footer-link" to="/user/login">立即登录</RouterLink>
+          </div>
         </div>
-
-        <!-- 确认密码 -->
-        <a-form-item
-          :rules="[
-            { required: true, message: '请确认密码' },
-            { min: 8, message: '密码不能小于 8 位' },
-            { validator: validateCheckPassword },
-          ]"
-          name="checkPassword"
-        >
-          <a-input-password
-            v-model:value="formState.checkPassword"
-            class="register-input"
-            placeholder="请再次输入密码"
-            size="large"
-          >
-            <template #prefix>
-              <SafetyOutlined class="input-icon" />
-            </template>
-          </a-input-password>
-        </a-form-item>
-
-        <!-- 邀请码（可选） -->
-        <a-form-item name="invitationCode">
-          <a-input
-            v-model:value="formState.invitationCode"
-            class="register-input"
-            placeholder="邀请码（可选，填写可获得积分奖励）"
-            size="large"
-          >
-            <template #prefix>
-              <GiftOutlined class="input-icon" />
-            </template>
-            <template #suffix>
-              <a-tooltip title="填写邀请码，注册成功后您和邀请人都能获得积分奖励">
-                <QuestionCircleOutlined class="help-icon" />
-              </a-tooltip>
-            </template>
-          </a-input>
-        </a-form-item>
-
-        <!-- 图形验证码 -->
-        <CaptchaInput ref="captchaRef" v-model="formState.captcha" />
-
-        <!-- 注册按钮 -->
-        <a-form-item>
-          <a-button
-            :loading="loading"
-            block
-            class="register-button"
-            html-type="submit"
-            size="large"
-            type="primary"
-          >
-            <template #icon>
-              <UserAddOutlined />
-            </template>
-            立即注册
-          </a-button>
-        </a-form-item>
-
-        <!-- 协议同意提示 -->
-        <div class="agreement-tip">
-          注册即表示您同意我们的
-          <a class="link" href="/help/docs#terms">服务条款</a>
-        </div>
-      </a-form>
-
-      <!-- 登录链接 -->
-      <div class="login-link">
-        已有账号？
-        <RouterLink class="link-text" to="/user/login">立即登录</RouterLink>
       </div>
     </div>
   </div>
@@ -183,15 +191,6 @@ import type { FormInstance } from 'ant-design-vue'
 import { message } from 'ant-design-vue'
 import { computed, onMounted, reactive, ref } from 'vue'
 import CaptchaInput from '@/components/CaptchaInput.vue'
-import {
-  CodeOutlined,
-  GiftOutlined,
-  LockOutlined,
-  QuestionCircleOutlined,
-  SafetyOutlined,
-  UserAddOutlined,
-  UserOutlined,
-} from '@ant-design/icons-vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -207,7 +206,25 @@ const formState = reactive<API.UserRegisterRequest & { captcha: string }>({
   captcha: '',
 })
 
-// 密码强度计算（0-3）
+const benefits = [
+  {
+    icon: '🎨',
+    title: '智能创作',
+    desc: 'AI 助你快速生成应用代码',
+  },
+  {
+    icon: '🚀',
+    title: '一键部署',
+    desc: '轻松发布到云端服务器',
+  },
+  {
+    icon: '🎁',
+    title: '积分奖励',
+    desc: '签到邀请获取丰厚奖励',
+  },
+]
+
+// 密码强度计算（0-4）
 const passwordStrength = computed(() => {
   const password = formState.userPassword || ''
   let strength = 0
@@ -218,45 +235,23 @@ const passwordStrength = computed(() => {
   if (/[0-9]/.test(password)) strength++
   if (/[^A-Za-z0-9]/.test(password)) strength++
 
-  return Math.min(strength, 3)
+  return Math.min(strength, 4)
 })
 
 const passwordStrengthText = computed(() => {
   const strength = passwordStrength.value
-  if (strength === 0) return '太弱'
-  if (strength === 1) return '弱'
+  if (strength <= 1) return '弱'
   if (strength === 2) return '中等'
-  return '强'
+  if (strength === 3) return '强'
+  return '非常强'
 })
 
-const passwordStrengthClass = computed(() => {
-  const strength = passwordStrength.value
-  if (strength === 0) return 'weak'
-  if (strength === 1) return 'weak'
-  if (strength === 2) return 'medium'
-  return 'strong'
-})
-
-/**
- * 账号输入变化处理
- */
-const handleAccountChange = () => {
-  // 可以添加实时验证逻辑
-}
-
-/**
- * 密码输入变化处理
- */
 const handlePasswordChange = () => {
-  // 密码变化时清空确认密码
   if (formState.checkPassword && formState.userPassword !== formState.checkPassword) {
     formState.checkPassword = ''
   }
 }
 
-/**
- * 验证确认密码
- */
 const validateCheckPassword = (
   _rule: unknown,
   value: string,
@@ -269,13 +264,9 @@ const validateCheckPassword = (
   }
 }
 
-/**
- * 提交注册表单
- */
 const handleSubmit = async (values: API.UserRegisterRequest & { captcha: string }) => {
   loading.value = true
   try {
-    // 验证验证码
     if (!captchaRef.value?.validate()) {
       message.error('验证码错误，请重新输入')
       captchaRef.value?.refresh()
@@ -283,12 +274,11 @@ const handleSubmit = async (values: API.UserRegisterRequest & { captcha: string 
       return
     }
 
-    // 移除captcha字段，因为后端不需要
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { captcha, ...registerData } = values
     const res = await userRegister(registerData)
     if (res.data.code === 0) {
-      message.success('🎉 注册成功！即将跳转到登录页面...')
+      message.success('注册成功！即将跳转到登录页面...')
       setTimeout(() => {
         router.push({
           path: '/user/login',
@@ -309,7 +299,6 @@ const handleSubmit = async (values: API.UserRegisterRequest & { captcha: string 
   }
 }
 
-// 解析 URL 参数，自动填入邀请码
 onMounted(() => {
   const invitationCodeParam = route.query.invitationCode as string
   if (invitationCodeParam) {
@@ -318,183 +307,257 @@ onMounted(() => {
 })
 </script>
 
-<style lang="less" scoped>
-.register-container {
+<style>
+/* ========== 全局变量（非scoped） ========== */
+:root {
+  --color-primary: #ff6b6b;
+  --color-primary-light: #ff8787;
+  --color-primary-dark: #fa5252;
+  --color-secondary: #ffa8a8;
+  --color-accent: #ffec99;
+  --color-text: #2d3436;
+  --color-text-secondary: #636e72;
+  --color-text-light: #b2bec3;
+  --color-bg: #fff5f5;
+  --color-glass: rgba(255, 255, 255, 0.7);
+  --color-glass-border: rgba(255, 255, 255, 0.9);
+  --shadow-soft: 0 8px 32px rgba(255, 107, 107, 0.1);
+  --shadow-hover: 0 12px 48px rgba(255, 107, 107, 0.15);
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --font-main: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+</style>
+
+<style scoped>
+/* ========== 字体引入 ========== */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap');
+
+/* ========== 主容器 ========== */
+.auth-container {
   min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+  font-family: var(--font-main);
+  background: var(--color-bg);
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 40px 20px;
-  position: relative;
-  overflow: hidden;
 }
 
-/* Hero 背景 */
-.hero-background {
-  position: absolute;
+/* ========== 渐变背景 ========== */
+.gradient-bg {
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-image: url('https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=1920&q=80');
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
   z-index: 0;
-}
-
-.hero-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    135deg,
-    rgba(249, 115, 22, 0.92) 0%,
-    rgba(234, 88, 12, 0.88) 50%,
-    rgba(251, 191, 36, 0.85) 100%
-  );
-  backdrop-filter: blur(2px);
-}
-
-/* 背景装饰 */
-.bg-decoration {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
   overflow: hidden;
-  z-index: 1;
-  pointer-events: none;
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
 }
 
-.circle {
+.gradient-orb {
   position: absolute;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  animation: float 20s infinite ease-in-out;
+  filter: blur(80px);
+  opacity: 0.6;
+  animation: float 20s ease-in-out infinite;
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
-.circle-1 {
-  width: 300px;
-  height: 300px;
-  top: -100px;
-  left: -100px;
+.orb-1 {
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, var(--color-primary) 0%, transparent 70%);
+  top: -200px;
+  right: -100px;
   animation-delay: 0s;
 }
 
-.circle-2 {
-  width: 200px;
-  height: 200px;
-  top: 20%;
-  right: 10%;
-  animation-delay: 5s;
+.orb-2 {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, var(--color-secondary) 0%, transparent 70%);
+  bottom: -150px;
+  left: -100px;
+  animation-delay: 7s;
 }
 
-.circle-3 {
-  width: 150px;
-  height: 150px;
-  bottom: 10%;
-  left: 20%;
-  animation-delay: 10s;
+.orb-3 {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, var(--color-accent) 0%, transparent 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation-delay: 14s;
 }
 
 @keyframes float {
   0%,
   100% {
-    transform: translateY(0) scale(1);
+    transform: translate3d(0, 0, 0) scale(1);
   }
-  50% {
-    transform: translateY(-30px) scale(1.1);
+  33% {
+    transform: translate3d(30px, -30px, 0) scale(1.1);
+  }
+  66% {
+    transform: translate3d(-20px, 20px, 0) scale(0.9);
   }
 }
 
-/* 注册卡片 */
-.register-card {
-  background: rgba(255, 255, 255, 0.98);
+/* ========== 内容容器 ========== */
+.content-wrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  max-width: 1200px;
+  width: 100%;
+  z-index: 1;
+  align-items: center;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* ========== 左侧介绍区域 ========== */
+.intro-section {
+  padding: 40px;
+}
+
+.brand-mark {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 50px;
+  opacity: 0;
+  animation: fadeInUp 0.8s ease forwards;
+}
+
+.mark-icon {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  border-radius: var(--radius-md);
+  color: white;
+  box-shadow: var(--shadow-soft);
+}
+
+.mark-icon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.brand-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.benefit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.benefit-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(10px);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 107, 107, 0.1);
+  opacity: 0;
+  animation: fadeInUp 0.8s ease forwards;
+  transition: all 0.3s ease;
+}
+
+.benefit-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-soft);
+}
+
+.benefit-icon {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.benefit-content {
+  flex: 1;
+}
+
+.benefit-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0 0 6px 0;
+}
+
+.benefit-desc {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ========== 右侧表单区域 ========== */
+.form-section {
+  display: flex;
+  justify-content: center;
+}
+
+.glass-card {
+  background: var(--color-glass);
   backdrop-filter: blur(20px);
-  border-radius: 24px;
-  padding: 48px 42px;
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--color-glass-border);
+  border-radius: var(--radius-lg);
+  padding: 48px;
   width: 100%;
   max-width: 480px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  position: relative;
-  z-index: 2;
-  animation: slideUp 0.6s ease-out;
+  box-shadow: var(--shadow-soft);
+  animation: fadeInUp 1s ease 0.2s both;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform, opacity;
 }
 
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* 卡片头部 */
 .card-header {
   text-align: center;
   margin-bottom: 36px;
 }
 
-.logo-wrapper {
-  margin-bottom: 20px;
-}
-
-.logo-icon {
-  width: 64px;
-  height: 64px;
-  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-  border-radius: 16px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 32px;
-  box-shadow: 0 8px 24px rgba(249, 115, 22, 0.4);
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-}
-
-.register-title {
+.card-title {
   font-size: 28px;
   font-weight: 700;
-  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  text-align: center;
+  color: var(--color-text);
   margin: 0 0 12px 0;
-  letter-spacing: -0.5px;
 }
 
-.welcome-text {
-  text-align: center;
-  color: #6b7280;
-  font-size: 13px;
+.card-subtitle {
+  font-size: 14px;
+  color: var(--color-text-secondary);
   margin: 0;
-  line-height: 1.5;
-  font-weight: 400;
 }
 
-/* 表单样式 */
+/* ========== 表单样式 ========== */
 .register-form {
-  margin-top: 0;
+  margin-bottom: 24px;
 }
 
 .register-form :deep(.ant-form-item) {
@@ -505,75 +568,67 @@ onMounted(() => {
   margin-bottom: 0;
 }
 
-.register-input {
-  border-radius: 12px;
-  transition: all 0.3s ease;
-}
-
-.register-input :deep(.ant-input),
-.register-input :deep(.ant-input-password) {
-  border-radius: 12px;
-  height: 50px;
-  font-size: 13px;
-  padding-left: 44px;
-  border: 2px solid #e5e7eb;
-  background: #f9fafb;
-  transition: all 0.3s ease;
-}
-
-.register-input :deep(.ant-input:hover),
-.register-input :deep(.ant-input-password:hover) {
-  border-color: #f97316;
-  background: #ffffff;
-}
-
-.register-input :deep(.ant-input:focus),
-.register-input :deep(.ant-input-focused),
-.register-input :deep(.ant-input-password:focus) {
-  border-color: #f97316;
-  background: #ffffff;
-  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.1);
-}
-
-.input-icon {
-  color: #9ca3af;
-  font-size: 16px;
-  transition: color 0.3s ease;
-}
-
-.register-input:focus-within .input-icon {
-  color: #f97316;
-}
-
-.register-input :deep(.ant-input-password-icon) {
-  color: #9ca3af;
-  font-size: 16px;
-  transition: color 0.3s ease;
-}
-
-.register-input :deep(.ant-input-password-icon:hover) {
-  color: #f97316;
-}
-
-.help-icon {
-  color: #9ca3af;
+.form-label {
+  display: block;
   font-size: 14px;
-  cursor: help;
+  font-weight: 500;
+  color: var(--color-text);
+  margin-bottom: 8px;
+}
+
+.optional-tag {
+  font-size: 13px;
+  color: var(--color-text-light);
+  font-weight: 400;
+  margin-left: 4px;
+}
+
+.glass-input :deep(.ant-input),
+.glass-input :deep(.ant-input-password) {
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 107, 107, 0.2);
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  height: 48px;
+  color: var(--color-text);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-input :deep(.ant-input::placeholder),
+.glass-input :deep(.ant-input-password::placeholder) {
+  color: var(--color-text-light);
+}
+
+.glass-input :deep(.ant-input:hover),
+.glass-input :deep(.ant-input-password:hover) {
+  border-color: var(--color-primary-light);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.glass-input :deep(.ant-input:focus),
+.glass-input :deep(.ant-input-focused),
+.glass-input :deep(.ant-input-password:focus) {
+  border-color: var(--color-primary);
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+  outline: none;
+}
+
+.glass-input :deep(.ant-input-password-icon) {
+  color: var(--color-text-light);
   transition: color 0.3s ease;
 }
 
-.help-icon:hover {
-  color: #f97316;
+.glass-input :deep(.ant-input-password-icon:hover) {
+  color: var(--color-primary);
 }
 
-/* 密码强度指示器 */
+/* ========== 密码强度指示器 ========== */
 .password-strength {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-top: -12px;
-  margin-bottom: 12px;
-  padding: 0 4px;
+  margin-top: 10px;
 }
 
 .strength-bar {
@@ -586,126 +641,193 @@ onMounted(() => {
 .strength-segment {
   flex: 1;
   border-radius: 2px;
-  background: #e5e7eb;
+  background: rgba(255, 107, 107, 0.2);
   transition: all 0.3s ease;
 }
 
-.strength-segment.active.weak {
-  background: #ef4444;
+.strength-segment.active:nth-child(1) {
+  background: #ff6b6b;
 }
 
-.strength-segment.active.medium {
-  background: #f59e0b;
+.strength-segment.active:nth-child(2) {
+  background: #ff8787;
 }
 
-.strength-segment.active.strong {
-  background: #10b981;
+.strength-segment.active:nth-child(3) {
+  background: #ffa8a8;
+}
+
+.strength-segment.active:nth-child(4) {
+  background: #74b9ff;
 }
 
 .strength-text {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
-  min-width: 30px;
+  min-width: 60px;
   text-align: right;
+  color: var(--color-text-secondary);
 }
 
-.strength-text.weak {
-  color: #ef4444;
-}
-
-.strength-text.medium {
-  color: #f59e0b;
-}
-
-.strength-text.strong {
-  color: #10b981;
-}
-
-/* 注册按钮 */
-.register-button {
-  height: 52px;
-  border-radius: 12px;
+/* ========== 提交按钮 ========== */
+.submit-button {
+  height: 50px;
+  border: none;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  color: white;
   font-size: 16px;
   font-weight: 600;
-  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-  border: none;
-  margin-top: 8px;
-  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
-  transition: all 0.3s ease;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-soft);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-top: 12px;
 }
 
-.register-button:hover {
-  background: linear-gradient(135deg, #ea580c 0%, #3b82f6 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(249, 115, 22, 0.4);
+.submit-button:hover {
+  background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary));
+  box-shadow: var(--shadow-hover);
+  transform: translate3d(0, -2px, 0);
 }
 
-.register-button:active {
+.submit-button:active {
   transform: translateY(0);
 }
 
-/* 协议提示 */
-.agreement-tip {
+/* ========== 协议提示 ========== */
+.agreement-notice {
   text-align: center;
-  color: #6b7280;
   font-size: 13px;
+  color: var(--color-text-secondary);
   margin-top: 16px;
   line-height: 1.5;
 }
 
-.agreement-tip .link {
-  color: #f97316;
+.agreement-link {
+  color: var(--color-primary);
   text-decoration: none;
   font-weight: 500;
-  margin: 0 2px;
-  transition: color 0.3s ease;
-}
-
-.agreement-tip .link:hover {
-  color: #ea580c;
-  text-decoration: underline;
-}
-
-/* 登录链接 */
-.login-link {
-  text-align: center;
-  color: #6b7280;
-  font-size: 14px;
-  margin-top: 24px;
-  padding-top: 24px;
-  border-top: 1px solid #e5e7eb;
-}
-
-.link-text {
-  color: #f97316;
-  text-decoration: none;
-  font-weight: 600;
-  margin-left: 4px;
   transition: all 0.3s ease;
 }
 
-.link-text:hover {
-  color: #ea580c;
+.agreement-link:hover {
+  color: var(--color-primary-dark);
   text-decoration: underline;
 }
 
-/* 响应式设计 */
-@media (max-width: 640px) {
-  .register-card {
-    padding: 36px 28px;
-    border-radius: 20px;
+/* ========== 表单底部 ========== */
+.form-footer {
+  text-align: center;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255, 107, 107, 0.1);
+}
+
+.footer-text {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin-right: 4px;
+}
+
+.footer-link {
+  font-size: 14px;
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.footer-link:hover {
+  color: var(--color-primary-dark);
+  text-decoration: underline;
+}
+
+/* ========== 动画 ========== */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 30px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* ========== 响应式设计 ========== */
+@media (max-width: 1024px) {
+  .content-wrapper {
+    grid-template-columns: 1fr;
+    gap: 40px;
   }
 
-  .register-title {
+  .intro-section {
+    order: 2;
+    padding: 20px;
+  }
+
+  .brand-mark {
+    justify-content: center;
+  }
+
+  .benefit-card {
+    padding: 16px;
+  }
+
+  .gradient-orb {
+    filter: blur(60px);
+  }
+
+  .orb-1,
+  .orb-2,
+  .orb-3 {
+    width: 300px;
+    height: 300px;
+  }
+}
+
+@media (max-width: 640px) {
+  .auth-container {
+    padding: 20px 16px;
+  }
+
+  .glass-card {
+    padding: 32px 24px;
+  }
+
+  .card-title {
     font-size: 24px;
   }
 
-  .welcome-text {
-    font-size: 14px;
+  .brand-title {
+    font-size: 22px;
   }
 
-  .circle {
-    display: none;
+  .benefit-icon {
+    font-size: 24px;
   }
+
+  .benefit-title {
+    font-size: 15px;
+  }
+
+  .benefit-desc {
+    font-size: 13px;
+  }
+}
+
+/* ========== Ant Design 覆盖样式 ========== */
+:deep(.ant-form-item-explain-error) {
+  color: var(--color-primary-dark) !important;
+  font-size: 13px;
+  margin-top: 6px;
+}
+
+:deep(.ant-btn-primary) {
+  background: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  color: white !important;
+}
+
+:deep(.ant-btn-loading) {
+  opacity: 0.8;
 }
 </style>
