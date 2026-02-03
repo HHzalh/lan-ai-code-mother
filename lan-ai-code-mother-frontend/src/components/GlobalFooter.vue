@@ -53,14 +53,9 @@
         <div class="copyright-info">
           <p class="copyright">
             © 2026
-            <a
-              class="author-link"
-              href="http://82.156.29.4/"
-              rel="noopener noreferrer"
-              target="_blank"
-            >
-              蓝海智造
-            </a>
+            <RouterLink to="/" class="author-link">
+              <p>蓝海智造</p>
+            </RouterLink>
             . All rights reserved.
           </p>
           <p class="slogan">让想法，瞬间成为可用的应用</p>
