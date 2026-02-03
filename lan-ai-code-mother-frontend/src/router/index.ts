@@ -13,7 +13,6 @@ import ChatManagePage from '@/pages/admin/ChatManagePage.vue'
 import PointManagePage from '@/pages/admin/PointManagePage.vue'
 import PointLogsPage from '@/pages/user/PointLogsPage.vue'
 import PointMallPage from '@/pages/user/PointMallPage.vue'
-import QuickStartPage from '@/pages/QuickStartPage.vue'
 import HelpDocsPage from '@/pages/HelpDocsPage.vue'
 
 const router = createRouter({
@@ -88,11 +87,6 @@ const router = createRouter({
       path: '/user/edit-profile',
       name: '编辑资料',
       component: EditProfilePage,
-    },
-    {
-      path: '/quick-start',
-      name: '快速开始',
-      component: QuickStartPage,
     },
     {
       path: '/help/docs',
