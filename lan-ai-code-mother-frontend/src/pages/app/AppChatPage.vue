@@ -1095,8 +1095,8 @@ onUnmounted(() => {
 }
 
 .user-message .message-content {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-  color: white;
+  background: rgba(82, 248, 75, 0.76);
+  color: black;
   border-bottom-right-radius: 4px;
   border: 2px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -1263,6 +1263,7 @@ onUnmounted(() => {
   flex-direction: column;
   background: #fafbfc;
   overflow: hidden;
+  border-left: 1px solid #FFB7C5;
 }
 
 .preview-header {
