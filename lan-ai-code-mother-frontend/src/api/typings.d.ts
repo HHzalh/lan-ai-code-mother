@@ -145,12 +145,6 @@ declare namespace API {
     message?: string
   }
 
-  type BaseResponseVoid = {
-    code?: number
-    data?: Record<string, any>
-    message?: string
-  }
-
   type canDownloadAppCodeParams = {
     appId: number
   }
@@ -222,10 +216,6 @@ declare namespace API {
   type grantPointsToAllParams = {
     points: number
     remark: string
-  }
-
-  type handleInvitationCodeParams = {
-    invitationCode: string
   }
 
   type listAppChatHistoryParams = {

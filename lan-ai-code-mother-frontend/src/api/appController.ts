@@ -86,6 +86,20 @@ export async function chatToGenCode(
   })
 }
 
+/** 此处后端没有提供注释 GET /app/check/download/${param0} */
+export async function canDownloadAppCode(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.canDownloadAppCodeParams,
+  options?: { [key: string]: any },
+) {
+  const { appId: param0, ...queryParams } = params
+  return request<API.BaseResponseBoolean>(`/app/check/download/${param0}`, {
+    method: 'GET',
+    params: { ...queryParams },
+    ...(options || {}),
+  })
+}
+
 /** 此处后端没有提供注释 POST /app/delete */
 export async function deleteApp(body: API.DeleteRequest, options?: { [key: string]: any }) {
   return request<API.BaseResponseBoolean>('/app/delete', {
@@ -150,20 +164,6 @@ export async function listGoodAppVoByPage(
       'Content-Type': 'application/json',
     },
     data: body,
-    ...(options || {}),
-  })
-}
-
-/** 此处后端没有提供注释 GET /app/isExist/Download/${param0} */
-export async function canDownloadAppCode(
-  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
-  params: API.canDownloadAppCodeParams,
-  options?: { [key: string]: any },
-) {
-  const { appId: param0, ...queryParams } = params
-  return request<API.BaseResponseBoolean>(`/app/isExist/Download/${param0}`, {
-    method: 'GET',
-    params: { ...queryParams },
     ...(options || {}),
   })
 }

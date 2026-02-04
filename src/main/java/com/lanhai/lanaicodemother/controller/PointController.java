@@ -143,22 +143,6 @@ public class PointController {
     }
 
     /**
-     * 处理邀请码（在注册时调用）
-     *
-     * @param request        HTTP请求
-     * @param invitationCode 邀请码
-     * @return 处理结果
-     */
-    @PostMapping("/invitation/handle")
-    public BaseResponse<Void> handleInvitationCode(
-            HttpServletRequest request,
-            @RequestParam String invitationCode) {
-        User loginUser = userService.getLoginUser(request);
-        pointService.handleInvitationCode(loginUser.getId(), invitationCode);
-        return ResultUtils.success(null);
-    }
-
-    /**
      * 获取积分规则
      *
      * @return 规则列表

@@ -1,5 +1,6 @@
 package com.lanhai.lanaicodemother.service.impl;
 
+import com.lanhai.lanaicodemother.constant.PointConstants;
 import com.lanhai.lanaicodemother.exception.ErrorCode;
 import com.lanhai.lanaicodemother.exception.ThrowUtils;
 import com.lanhai.lanaicodemother.mapper.PointSignInRecordMapper;
@@ -16,7 +17,6 @@ import com.lanhai.lanaicodemother.utils.RedisDistributedLockUtils;
 import com.mybatisflex.core.query.QueryWrapper;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,30 +35,32 @@ import static com.lanhai.lanaicodemother.constant.PointConstants.*;
 @Service
 public class PointSignInServiceImpl implements PointSignInService {
 
-    /**
-     * 签到锁Key前缀
-     */
-    private static final String SIGN_IN_LOCK_PREFIX = "point:sign:in:";
     @Resource
     private UserAccountService userAccountService;
+
     @Resource
     private UserAccountMapper userAccountMapper;
+
     @Resource
     private PointSignInRecordMapper signInRecordMapper;
+
     @Resource
     private PointService pointService;
+
     @Resource
     private RedisDistributedLockUtils redisDistributedLockUtils;
+
     @Resource
     private StringRedisTemplate stringRedisTemplate;
-    @Autowired
+
+    @Resource
     private PointRuleServiceImpl pointRuleServiceImpl;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public PointSignInResponse signIn(Long userId) {
         // 使用分布式锁防止重复签到
-        String lockKey = SIGN_IN_LOCK_PREFIX + userId;
+        String lockKey = PointConstants.SIGN_IN_LOCK_PREFIX + userId;
         return redisDistributedLockUtils.executeWithLock(lockKey, LOCK_WAIT_SECONDS, SIGN_IN_LOCK_EXPIRE_SECONDS, () -> doSignIn(userId));
     }
 

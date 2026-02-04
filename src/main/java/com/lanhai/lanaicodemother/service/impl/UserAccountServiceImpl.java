@@ -4,7 +4,6 @@ import cn.hutool.core.bean.BeanUtil;
 import com.lanhai.lanaicodemother.constant.PointConstants;
 import com.lanhai.lanaicodemother.exception.ErrorCode;
 import com.lanhai.lanaicodemother.exception.ThrowUtils;
-import com.lanhai.lanaicodemother.mapper.PointLogMapper;
 import com.lanhai.lanaicodemother.mapper.UserAccountMapper;
 import com.lanhai.lanaicodemother.model.dto.point.UserAccountQueryRequest;
 import com.lanhai.lanaicodemother.model.entity.UserAccount;
@@ -33,9 +32,6 @@ public class UserAccountServiceImpl extends ServiceImpl<UserAccountMapper, UserA
 
     @Resource
     private PointLogService pointLogService;
-
-    @Resource
-    private PointLogMapper pointLogMapper;
 
     @Override
     public UserAccount getByUserId(Long userId) {

@@ -35,16 +35,15 @@ import java.util.stream.Collectors;
 @Service
 public class PointServiceImpl implements PointService {
 
-    /**
-     * 邀请奖励锁前缀
-     */
-    private static final String INVITE_LOCK_PREFIX = "point:invite:";
     @Resource
     private UserAccountService userAccountService;
+
     @Resource
     private UserAccountMapper userAccountMapper;
+
     @Resource
     private PointLogMapper pointLogMapper;
+
     @Resource
     private RedisDistributedLockUtils redisDistributedLockUtils;
 
@@ -65,7 +64,7 @@ public class PointServiceImpl implements PointService {
         ThrowUtils.throwIf(inviterAccount == null, ErrorCode.PARAMS_ERROR, "邀请码无效");
 
         // 2. 使用分布式锁处理邀请逻辑
-        String lockKey = INVITE_LOCK_PREFIX + invitationCode + ":" + userId;
+        String lockKey = PointConstants.INVITE_LOCK_PREFIX + invitationCode + ":" + userId;
         redisDistributedLockUtils.executeWithLock(lockKey, PointConstants.LOCK_WAIT_SECONDS,
                 PointConstants.INVITE_LOCK_EXPIRE_SECONDS, () -> doHandleInvitation(userId, inviterAccount, invitationCode));
     }
@@ -102,29 +101,6 @@ public class PointServiceImpl implements PointService {
 
         log.info("邀请奖励发放成功，被邀请人ID：{}，邀请人ID：{}，被邀请人获得积分：{}，邀请人获得积分：{}",
                 userId, inviterId, inviteePoints, inviterPoints);
-    }
-
-
-    @Override
-    public Long calculateSignInPoints(Long userId) {
-        // 1. 获取签到基础积分
-        Long basePoints = pointRuleService.getRuleValue(PointRuleKeyEnum.SIGN_IN_BASE);
-
-        // 2. 获取用户连续天数
-        UserAccount account = userAccountService.getByUserId(userId);
-        ThrowUtils.throwIf(account == null, ErrorCode.NOT_FOUND_ERROR, "积分账户不存在");
-        Integer continuousDays = account.getContinuousDays();
-
-        // 3. 计算连续奖励（固定规则，只可修改不可新增）
-        Long bonusPoints = 0L;
-        if (continuousDays >= PointConstants.SIGN_IN_BONUS_DAY_3) {
-            bonusPoints += pointRuleService.getRuleValue(PointRuleKeyEnum.SIGN_IN_CONTINUOUS_3);
-        }
-        if (continuousDays >= PointConstants.SIGN_IN_BONUS_DAY_7) {
-            bonusPoints += pointRuleService.getRuleValue(PointRuleKeyEnum.SIGN_IN_CONTINUOUS_7);
-        }
-
-        return basePoints + bonusPoints;
     }
 
     /**

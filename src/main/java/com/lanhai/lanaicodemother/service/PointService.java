@@ -17,14 +17,6 @@ public interface PointService {
     void handleInvitationCode(Long userId, String invitationCode);
 
     /**
-     * 计算签到积分
-     *
-     * @param userId 用户ID
-     * @return 应得积分数
-     */
-    Long calculateSignInPoints(Long userId);
-
-    /**
      * 根据连续签到天数计算应得积分
      *
      * @param continuousDays 连续签到天数

@@ -12,9 +12,7 @@ import com.lanhai.lanaicodemother.service.PointLogService;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
-import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,13 +27,6 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class PointLogServiceImpl extends ServiceImpl<PointLogMapper, PointLog> implements PointLogService {
-
-    /**
-     * 流水记录缓存Key前缀
-     */
-    private static final String LOG_CACHE_PREFIX = "point:log:";
-    @Resource
-    private StringRedisTemplate stringRedisTemplate;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -54,12 +45,7 @@ public class PointLogServiceImpl extends ServiceImpl<PointLogMapper, PointLog> i
                 .createTime(java.time.LocalDateTime.now())
                 .build();
 
-        boolean saved = this.save(pointLog);
-        if (saved) {
-            // 清除用户流水缓存
-            clearLogCache(userId);
-        }
-        return saved;
+        return this.save(pointLog);
     }
 
     @Override
@@ -129,13 +115,6 @@ public class PointLogServiceImpl extends ServiceImpl<PointLogMapper, PointLog> i
         vo.setPointTypeText(pointTypeEnum != null ? pointTypeEnum.getText() : log.getPointType());
 
         return vo;
-    }
-
-    /**
-     * 清除流水缓存
-     */
-    private void clearLogCache(Long userId) {
-        stringRedisTemplate.delete(LOG_CACHE_PREFIX + userId);
     }
 
 }

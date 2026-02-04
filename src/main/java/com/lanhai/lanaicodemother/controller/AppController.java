@@ -414,7 +414,7 @@ public class AppController {
      * @param request 请求
      * @return 是否可以下载
      */
-    @GetMapping("/isExist/Download/{appId}")
+    @GetMapping("/check/download/{appId}")
     public BaseResponse<Boolean> canDownloadAppCode(@PathVariable Long appId,
                                                     HttpServletRequest request) {
         // 1. 基础校验
