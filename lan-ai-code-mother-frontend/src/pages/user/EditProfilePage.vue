@@ -8,7 +8,6 @@ import {
   EditOutlined,
   GiftOutlined,
   LockOutlined,
-  MailOutlined,
   SafetyOutlined,
   UploadOutlined,
   UserOutlined,
@@ -246,6 +245,7 @@ const truncateText = (text: string, maxLength: number) => {
           <div class="user-info-mini">
             <h3 class="user-name">{{ truncateText(formState.userName || '未设置', 10) }}</h3>
             <p class="user-account">@{{ formState.userAccount }}</p>
+            <p class="user-email">{{ loginUserStore.loginUser.userEmail || '未绑定邮箱' }}</p>
             <div class="user-role-badge">
               <span class="role-tag">{{ userRoleLabel }}</span>
             </div>
@@ -285,16 +285,16 @@ const truncateText = (text: string, maxLength: number) => {
               </a-button>
             </div>
 
-            <div class="security-item-compact security-item-spaced">
-              <div class="security-info">
-                <MailOutlined class="security-icon" />
-                <div>
-                  <h5>绑定邮箱</h5>
-                  <p>绑定邮箱以接收重要通知</p>
-                </div>
-              </div>
-              <a-button class="change-password-btn" size="small"> 绑定 </a-button>
-            </div>
+            <!--            <div class="security-item-compact security-item-spaced">-->
+            <!--              <div class="security-info">-->
+            <!--                <MailOutlined class="security-icon" />-->
+            <!--                <div>-->
+            <!--                  <h5>绑定邮箱</h5>-->
+            <!--                  <p>绑定邮箱以接收重要通知</p>-->
+            <!--                </div>-->
+            <!--              </div>-->
+            <!--              <a-button class="change-password-btn" size="small"> 绑定 </a-button>-->
+            <!--            </div>-->
           </div>
         </section>
       </div>
@@ -633,10 +633,19 @@ const truncateText = (text: string, maxLength: number) => {
 }
 
 .user-info-mini .user-account {
-  margin: 0 0 12px;
+  margin: 0 0 8px;
   font-size: 13px;
   color: var(--color-text-secondary);
   font-weight: 500;
+}
+
+.user-info-mini .user-email {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  font-weight: 400;
+  word-break: break-all;
+  opacity: 0.85;
 }
 
 /* 用户角色徽章 */

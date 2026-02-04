@@ -1,7 +1,7 @@
 <template>
   <div class="captcha-row">
     <a-form-item
-      :rules="[{ required: true, message: '请输入验证码' }, { validator: validateCaptcha }]"
+      :rules="[{ validator: validateCaptcha }]"
       :validateTrigger="['onBlur', 'submit']"
       name="captcha"
     >

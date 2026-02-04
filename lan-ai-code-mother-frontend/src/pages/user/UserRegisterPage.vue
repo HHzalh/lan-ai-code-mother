@@ -151,8 +151,66 @@
               />
             </a-form-item>
 
-            <!-- 图形验证码 -->
-            <CaptchaInput ref="captchaRef" v-model="formState.captcha" />
+            <!-- 注册邮箱 -->
+            <a-form-item
+              :rules="[
+                { required: true, message: '请输入邮箱' },
+                { type: 'email', message: '请输入有效的邮箱地址' },
+              ]"
+              name="userEmail"
+            >
+              <label class="form-label">注册邮箱</label>
+              <a-input
+                v-model:value="formState.userEmail"
+                class="glass-input"
+                placeholder="请输入您的邮箱地址"
+                size="large"
+              >
+                <template #prefix>
+                  <MailOutlined class="input-icon" />
+                </template>
+              </a-input>
+            </a-form-item>
+
+            <!-- 邮箱验证码 -->
+            <a-form-item
+              :rules="[
+                { required: true, message: '请输入邮箱验证码' },
+                { len: 6, message: '验证码为6位数字' },
+              ]"
+              name="code"
+            >
+              <label class="form-label">
+                邮箱验证码
+                <span class="validity-hint">验证码5分钟内有效</span>
+              </label>
+              <div class="email-code-row">
+                <a-input
+                  v-model:value="formState.code"
+                  class="glass-input code-input"
+                  maxlength="6"
+                  placeholder="请输入6位验证码"
+                  size="large"
+                >
+                  <template #prefix>
+                    <SafetyOutlined class="input-icon" />
+                  </template>
+                </a-input>
+                <a-button
+                  :disabled="isSending || countdown > 0"
+                  :loading="isSending"
+                  class="send-code-button"
+                  size="large"
+                  @click="handleSendCode"
+                >
+                  {{ countdown > 0 ? `${countdown}秒后重试` : '发送验证码' }}
+                </a-button>
+              </div>
+              <div v-if="codeSentTime" class="code-sent-tip">
+                <ClockCircleOutlined class="tip-icon" />
+                验证码已发送，请查收邮箱。{{ countdown > 0 ? `(${countdown}秒后可重新发送)` : '' }}
+              </div>
+            </a-form-item>
 
             <!-- 注册按钮 -->
             <a-button
@@ -186,24 +244,28 @@
 
 <script lang="ts" setup>
 import { useRoute, useRouter } from 'vue-router'
-import { userRegister } from '@/api/userController.ts'
+import { sendRegisterEmailCode, userRegister } from '@/api/userController.ts'
 import type { FormInstance } from 'ant-design-vue'
 import { message } from 'ant-design-vue'
-import { computed, onMounted, reactive, ref } from 'vue'
-import CaptchaInput from '@/components/CaptchaInput.vue'
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
+import { ClockCircleOutlined, MailOutlined, SafetyOutlined } from '@ant-design/icons-vue'
 
 const router = useRouter()
 const route = useRoute()
 const formRef = ref<FormInstance>()
 const loading = ref(false)
-const captchaRef = ref<InstanceType<typeof CaptchaInput>>()
+const isSending = ref(false)
+const countdown = ref(0)
+const codeSentTime = ref<string>('')
+const countdownTimer = ref<number | null>(null)
 
-const formState = reactive<API.UserRegisterRequest & { captcha: string }>({
+const formState = reactive<API.UserRegisterRequest>({
   userAccount: '',
   userPassword: '',
   checkPassword: '',
   invitationCode: '',
-  captcha: '',
+  userEmail: '',
+  code: '',
 })
 
 const benefits = [
@@ -264,19 +326,52 @@ const validateCheckPassword = (
   }
 }
 
-const handleSubmit = async (values: API.UserRegisterRequest & { captcha: string }) => {
+// 发送邮箱验证码
+const handleSendCode = async () => {
+  if (!formState.userEmail) {
+    message.error('请先输入邮箱地址')
+    formRef.value?.validateFields(['userEmail'])
+    return
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(formState.userEmail)) {
+    message.error('请输入有效的邮箱地址')
+    return
+  }
+
+  isSending.value = true
+  try {
+    const res = await sendRegisterEmailCode({ email: formState.userEmail })
+    if (res.data.code === 0) {
+      message.success('验证码已发送到您的邮箱，请注意查收')
+      codeSentTime.value = new Date().toLocaleTimeString()
+      countdown.value = 60
+      countdownTimer.value = window.setInterval(() => {
+        countdown.value--
+        if (countdown.value <= 0) {
+          if (countdownTimer.value) {
+            clearInterval(countdownTimer.value)
+            countdownTimer.value = null
+          }
+        }
+      }, 1000)
+    } else {
+      message.error(res.data.message || '发送失败，请重试')
+    }
+  } catch (error: any) {
+    console.error('发送验证码失败:', error)
+    const errorMsg = error?.response?.data?.message || error?.message || '发送失败，请检查网络连接'
+    message.error(errorMsg)
+  } finally {
+    isSending.value = false
+  }
+}
+
+const handleSubmit = async (values: API.UserRegisterRequest) => {
   loading.value = true
   try {
-    if (!captchaRef.value?.validate()) {
-      message.error('验证码错误，请重新输入')
-      captchaRef.value?.refresh()
-      loading.value = false
-      return
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { captcha, ...registerData } = values
-    const res = await userRegister(registerData)
+    const res = await userRegister(values)
     if (res.data.code === 0) {
       message.success('注册成功！即将跳转到登录页面...')
       setTimeout(() => {
@@ -287,17 +382,22 @@ const handleSubmit = async (values: API.UserRegisterRequest & { captcha: string 
       }, 1500)
     } else {
       message.error(res.data.message || '注册失败，请重试')
-      captchaRef.value?.refresh()
     }
   } catch (error: any) {
     console.error('注册失败:', error)
     const errorMsg = error?.response?.data?.message || error?.message || '注册失败，请检查网络连接'
     message.error(errorMsg)
-    captchaRef.value?.refresh()
   } finally {
     loading.value = false
   }
 }
+
+// 清理定时器
+onUnmounted(() => {
+  if (countdownTimer.value) {
+    clearInterval(countdownTimer.value)
+  }
+})
 
 onMounted(() => {
   const invitationCodeParam = route.query.invitationCode as string
@@ -623,6 +723,68 @@ onMounted(() => {
   color: var(--color-primary);
 }
 
+.glass-input:focus-within .input-icon {
+  color: var(--color-primary);
+}
+
+/* ========== 邮箱验证码行 ========== */
+.email-code-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.code-input {
+  flex: 1;
+}
+
+.send-code-button {
+  flex-shrink: 0;
+  width: auto;
+  min-width: 120px;
+  height: 48px;
+  background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary));
+  border: none;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.2);
+}
+
+.send-code-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  box-shadow: 0 6px 16px rgba(255, 107, 107, 0.3);
+  transform: translate3d(0, -2px, 0);
+}
+
+.send-code-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.send-code-button:disabled {
+  background: rgba(184, 184, 184, 0.3);
+  color: var(--color-text-light);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.code-sent-tip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  animation: fadeInUp 0.3s ease;
+}
+
+.tip-icon {
+  color: var(--color-primary);
+  font-size: 14px;
+}
+
 /* ========== 密码强度指示器 ========== */
 .password-strength {
   display: flex;
@@ -811,6 +973,15 @@ onMounted(() => {
 
   .benefit-desc {
     font-size: 13px;
+  }
+
+  .email-code-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .send-code-button {
+    width: 100%;
   }
 }
 

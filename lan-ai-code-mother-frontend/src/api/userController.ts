@@ -29,6 +29,21 @@ export async function uploadUserAvatar(
   })
 }
 
+/** 此处后端没有提供注释 POST /user/change/password */
+export async function changePassword(
+  body: API.UserChangePasswordRequest,
+  options?: { [key: string]: any },
+) {
+  return request<API.BaseResponseBoolean>('/user/change/password', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  })
+}
+
 /** 此处后端没有提供注释 POST /user/delete */
 export async function deleteUser(body: API.DeleteRequest, options?: { [key: string]: any }) {
   return request<API.BaseResponseBoolean>('/user/delete', {
@@ -114,57 +129,57 @@ export async function userLogout(options?: { [key: string]: any }) {
   })
 }
 
-/** 此处后端没有提供注释 POST /user/password/change */
-export async function changePassword(
-  body: API.UserChangePasswordRequest,
-  options?: { [key: string]: any },
-) {
-  return request<API.BaseResponseBoolean>('/user/password/change', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    data: body,
-    ...(options || {}),
-  })
-}
-
-/** 此处后端没有提供注释 POST /user/password/find */
-export async function findPassword(
-  body: API.FindPasswordRequest,
-  options?: { [key: string]: any },
-) {
-  return request<API.BaseResponseBoolean>('/user/password/find', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    data: body,
-    ...(options || {}),
-  })
-}
-
-/** 此处后端没有提供注释 POST /user/password/reset */
-export async function resetPassword(
-  body: API.ResetPasswordRequest,
-  options?: { [key: string]: any },
-) {
-  return request<API.BaseResponseBoolean>('/user/password/reset', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    data: body,
-    ...(options || {}),
-  })
-}
-
 /** 此处后端没有提供注释 POST /user/register */
 export async function userRegister(
   body: API.UserRegisterRequest,
   options?: { [key: string]: any },
 ) {
   return request<API.BaseResponseLong>('/user/register', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  })
+}
+
+/** 此处后端没有提供注释 POST /user/reset/password */
+export async function resetPassword(
+  body: API.ResetPasswordRequest,
+  options?: { [key: string]: any },
+) {
+  return request<API.BaseResponseBoolean>('/user/reset/password', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  })
+}
+
+/** 此处后端没有提供注释 POST /user/send/register/code */
+export async function sendRegisterEmailCode(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.sendRegisterEmailCodeParams,
+  options?: { [key: string]: any },
+) {
+  return request<API.BaseResponseBoolean>('/user/send/register/code', {
+    method: 'POST',
+    params: {
+      ...params,
+    },
+    ...(options || {}),
+  })
+}
+
+/** 此处后端没有提供注释 POST /user/send/reset-password/code */
+export async function findPassword(
+  body: API.FindPasswordRequest,
+  options?: { [key: string]: any },
+) {
+  return request<API.BaseResponseBoolean>('/user/send/reset-password/code', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

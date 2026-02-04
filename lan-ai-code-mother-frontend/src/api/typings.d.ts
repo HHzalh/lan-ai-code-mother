@@ -230,6 +230,7 @@ declare namespace API {
     userName?: string
     userAvatar?: string
     userProfile?: string
+    userEmail?: string
     userRole?: string
     createTime?: string
     updateTime?: string
@@ -338,6 +339,10 @@ declare namespace API {
     checkPassword?: string
   }
 
+  type sendRegisterEmailCodeParams = {
+    email: string
+  }
+
   type ServerSentEventString = true
 
   type serveStaticResourceParams = {
@@ -355,6 +360,7 @@ declare namespace API {
     userName?: string
     userAvatar?: string
     userProfile?: string
+    userEmail?: string
     userRole?: string
     editTime?: string
     createTime?: string
@@ -394,6 +400,7 @@ declare namespace API {
     userAccount?: string
     userAvatar?: string
     userProfile?: string
+    userEmail?: string
     userRole?: string
   }
 
@@ -424,7 +431,9 @@ declare namespace API {
     userAccount?: string
     userPassword?: string
     checkPassword?: string
+    userEmail?: string
     invitationCode?: string
+    code?: string
   }
 
   type UserUpdateRequest = {
@@ -432,6 +441,7 @@ declare namespace API {
     userName?: string
     userAvatar?: string
     userProfile?: string
+    userEmail?: string
     userRole?: string
   }
 
@@ -441,6 +451,7 @@ declare namespace API {
     userName?: string
     userAvatar?: string
     userProfile?: string
+    userEmail?: string
     userRole?: string
     createTime?: string
   }
