@@ -67,6 +67,12 @@ public class User implements Serializable {
     private String userProfile;
 
     /**
+     * 用户邮箱
+     */
+    @Column("userEmail")
+    private String userEmail;
+
+    /**
      * 用户角色：user/admin
      */
     @Column("userRole")

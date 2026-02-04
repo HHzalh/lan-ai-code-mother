@@ -3,14 +3,13 @@ package com.lanhai.lanaicodemother.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
+import com.lanhai.lanaicodemother.constant.UserConstant;
 import com.lanhai.lanaicodemother.exception.BusinessException;
 import com.lanhai.lanaicodemother.exception.ErrorCode;
 import com.lanhai.lanaicodemother.exception.ThrowUtils;
 import com.lanhai.lanaicodemother.manager.CosManager;
 import com.lanhai.lanaicodemother.mapper.UserMapper;
-import com.lanhai.lanaicodemother.model.dto.user.UserAddRequest;
-import com.lanhai.lanaicodemother.model.dto.user.UserQueryRequest;
-import com.lanhai.lanaicodemother.model.dto.user.UserUpdateRequest;
+import com.lanhai.lanaicodemother.model.dto.user.*;
 import com.lanhai.lanaicodemother.model.entity.User;
 import com.lanhai.lanaicodemother.model.entity.UserAccount;
 import com.lanhai.lanaicodemother.model.enums.PointBusinessTypeEnum;
@@ -45,7 +44,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static com.lanhai.lanaicodemother.constant.UserConstant.*;
+import static com.lanhai.lanaicodemother.constant.UserConstant.CODE_EXPIRE_TIME;
+import static com.lanhai.lanaicodemother.constant.UserConstant.USER_LOGIN_STATE;
 
 /**
  * 用户 服务层实现。
@@ -81,9 +81,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private String adminRegisterPassword;
 
     @Override
-    public long userRegister(String userAccount, String userPassword, String checkPassword, String invitationCode) {
+    public long userRegister(UserRegisterRequest userRegisterRequest) {
         // 1. 校验
-        if (StrUtil.hasBlank(userAccount, userPassword, checkPassword)) {
+        String userAccount = userRegisterRequest.getUserAccount();
+        String userPassword = userRegisterRequest.getUserPassword();
+        String checkPassword = userRegisterRequest.getCheckPassword();
+        String userEmail = userRegisterRequest.getUserEmail();
+        String invitationCode = userRegisterRequest.getInvitationCode();
+        String code = userRegisterRequest.getCode();
+
+        if (StrUtil.hasBlank(userAccount, userPassword, checkPassword, userEmail, code)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数为空");
         }
         if (userAccount.length() < 4) {
@@ -95,12 +102,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (!userPassword.equals(checkPassword)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "两次输入的密码不一致");
         }
+        if (RegexUtils.isEmailInvalid(userEmail)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "邮箱格式错误");
+        }
         // 2. 检查是否重复
         QueryWrapper queryWrapper = new QueryWrapper();
-        queryWrapper.eq("userAccount", userAccount);
+        queryWrapper.eq("userAccount", userAccount).eq("userEmail", userEmail);
         long count = this.mapper.selectCountByQuery(queryWrapper);
         if (count > 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号重复");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号或邮箱重复");
+        }
+        String redisKey = UserConstant.EMAIL_REGISTER_CODE_PREFIX + userEmail;
+        // 从redis中获取验证码
+        String redisCode = stringRedisTemplate.opsForValue().get(redisKey);
+        if (StrUtil.isBlank(redisCode) || !redisCode.equals(code)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "验证码错误");
         }
         // 3. 加密
         String encryptPassword = getEncryptPassword(userPassword);
@@ -108,7 +124,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         User user = new User();
         user.setUserAccount(userAccount);
         user.setUserPassword(encryptPassword);
-        user.setUserName("无名");
+        user.setUserEmail(userEmail);
+        user.setUserName("未命名");
 
         // 管理员注册密码从配置读取，避免硬编码
         String adminRegisterPassword = getAdminRegisterPassword();
@@ -167,7 +184,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public LoginUserVO userLogin(String userAccount, String userPassword, HttpServletRequest request) {
+    public LoginUserVO userLogin(UserLoginRequest userLoginRequest, HttpServletRequest request) {
+        String userAccount = userLoginRequest.getUserAccount();
+        String userPassword = userLoginRequest.getUserPassword();
         // 1. 校验
         if (StrUtil.hasBlank(userAccount, userPassword)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数为空");
@@ -308,7 +327,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * 发送密码找回验证码
      */
     @Override
-    public boolean sendPasswordResetCode(String userAccount, String email) {
+    public boolean sendPasswordResetEmailCode(String userAccount, String email) {
         // 1. 参数校验
         if (!StringUtils.hasText(userAccount) || !StringUtils.hasText(email)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号和邮箱不能为空");
@@ -322,25 +341,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         queryWrapper.eq("userAccount", userAccount);
         User user = this.mapper.selectOneByQuery(queryWrapper);
         ThrowUtils.throwIf(user == null, ErrorCode.NOT_FOUND_ERROR, "该账号未注册");
+        ThrowUtils.throwIf(!user.getUserEmail().equals(email), ErrorCode.PARAMS_ERROR, "该邮箱与账号不匹配");
 
-        // 3. 生成验证码
-        String code = MailUtils.generateCode();
-
-        // 4. 将验证码存储到Redis，设置5分钟过期时间
-        String redisKey = PASSWORD_RESET_CODE_PREFIX + userAccount + ":" + email;
-        stringRedisTemplate.opsForValue().set(redisKey, code, CODE_EXPIRE_TIME, TimeUnit.SECONDS);
-
-        // 5. 发送验证码邮件
-        try {
-            mailUtils.sendVerificationCode(email, code);
-            log.info("密码找回验证码发送成功，账号：{}，邮箱：{}", userAccount, email);
-            return true;
-        } catch (Exception e) {
-            log.error("密码找回验证码发送失败，账号：{}，邮箱：{}，错误：{}", userAccount, email, e.getMessage(), e);
-            // 发送失败时删除Redis中的验证码
-            stringRedisTemplate.delete(redisKey);
-            throw new BusinessException(ErrorCode.OPERATION_ERROR, "验证码发送失败，请稍后重试");
-        }
+        return sendEmailCode(email, UserConstant.EMAIL_PASSWORD_RESET_CODE_PREFIX + userAccount + ":" + email);
     }
 
     /**
@@ -366,7 +369,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         // 2. 验证验证码
-        String redisKey = PASSWORD_RESET_CODE_PREFIX + userAccount + ":" + email;
+        String redisKey = UserConstant.EMAIL_PASSWORD_RESET_CODE_PREFIX + userAccount + ":" + email;
         String storedCode = stringRedisTemplate.opsForValue().get(redisKey);
         if (storedCode == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "验证码已过期或不存在，请重新获取");
@@ -380,6 +383,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         queryWrapper.eq("userAccount", userAccount);
         User user = this.mapper.selectOneByQuery(queryWrapper);
         ThrowUtils.throwIf(user == null, ErrorCode.NOT_FOUND_ERROR, "用户不存在");
+        ThrowUtils.throwIf(!user.getUserEmail().equals(email), ErrorCode.PARAMS_ERROR, "该邮箱与账号不匹配");
 
         // 4. 加密新密码
         String encryptPassword = getEncryptPassword(newPassword);
@@ -530,6 +534,46 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         userVOPage.setRecords(userVOList);
 
         return userVOPage;
+    }
+
+    /**
+     * 发送邮件验证码
+     *
+     * @param email 邮箱地址
+     * @return 是否发送成功
+     */
+    @Override
+    public boolean sendEmailCode(String email, String key) {
+        ThrowUtils.throwIf(StrUtil.isBlank(email), ErrorCode.PARAMS_ERROR, "邮箱地址不能为空");
+
+        if (RegexUtils.isEmailInvalid(email)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "邮箱地址格式不正确");
+        }
+        String code = MailUtils.generateCode();
+
+        //将验证码存储到Redis，设置5分钟过期时间
+        String redisKey = key + email;
+        stringRedisTemplate.opsForValue().set(redisKey, code, CODE_EXPIRE_TIME, TimeUnit.SECONDS);
+        // 发送验证码邮件
+        try {
+            mailUtils.sendVerificationCode(email, code, UserConstant.CODE_TITLE);
+            return true;
+        } catch (Exception e) {
+            // 发送失败时删除Redis中的验证码
+            stringRedisTemplate.delete(redisKey);
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "验证码发送失败，请稍后重试");
+        }
+    }
+
+    /**
+     * 发送注册邮件验证码
+     *
+     * @param email
+     * @return
+     */
+    @Override
+    public boolean sendRegisterEmailCode(String email) {
+        return sendEmailCode(email, UserConstant.EMAIL_REGISTER_CODE_PREFIX);
     }
 
     /**

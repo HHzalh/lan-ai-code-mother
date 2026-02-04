@@ -42,13 +42,21 @@ public class UserController {
     @PostMapping("/register")
     public BaseResponse<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
         ThrowUtils.throwIf(userRegisterRequest == null, ErrorCode.PARAMS_ERROR);
-        long userId = userService.userRegister(
-                userRegisterRequest.getUserAccount(),
-                userRegisterRequest.getUserPassword(),
-                userRegisterRequest.getCheckPassword(),
-                userRegisterRequest.getInvitationCode()
-        );
+        long userId = userService.userRegister(userRegisterRequest);
         return ResultUtils.success(userId);
+    }
+
+    /**
+     * 用户注册 - 发送验证码
+     *
+     * @param email 邮箱地址
+     * @return 是否发送成功
+     */
+    @PostMapping("/send/register/code")
+    public BaseResponse<Boolean> sendRegisterEmailCode(String email) {
+        ThrowUtils.throwIf(email == null, ErrorCode.PARAMS_ERROR);
+        boolean result = userService.sendRegisterEmailCode(email);
+        return ResultUtils.success(result);
     }
 
     /**
@@ -61,9 +69,7 @@ public class UserController {
     @PostMapping("/login")
     public BaseResponse<LoginUserVO> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(userLoginRequest == null, ErrorCode.PARAMS_ERROR);
-        String userAccount = userLoginRequest.getUserAccount();
-        String userPassword = userLoginRequest.getUserPassword();
-        LoginUserVO loginUserVO = userService.userLogin(userAccount, userPassword, request);
+        LoginUserVO loginUserVO = userService.userLogin(userLoginRequest, request);
         return ResultUtils.success(loginUserVO);
     }
 
@@ -112,12 +118,12 @@ public class UserController {
      * @param findPasswordRequest 找回密码请求（包含账号和邮箱）
      * @return 是否发送成功
      */
-    @PostMapping("/password/find")
+    @PostMapping("/send/reset-password/code")
     public BaseResponse<Boolean> findPassword(@RequestBody FindPasswordRequest findPasswordRequest) {
         ThrowUtils.throwIf(findPasswordRequest == null, ErrorCode.PARAMS_ERROR);
         String userAccount = findPasswordRequest.getUserAccount();
         String email = findPasswordRequest.getEmail();
-        boolean result = userService.sendPasswordResetCode(userAccount, email);
+        boolean result = userService.sendPasswordResetEmailCode(userAccount, email);
         return ResultUtils.success(result);
     }
 
@@ -127,7 +133,7 @@ public class UserController {
      * @param resetPasswordRequest 重置密码请求（包含账号、邮箱、验证码、新密码）
      * @return 是否重置成功
      */
-    @PostMapping("/password/reset")
+    @PostMapping("/reset/password")
     public BaseResponse<Boolean> resetPassword(@RequestBody ResetPasswordRequest resetPasswordRequest) {
         ThrowUtils.throwIf(resetPasswordRequest == null, ErrorCode.PARAMS_ERROR);
         String userAccount = resetPasswordRequest.getUserAccount();
@@ -146,7 +152,7 @@ public class UserController {
      * @param request               请求
      * @return 是否修改成功
      */
-    @PostMapping("/password/change")
+    @PostMapping("/change/password")
     public BaseResponse<Boolean> changePassword(@RequestBody UserChangePasswordRequest changePasswordRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(changePasswordRequest == null, ErrorCode.PARAMS_ERROR);
         User loginUser = userService.getLoginUser(request);

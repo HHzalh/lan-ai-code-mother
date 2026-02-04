@@ -27,10 +27,25 @@ public interface UserConstant {
     /**
      * 密码重置验证码Redis key前缀
      */
-    String PASSWORD_RESET_CODE_PREFIX = "password:reset:code:";
+    String EMAIL_PASSWORD_RESET_CODE_PREFIX = "email:passwordReset:";
+
+    /**
+     * 注册验证码Redis key前缀
+     */
+    String EMAIL_REGISTER_CODE_PREFIX = "email:register:";
+
+    /**
+     * 换绑邮箱验证码Redis key前缀
+     */
+    String EMAIL_CHANGE_EMAIL_CODE_PREFIX = "email:changeEmail:";
 
     /**
      * 验证码过期时间（秒）
      */
     Long CODE_EXPIRE_TIME = 300L; // 5分钟
+
+    /**
+     * 注册验证码标题
+     */
+    String CODE_TITLE = "蓝海智造 验证码";
 }

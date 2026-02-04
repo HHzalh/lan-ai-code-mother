@@ -66,3 +66,5 @@ create table chat_history
 
 # # 升级为 MEDIUMTEXT (最大 16MB)
 ALTER TABLE chat_history MODIFY COLUMN message MEDIUMTEXT NOT NULL COMMENT '消息';
+# 系统表增加邮箱字段
+ALTER TABLE user ADD COLUMN userEmail VARCHAR(256) NULL COMMENT '用户邮箱';

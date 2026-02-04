@@ -1,8 +1,6 @@
 package com.lanhai.lanaicodemother.service;
 
-import com.lanhai.lanaicodemother.model.dto.user.UserAddRequest;
-import com.lanhai.lanaicodemother.model.dto.user.UserQueryRequest;
-import com.lanhai.lanaicodemother.model.dto.user.UserUpdateRequest;
+import com.lanhai.lanaicodemother.model.dto.user.*;
 import com.lanhai.lanaicodemother.model.entity.User;
 import com.lanhai.lanaicodemother.model.vo.LoginUserVO;
 import com.lanhai.lanaicodemother.model.vo.UserVO;
@@ -24,13 +22,10 @@ public interface UserService extends IService<User> {
     /**
      * 用户注册
      *
-     * @param userAccount   用户账户
-     * @param userPassword  用户密码
-     * @param checkPassword 校验密码
-     * @param invitationCode 邀请码（可选）
+     * @param userRegisterRequest 用户注册请求
      * @return 新用户 id
      */
-    long userRegister(String userAccount, String userPassword, String checkPassword, String invitationCode);
+    long userRegister(UserRegisterRequest userRegisterRequest);
 
     /**
      * 获取脱敏的已登录用户信息
@@ -42,12 +37,11 @@ public interface UserService extends IService<User> {
     /**
      * 用户登录
      *
-     * @param userAccount  用户账户
-     * @param userPassword 用户密码
+     * @param userLoginRequest 用户登录请求
      * @param request
      * @return 脱敏后的用户信息
      */
-    LoginUserVO userLogin(String userAccount, String userPassword, HttpServletRequest request);
+    LoginUserVO userLogin(UserLoginRequest userLoginRequest, HttpServletRequest request);
 
 
     /**
@@ -114,7 +108,7 @@ public interface UserService extends IService<User> {
      * @param email       邮箱地址
      * @return 是否发送成功
      */
-    boolean sendPasswordResetCode(String userAccount, String email);
+    boolean sendPasswordResetEmailCode(String userAccount, String email);
 
     /**
      * 重置密码
@@ -142,8 +136,8 @@ public interface UserService extends IService<User> {
     /**
      * 更新用户个人信息（仅可更新 userName 和 userProfile）
      *
-     * @param userId       用户ID
-     * @param userName     用户昵称（可选）
+     * @param userId      用户ID
+     * @param userName    用户昵称（可选）
      * @param userProfile 用户简介（可选）
      * @return 是否更新成功
      */
@@ -172,4 +166,20 @@ public interface UserService extends IService<User> {
      * @return 用户分页数据（脱敏）
      */
     Page<UserVO> listUserVOByPage(UserQueryRequest userQueryRequest);
+
+    /**
+     * 发送邮件验证码
+     *
+     * @param email 邮箱地址
+     * @return 是否发送成功
+     */
+    boolean sendEmailCode(String email, String key);
+
+    /**
+     * 发送注册邮件验证码
+     *
+     * @param email
+     * @return
+     */
+    boolean sendRegisterEmailCode(String email);
 }

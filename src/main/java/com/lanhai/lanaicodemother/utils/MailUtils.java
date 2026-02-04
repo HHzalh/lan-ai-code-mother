@@ -47,15 +47,14 @@ public class MailUtils {
      * @param to   收件人邮箱
      * @param code 验证码
      */
-    public void sendVerificationCode(String to, String code) {
-        String subject = "密码找回验证码";
+    public void sendVerificationCode(String to, String code, String title) {
         String content = "您好，\n\n" +
-                "您正在找回密码，验证码为：" + code + "\n\n" +
+                "您的验证码为：" + code + "\n\n" +
                 "验证码有效期为5分钟，请勿泄露给他人。\n\n" +
                 "如非本人操作，请忽略此邮件。\n\n" +
                 "此邮件由系统自动发送，请勿回复。";
         try {
-            sendMail(to, subject, content);
+            sendMail(to, title, content);
         } catch (MessagingException e) {
             log.error("发送验证码邮件失败，收件人：{}，错误信息：{}", to, e.getMessage(), e);
             throw new RuntimeException("邮件发送失败", e);
