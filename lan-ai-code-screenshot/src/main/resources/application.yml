@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: lan-ai-code-screenshot
+  profiles:
+    active: local
+
+  # RabbitMQ 配置
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    virtual-host: /
+    listener:
+      simple:
+        acknowledge-mode: auto  # 手动确认模式
+        prefetch: 1  # 每次只处理一条消息
+        retry:
+          enabled: true
+          max-attempts: 3
+          initial-interval: 2000
+
+server:
+  port: 8127
+  servlet:
+    context-path: /api
+
+# COS 对象存储配置（需要从腾讯云获取）
+cos:
+  client:
+    host: your-custom-domain.com
+    secretId: your-secret-id
+    secretKey: your-secret-key
+    region: your-region
+    bucket: your-bucket-name

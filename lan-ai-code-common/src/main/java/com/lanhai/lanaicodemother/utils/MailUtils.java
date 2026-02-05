@@ -1,8 +1,11 @@
 package com.lanhai.lanaicodemother.utils;
 
 import cn.hutool.core.util.RandomUtil;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import javax.mail.*;
@@ -12,8 +15,16 @@ import java.util.Properties;
 
 /**
  * 邮件发送工具类
+ * 只有配置了 mail.smtp-host 的服务才会加载此 Bean
  */
 @Slf4j
+@ConfigurationProperties(prefix = "mail")
+@ConditionalOnProperty(
+        prefix = "mail",
+        name = "smtp-host",
+        matchIfMissing = false  // 如果没有配置，不加载此 Bean
+)
+@Data
 @Component
 public class MailUtils {
 
