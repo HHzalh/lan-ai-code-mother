@@ -5,7 +5,6 @@ import com.lanhai.lanaicodemother.exception.ThrowUtils;
 import jakarta.annotation.Resource;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.TimeUnit;
@@ -15,13 +14,12 @@ import java.util.function.Supplier;
  * Redis分布式锁工具类
  * 使用Redisson实现分布式锁
  *
- * @author 积分系统
+ * @author lan-ai-code-mother
  */
 @Component
 public class RedisDistributedLockUtils {
 
     @Resource
-    @Lazy
     private RedissonClient redissonClient;
 
     /**
@@ -95,4 +93,3 @@ public class RedisDistributedLockUtils {
     }
 
 }
-

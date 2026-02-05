@@ -6,6 +6,7 @@ import com.lanhai.lanaicodemother.service.AppService;
 import com.mybatisflex.core.query.QueryWrapper;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -45,20 +46,20 @@ public class ScreenshotScheduledTask {
         }
     }
 
-    /**
-     * 每天凌晨3点执行，清理过期的临时截图文件
-     * 0 0 3 * * ? 表示每天凌晨2点0分0秒执行
-     * Cron表达式：秒 分 时 日 月 周
-     * <p>
-     * 注意：此功能已移至 screenshot 服务
-     */
-    @Scheduled(cron = "0 0 3 * * ?")
-    public void cleanupTempScreenshots() {
-        log.info("定时清理临时截图文件功能已移至 screenshot 服务");
-        // 功能已迁移，不再在此处执行
-        // 原实现：
-        // WebScreenshotUtils.cleanupTempFiles();
-    }
+    // 功能已迁移，不再在此处执行
+//    /**
+//     * 每天凌晨3点执行，清理过期的临时截图文件
+//     * 0 0 3 * * ? 表示每天凌晨2点0分0秒执行
+//     * Cron表达式：秒 分 时 日 月 周
+//     * <p>
+//     * 注意：此功能已移至 screenshot 服务
+//     */
+//    @Scheduled(cron = "0 0 3 * * ?")
+//    public void cleanupTempScreenshots() {
+//        // 功能已迁移，不再在此处执行
+//        // 原实现：
+//        // WebScreenshotUtils.cleanupTempFiles();
+//    }
 
     /**
      * 查询已部署但封面为空的应用

@@ -69,3 +69,18 @@ springdoc:
   group-configs:
     - group: 'default'
       packages-to-scan: com.lanhai.lanaicodemother.controller
+
+# Dubbo 配置（消费者）
+dubbo:
+  registry:
+    address: nacos://127.0.0.1:8848?username=nacos&password=nacos
+    register-mode: instance
+  protocol:
+    name: tri
+    port: 50054
+  consumer:
+    timeout: 120000     # 调用其他服务的超时时间
+    check: false        # 启动时不检查服务是否可用（开发环境）
+    retries: 2          # 失败重试次数
+  provider:
+    timeout: 60000

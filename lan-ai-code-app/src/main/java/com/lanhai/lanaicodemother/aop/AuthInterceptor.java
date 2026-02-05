@@ -11,7 +11,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestAttributes;
@@ -22,10 +21,6 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 @Component
 @Order(0)
 public class AuthInterceptor {
-
-    @Resource
-    @Lazy
-    private InnerUserService userService;
 
     /**
      * 执行拦截

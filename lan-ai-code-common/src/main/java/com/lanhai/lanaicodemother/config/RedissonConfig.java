@@ -1,5 +1,4 @@
-package com.lanhai.lanaicodemother.ratelimter.config;
-
+package com.lanhai.lanaicodemother.config;
 
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
@@ -9,6 +8,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Redisson 配置类
+ * 用于分布式锁等功能
+ *
+ * @author lan-ai-code-mother
+ */
 @Configuration
 public class RedissonConfig {
 
@@ -18,12 +23,16 @@ public class RedissonConfig {
     @Value("${spring.data.redis.port}")
     private Integer redisPort;
 
-    @Value("${spring.data.redis.password}")
+    @Value("${spring.data.redis.password:}")
     private String redisPassword;
 
     @Value("${spring.data.redis.database}")
     private Integer redisDatabase;
 
+    /**
+     * 创建 RedissonClient Bean
+     * 用于分布式锁等场景
+     */
     @Bean
     public RedissonClient redissonClient() {
         Config config = new Config();

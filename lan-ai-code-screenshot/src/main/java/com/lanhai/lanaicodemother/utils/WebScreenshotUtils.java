@@ -39,8 +39,8 @@ public class WebScreenshotUtils {
     private static WebDriver initChromeDriver(int width, int height) {
         try {
             // 自动管理 ChromeDriver
-            //System.setProperty("webdriver.chrome.driver", "tmp/chromedriver/chromedriver.exe");
-            WebDriverManager.chromedriver().setup();
+            System.setProperty("webdriver.chrome.driver", "tmp/chromedriver/chromedriver.exe");
+            //WebDriverManager.chromedriver().setup();
             // 配置 Chrome 选项
             ChromeOptions options = new ChromeOptions();
             // 无头模式

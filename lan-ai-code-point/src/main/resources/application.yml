@@ -36,3 +36,16 @@ springdoc:
       packages-to-scan: com.lanhai.lanaicodemother.controller
 point:
   cachewarm-enabled: true
+
+# Dubbo 配置
+dubbo:
+  registry:
+    address: nacos://127.0.0.1:8848?username=nacos&password=nacos
+    register-mode: instance
+  protocol:
+    name: tri
+    port: 50053
+  consumer:
+    timeout: 60000
+  provider:
+    timeout: 60000
