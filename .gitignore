@@ -45,3 +45,9 @@ build/
 /.claude/
 /.playwright-mcp/
 /.spec-workflow/templates/
+/.agents/
+
+### AI assistant local artifacts ###
+CLAUDE.md
+tmpclaude-*
+nul

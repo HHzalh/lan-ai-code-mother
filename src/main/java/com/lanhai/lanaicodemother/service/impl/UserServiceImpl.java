@@ -371,7 +371,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 2. 验证验证码
         String redisKey = UserConstant.EMAIL_PASSWORD_RESET_CODE_PREFIX + userAccount + ":" + email;
         String storedCode = stringRedisTemplate.opsForValue().get(redisKey);
-        if (storedCode == null) {
+        if (code == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "验证码已过期或不存在，请重新获取");
         }
         if (!storedCode.equals(code)) {
@@ -552,7 +552,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         String code = MailUtils.generateCode();
 
         //将验证码存储到Redis，设置5分钟过期时间
-        String redisKey = key + email;
+        String redisKey = key;
         stringRedisTemplate.opsForValue().set(redisKey, code, CODE_EXPIRE_TIME, TimeUnit.SECONDS);
         // 发送验证码邮件
         try {
@@ -573,7 +573,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      */
     @Override
     public boolean sendRegisterEmailCode(String email) {
-        return sendEmailCode(email, UserConstant.EMAIL_REGISTER_CODE_PREFIX);
+        return sendEmailCode(email, UserConstant.EMAIL_REGISTER_CODE_PREFIX + email);
     }
 
     /**
