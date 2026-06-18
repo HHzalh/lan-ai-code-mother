@@ -224,28 +224,28 @@ onMounted(() => {
               type="default"
               @click="
                 setPrompt(
-                  '设计一个专业的企业官网，包含公司介绍、产品服务展示、新闻资讯、联系我们等页面。采用商务风格的设计，包含轮播图、产品展示卡片、团队介绍、客户案例展示，支持多语言切换和在线客服功能。',
+                  '设计一个日常生活中可以经常用的到的小工具',
                 )
               "
             >
               <template #icon>
                 <BuildOutlined />
               </template>
-              企业官网
+              常用小工具
             </a-button>
             <a-button
               class="quick-btn"
               type="default"
               @click="
                 setPrompt(
-                  '构建一个功能完整的在线商城，包含商品展示、购物车、用户注册登录、订单管理、支付结算等功能。设计现代化的商品卡片布局，支持商品搜索筛选、用户评价、优惠券系统和会员积分功能。',
+                  '设计一个复古波普艺术风格的电商网页，背景使用鲜艳的橙色和粉色撞色，融入漫画风格的圆点图案和手绘插图。商品展示区以波普画框形式呈现，按钮带有手写字体和跳跃动画。整体风格活泼有趣，适合潮流服饰或艺术品销售。',
                 )
               "
             >
               <template #icon>
                 <ShoppingOutlined />
               </template>
-              在线商城
+              波普风电商页面
             </a-button>
             <a-button
               class="quick-btn"
