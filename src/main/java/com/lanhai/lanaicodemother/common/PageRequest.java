@@ -2,6 +2,9 @@ package com.lanhai.lanaicodemother.common;
 
 import lombok.Data;
 
+/**
+ * 通用分页与排序请求基类，提供页码、页大小、排序字段和排序方向。
+ */
 @Data
 public class PageRequest {
 

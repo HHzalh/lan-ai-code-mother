@@ -8,6 +8,9 @@ import dev.langchain4j.service.TokenStream;
 import dev.langchain4j.service.UserMessage;
 import reactor.core.publisher.Flux;
 
+/**
+ * AI 代码生成服务接口，根据系统提示词支持 HTML 和多文件代码的同步与流式生成，以及 Vue 项目代码的流式生成。
+ */
 public interface
 AiCodeGeneratorService {
 

@@ -8,6 +8,9 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+/**
+ * 单体版 AI 代码生成平台的 Spring Boot 启动入口，启用 AOP、缓存、定时任务和 MyBatis Mapper 扫描。
+ */
 @SpringBootApplication(exclude = {RedisEmbeddingStoreAutoConfiguration.class})
 @EnableAspectJAutoProxy(exposeProxy = true)
 @EnableCaching

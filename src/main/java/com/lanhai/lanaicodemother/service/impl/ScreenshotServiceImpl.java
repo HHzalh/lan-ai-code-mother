@@ -16,6 +16,9 @@ import java.io.File;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
+/**
+ * 网页截图服务实现，协调本地页面截图、腾讯云 COS 上传及临时文件清理。
+ */
 @Service
 @Slf4j
 public class ScreenshotServiceImpl implements ScreenshotService {

@@ -15,6 +15,9 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import java.io.IOException;
 import java.util.Map;
 
+/**
+ * REST 接口全局异常处理器，将业务异常和未预期异常转换为统一错误响应。
+ */
 @Hidden
 @RestControllerAdvice
 @Slf4j

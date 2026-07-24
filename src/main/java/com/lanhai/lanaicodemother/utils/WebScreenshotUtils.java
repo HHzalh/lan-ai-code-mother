@@ -21,6 +21,9 @@ import java.io.File;
 import java.time.Duration;
 import java.util.UUID;
 
+/**
+ * Selenium 网页截图工具，管理无头 Chrome 驱动，等待页面加载后生成并压缩页面截图。
+ */
 @Slf4j
 public class WebScreenshotUtils {
 

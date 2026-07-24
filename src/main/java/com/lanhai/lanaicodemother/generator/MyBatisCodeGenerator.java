@@ -8,6 +8,9 @@ import com.zaxxer.hikari.HikariDataSource;
 
 import java.util.Map;
 
+/**
+ * MyBatis-Flex 代码生成入口，根据数据库表结构生成实体、Mapper 和服务层基础代码。
+ */
 public class MyBatisCodeGenerator {
 
     // 需要生成的表名

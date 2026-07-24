@@ -4,6 +4,9 @@ import lombok.Data;
 
 import java.io.Serializable;
 
+/**
+ * 应用部署请求，携带需要发布的应用标识。
+ */
 @Data
 public class AppDeployRequest implements Serializable {
 

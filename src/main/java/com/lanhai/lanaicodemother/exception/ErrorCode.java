@@ -2,6 +2,9 @@ package com.lanhai.lanaicodemother.exception;
 
 import lombok.Getter;
 
+/**
+ * 系统通用错误码枚举，统一定义响应中的业务状态码及其默认提示信息。
+ */
 @Getter
 public enum ErrorCode {
 

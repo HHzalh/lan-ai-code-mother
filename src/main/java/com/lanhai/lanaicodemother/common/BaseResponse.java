@@ -6,6 +6,9 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 
+/**
+ * 后端接口的统一响应模型，封装业务状态码、响应数据和提示信息。
+ */
 @Data
 @NoArgsConstructor
 public class BaseResponse<T> implements Serializable {

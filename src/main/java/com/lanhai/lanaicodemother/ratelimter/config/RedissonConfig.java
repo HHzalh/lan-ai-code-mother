@@ -9,6 +9,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Redisson 单节点客户端配置，根据 Redis 连接参数创建分布式限流所需客户端。
+ */
 @Configuration
 public class RedissonConfig {
 

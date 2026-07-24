@@ -8,6 +8,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
+/**
+ * AI 输入安全护栏，在模型调用前检查提示词长度、空白输入、敏感词和提示词注入。
+ */
 public class PromptSafetyInputGuardrail implements InputGuardrail {
 
     // 敏感词列表

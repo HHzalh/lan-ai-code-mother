@@ -16,6 +16,9 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.time.Duration;
 
+/**
+ * Redis 缓存管理器配置，定义键值序列化方式、默认过期时间及精选应用缓存策略。
+ */
 @Configuration
 public class RedisCacheManagerConfig {
 
