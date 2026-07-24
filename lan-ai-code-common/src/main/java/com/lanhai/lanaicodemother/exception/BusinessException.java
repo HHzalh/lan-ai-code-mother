@@ -2,6 +2,9 @@ package com.lanhai.lanaicodemother.exception;
 
 import lombok.Getter;
 
+/**
+ * 携带业务错误码和提示信息的运行时异常，供统一异常处理器转换为标准响应。
+ */
 @Getter
 public class BusinessException extends RuntimeException {
 

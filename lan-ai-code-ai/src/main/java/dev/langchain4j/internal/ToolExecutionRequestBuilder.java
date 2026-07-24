@@ -10,6 +10,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import static dev.langchain4j.internal.Utils.isNotNullOrBlank;
 import static dev.langchain4j.internal.Utils.isNotNullOrEmpty;
 
+/**
+ * LangChain4j 工具调用请求的增量构建器，用于聚合流式返回的工具标识、名称和参数片段。
+ */
 @Internal
 // TODO location
 // TODO name

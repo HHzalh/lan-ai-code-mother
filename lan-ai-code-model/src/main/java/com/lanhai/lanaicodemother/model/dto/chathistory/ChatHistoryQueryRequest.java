@@ -7,6 +7,9 @@ import lombok.EqualsAndHashCode;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+/**
+ * 对话历史分页查询条件，支持按应用、用户、消息属性和创建时间游标筛选。
+ */
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class ChatHistoryQueryRequest extends PageRequest implements Serializable {

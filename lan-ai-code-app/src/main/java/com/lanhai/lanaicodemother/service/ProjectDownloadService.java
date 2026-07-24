@@ -2,6 +2,9 @@ package com.lanhai.lanaicodemother.service;
 
 import jakarta.servlet.http.HttpServletResponse;
 
+/**
+ * 项目下载服务，负责将生成项目打包为 ZIP 并写入 HTTP 响应。
+ */
 public interface ProjectDownloadService {
 
     /**

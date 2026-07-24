@@ -2,6 +2,9 @@ package com.lanhai.lanaicodemother.common;
 
 import com.lanhai.lanaicodemother.exception.ErrorCode;
 
+/**
+ * 统一响应构造工具，集中创建成功或失败的 {@link BaseResponse}。
+ */
 public class ResultUtils {
 
     /**

@@ -227,6 +227,9 @@ public class OpenAiStreamingResponseBuilder {
         return null;
     }
 
+    /**
+     * 单次流式工具调用的内部片段缓冲器，分别累积调用标识、工具名称和参数内容。
+     */
     private static class ToolExecutionRequestBuilder {
 
         private final StringBuffer idBuilder = new StringBuffer();

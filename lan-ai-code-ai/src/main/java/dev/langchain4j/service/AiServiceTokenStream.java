@@ -24,6 +24,9 @@ import static dev.langchain4j.internal.Utils.copy;
 import static dev.langchain4j.internal.ValidationUtils.ensureNotEmpty;
 import static dev.langchain4j.internal.ValidationUtils.ensureNotNull;
 
+/**
+ * LangChain4j AI 服务的令牌流实现，注册流式响应、检索内容、工具执行、完成和错误回调，并负责启动模型请求。
+ */
 @Internal
 public class AiServiceTokenStream implements TokenStream {
 

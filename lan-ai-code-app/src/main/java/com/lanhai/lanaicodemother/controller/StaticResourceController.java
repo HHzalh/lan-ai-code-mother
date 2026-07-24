@@ -15,6 +15,9 @@ import org.springframework.web.servlet.HandlerMapping;
 
 import java.io.File;
 
+/**
+ * 生成应用的静态资源访问控制器，从代码输出目录解析预览文件，并处理目录重定向和资源响应。
+ */
 @RestController
 @RequestMapping("/static")
 public class StaticResourceController {

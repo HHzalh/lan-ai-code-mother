@@ -3,6 +3,9 @@ package com.lanhai.lanaicodemother.model.enums;
 import cn.hutool.core.util.ObjUtil;
 import lombok.Getter;
 
+/**
+ * 用户角色枚举，定义普通用户和管理员的显示名称及持久化值。
+ */
 @Getter
 public enum UserRoleEnum {
 

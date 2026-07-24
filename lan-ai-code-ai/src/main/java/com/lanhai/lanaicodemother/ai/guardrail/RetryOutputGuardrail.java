@@ -4,6 +4,9 @@ import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.guardrail.OutputGuardrail;
 import dev.langchain4j.guardrail.OutputGuardrailResult;
 
+/**
+ * AI 输出质量护栏，检查模型响应是否为空、过短或包含敏感凭据关键词，并通过重新提示请求重新生成。
+ */
 public class RetryOutputGuardrail implements OutputGuardrail {
 
     @Override

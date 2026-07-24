@@ -1,5 +1,8 @@
 package com.lanhai.lanaicodemother.constant;
 
+/**
+ * 应用业务共享常量集合，定义精选优先级以及代码生成、部署目录和访问地址。
+ */
 public interface AppConstant {
 
     /**

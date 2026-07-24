@@ -554,7 +554,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         String code = MailUtils.generateCode();
 
         //将验证码存储到Redis，设置5分钟过期时间
-        String redisKey = key + email;
+        String redisKey = key;
         stringRedisTemplate.opsForValue().set(redisKey, code, CODE_EXPIRE_TIME, TimeUnit.SECONDS);
         // 发送验证码邮件
         try {
@@ -575,7 +575,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      */
     @Override
     public boolean sendRegisterEmailCode(String email) {
-        return sendEmailCode(email, UserConstant.EMAIL_REGISTER_CODE_PREFIX);
+        return sendEmailCode(email, UserConstant.EMAIL_REGISTER_CODE_PREFIX + email);
     }
 
     /**

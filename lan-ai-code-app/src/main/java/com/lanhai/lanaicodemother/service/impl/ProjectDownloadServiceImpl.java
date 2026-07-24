@@ -16,6 +16,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Set;
 
+/**
+ * 项目下载服务实现，校验项目目录并过滤依赖、构建产物和敏感配置后输出 ZIP 压缩包。
+ */
 @Service
 @Slf4j
 public class ProjectDownloadServiceImpl implements ProjectDownloadService {

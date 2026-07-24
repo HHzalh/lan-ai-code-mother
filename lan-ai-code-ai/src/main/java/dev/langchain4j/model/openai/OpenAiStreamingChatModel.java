@@ -232,6 +232,9 @@ public class OpenAiStreamingChatModel implements StreamingChatModel {
         return OPEN_AI;
     }
 
+    /**
+     * {@link OpenAiStreamingChatModel} 的配置构建器，收集连接、模型参数、工具调用和监听器配置后创建流式聊天模型。
+     */
     public static class OpenAiStreamingChatModelBuilder {
 
         private HttpClientBuilder httpClientBuilder;

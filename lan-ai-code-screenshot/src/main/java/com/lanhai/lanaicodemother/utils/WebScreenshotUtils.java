@@ -21,6 +21,9 @@ import java.io.File;
 import java.time.Duration;
 import java.util.UUID;
 
+/**
+ * Selenium 网页截图工具，管理无头 Chrome 驱动，等待页面加载后生成并压缩页面截图。
+ */
 @Slf4j
 public class WebScreenshotUtils {
 
@@ -39,8 +42,8 @@ public class WebScreenshotUtils {
     private static WebDriver initChromeDriver(int width, int height) {
         try {
             // 自动管理 ChromeDriver
-            System.setProperty("webdriver.chrome.driver", "tmp/chromedriver/chromedriver.exe");
-            //WebDriverManager.chromedriver().setup();
+            //System.setProperty("webdriver.chrome.driver", "tmp/chromedriver/chromedriver.exe");
+            WebDriverManager.chromedriver().useMirror().setup();
             // 配置 Chrome 选项
             ChromeOptions options = new ChromeOptions();
             // 无头模式

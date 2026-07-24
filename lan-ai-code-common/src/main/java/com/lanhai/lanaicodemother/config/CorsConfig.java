@@ -4,6 +4,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+/**
+ * Spring MVC 跨域配置，允许携带凭证的跨域请求访问微服务接口。
+ */
 @Configuration
 public class CorsConfig implements WebMvcConfigurer {
 

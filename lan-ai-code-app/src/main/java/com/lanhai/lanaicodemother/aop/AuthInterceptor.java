@@ -17,6 +17,9 @@ import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+/**
+ * 应用服务的角色权限校验切面，从当前请求获取登录用户，并在目标方法执行前验证 {@link AuthCheck} 声明的角色。
+ */
 @Aspect
 @Component
 @Order(0)

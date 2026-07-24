@@ -1,5 +1,8 @@
 package com.lanhai.lanaicodemother.exception;
 
+/**
+ * 条件断言工具，在条件成立时抛出指定运行时异常，或根据错误码构造并抛出业务异常。
+ */
 public class ThrowUtils {
 
     /**
